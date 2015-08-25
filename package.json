@@ -1,0 +1,28 @@
+{
+  "name": "babel-plugin-xvdom",
+  "version": "1.0.3",
+  "description": "Turn jsx into xvdom",
+  "repository": "peterwmwong/babel-plugin-xvdom",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "devDependencies": {
+    "babel": "^5.8.21",
+    "babel-eslint": "^4.0.10",
+    "eslint": "^1.2.1",
+    "mocha": "^2.2.5"
+  },
+  "scripts": {
+    "build": "babel-plugin build",
+    "push": "babel-plugin publish",
+    "test": "mocha --compilers js:babel/register -d",
+    "lint": "eslint src"
+  },
+  "keywords": [
+    "babel-plugin",
+    "xvdom",
+    "jsx"
+  ],
+  "babel": {
+    "loose": true
+  }
+}

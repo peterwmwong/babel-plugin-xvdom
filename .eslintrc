@@ -1,0 +1,48 @@
+{
+  "env": {
+    "browser": true,
+    "es6"    : true
+  },
+  "globals": {
+    "afterEach"  : true,
+    "beforeEach" : true,
+    "describe"   : true,
+    "IS_DEV"     : true,
+    "IS_MOCKING" : true,
+    "it"         : true,
+    "module"     : true,
+    "require"    : true,
+    "__dirname"  : true
+  },
+  "ecmaFeatures": {
+    "modules" : true,
+    "jsx"     : true
+  },
+  "rules": {
+    "brace-style"            : [2, "stroustrup", {"allowSingleLine": true}],
+    "camelcase"              : [0, {"properties": "never"}],
+    "comma-dangle"           : [2, "never"],
+    "curly"                  : [2, "multi-line"],
+    "dot-notation"           : 2,
+    "eol-last"               : 0,
+    "key-spacing"            : 0,
+    "new-cap"                : 2,
+    "new-parens"             : 2,
+    "no-irregular-whitespace": 2,
+    "no-loop-func"           : 0,
+    "no-multi-spaces"        : 0,
+    "no-multiple-empty-lines": 0,
+    "no-multiple-empty-lines": 1,
+    "no-spaced-func"         : 2,
+    "no-undef"               : 2,
+    "no-underscore-dangle"   : 0,
+    "no-unused-expressions"  : 0,
+    "no-unused-vars"         : [2, {"args": "none"}],
+    "no-var"                 : 2,
+    "object-shorthand"       : [2, "always"],
+    "quotes"                 : [2, "double", "avoid-escape"],
+    "semi"                   : [2, "always"],
+    "space-before-blocks"    : [2, "never"],
+    "strict"                 : 0
+  }
+}
