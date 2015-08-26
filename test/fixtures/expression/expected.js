@@ -8,7 +8,7 @@ function translate(str) {
   template: {
     el: "div",
     props: {
-      className$: 0
+      $className: 0
     }
   },
   values: [msg]
@@ -19,8 +19,8 @@ function translate(str) {
   template: {
     el: "div",
     props: {
-      className$: 0,
-      title$: 1
+      $className: 0,
+      $title: 1
     }
   },
   values: [msg + "hello", translate(msg)]

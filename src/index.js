@@ -54,7 +54,7 @@ export default function ({ Plugin, types:t }){
                             value: propValue,
                             ref: propValue = t.literal(dynamicValueProps.length)
                           });
-                          propName = `${propName}$`;
+                          propName = `$${propName}`;
                         }
                         objectProps.push(objectProperty(t, propName, propValue));
                       }

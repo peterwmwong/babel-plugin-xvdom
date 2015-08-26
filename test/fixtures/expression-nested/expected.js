@@ -6,7 +6,7 @@ var id = "blah";
   template: {
     el: "div",
     props: {
-      id$: 0
+      $id: 0
     },
     children: [1]
   },
