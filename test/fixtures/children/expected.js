@@ -1,6 +1,9 @@
 ({
-  el: "div",
-  children: [{
-    el: "span"
-  }]
+  node: null,
+  template: {
+    el: "div",
+    children: [{
+      el: "span"
+    }]
+  }
 });

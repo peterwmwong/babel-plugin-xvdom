@@ -1,6 +1,9 @@
 ({
-  el: "div",
-  props: {
-    "class": "my-class"
+  node: null,
+  template: {
+    el: "div",
+    props: {
+      "class": "my-class"
+    }
   }
 });

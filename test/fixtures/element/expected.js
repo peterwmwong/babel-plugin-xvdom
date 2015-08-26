@@ -1,3 +1,6 @@
 ({
-  el: "div"
+  node: null,
+  template: {
+    el: "div"
+  }
 });

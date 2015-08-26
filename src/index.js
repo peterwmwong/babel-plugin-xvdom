@@ -23,21 +23,40 @@ function transformProp(t, prop){
   );
 }
 
+function getVNodeProperty(t, vnode, propName){
+  let prop;
+  for(let i=0; i<vnode.properties.length; ++i){
+    prop = vnode.properties[i];
+    if(prop.key.name === propName){
+      return prop;
+    }
+  }
+}
+
 export default function ({ Plugin, types:t }){
   return new Plugin("xvdom", {
     visitor: {
       JSXOpeningElement: {
         exit(node/*, parent, scope, file */){
-          return t.objectExpression([
+          const dynamicValueProps = [];
+          const result = t.objectExpression([
             objectProperty(t, "el", t.literal(node.name.name)),
             ...(
               !node.attributes.length ? [] : [
                 objectProperty(t, "props",
                   t.objectExpression(
                     node.attributes.reduce((objectProps, attr)=>{
-                      const propValue = transformProp(t, attr.value);
+                      let propValue = transformProp(t, attr.value);
                       if(propValue){
-                        objectProps.push(objectProperty(t, attr.name.name, propValue));
+                        let propName = attr.name.name;
+                        if(isDynamic(t, propValue)){
+                          dynamicValueProps.push({
+                            value: propValue,
+                            ref: propValue = t.literal(dynamicValueProps.length)
+                          });
+                          propName = `${propName}$`;
+                        }
+                        objectProps.push(objectProperty(t, propName, propValue));
                       }
                       return objectProps;
                     }, [])
@@ -46,6 +65,8 @@ export default function ({ Plugin, types:t }){
               ]
             )
           ]);
+          result.__xvdom_dynamicValueProps = dynamicValueProps;
+          return result;
         }
       },
 
@@ -54,31 +75,9 @@ export default function ({ Plugin, types:t }){
       },
 
       JSXElement: {
-        exit(node){
+        exit(node, parent){
           const children = buildChildren(t, node.children);
-          const values   = [];
-          let i          = node.openingElement.properties.length;
-          let elementProp, elProp;
-
-          while(--i){
-            elProp = node.openingElement.properties[i];
-            if(elProp.key.name === "props"){
-              elementProp = elProp;
-              break;
-            }
-          }
-
-          // props dynamic props
-          if(elementProp){
-            const props = elementProp.value.properties;
-            props.forEach(prop=>{
-              if(isDynamic(t, prop.value)){
-                values.push(prop.value);
-                prop.key   = t.identifier(`${prop.key.name}$`);
-                prop.value = t.literal(values.length - 1);
-              }
-            });
-          }
+          let values     = node.openingElement.__xvdom_dynamicValueProps || [];
 
           // Process dynamic children
           if(children.length){
@@ -86,21 +85,47 @@ export default function ({ Plugin, types:t }){
               t.property(
                 "init",
                 t.identifier("children"),
-                t.arrayExpression(children.map(child=>
-                  isDynamic(t, child) ? (values.push(child), t.literal(values.length - 1))
-                    : child
-                ))
+                t.arrayExpression(children.map(child=>{
+                  if(isDynamic(t, child)){
+                    const valueRef = t.literal(values.length);
+                    values.push({
+                      value: child,
+                      ref: valueRef
+                    });
+                    return valueRef;
+                  }
+                  else if(child.__xvdom_dynamicValues){
+                    child.__xvdom_dynamicValues.forEach(function({ref, value}){
+                      ref.value = values.length;
+                      values.push({ref, value});
+                    });
+                    return getVNodeProperty(t, child, "template").value;
+                  }
+                  else{
+                    return child;
+
+                  }
+                }))
               )
             );
           }
 
           // If there were any dynamic props or children, create a dynamic vnode
-          if(values.length){
-            return t.objectExpression([
+          if(values.length || !t.isJSXElement(parent)){
+            const rootObjectProperties = [
               objectProperty(t, "node",     t.identifier("null")),
-              objectProperty(t, "template", node.openingElement),
-              objectProperty(t, "values",   t.arrayExpression(values))
-            ]);
+              objectProperty(t, "template", node.openingElement)
+            ];
+            if(values.length){
+              rootObjectProperties.push(
+                objectProperty(t, "values",
+                  t.arrayExpression(values.map(valueRef=>valueRef.value))
+                )
+              );
+            }
+            const result = t.objectExpression(rootObjectProperties);
+            result.__xvdom_dynamicValues = values;
+            return result;
           }
 
           return node.openingElement;
