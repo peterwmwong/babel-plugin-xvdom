@@ -1,3 +1,5 @@
+var key = "two";
+
 ({
   node: null,
   template: {
@@ -6,4 +8,20 @@
       "class": "my-class"
     }
   }
+});
+
+({
+  node: null,
+  template: {
+    el: "div"
+  },
+  key: "one"
+});
+
+({
+  node: null,
+  template: {
+    el: "div"
+  },
+  key: key
 });
