@@ -1,5 +1,12 @@
 {
+  "globals": {
+    "require": true,
+    "describe": true,
+    "it": true,
+    "__dirname": true
+  },
   "rules": {
+    "no-var":    [0],
     "object-shorthand":    [2, "never"],
     "space-before-blocks": [2, "always"]
   }
