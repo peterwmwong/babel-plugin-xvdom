@@ -3,17 +3,6 @@
     "browser": true,
     "es6"    : true
   },
-  "globals": {
-    "afterEach"  : true,
-    "beforeEach" : true,
-    "describe"   : true,
-    "IS_DEV"     : true,
-    "IS_MOCKING" : true,
-    "it"         : true,
-    "module"     : true,
-    "require"    : true,
-    "__dirname"  : true
-  },
   "ecmaFeatures": {
     "modules" : true,
     "jsx"     : true
