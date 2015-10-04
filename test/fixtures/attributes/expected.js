@@ -1,27 +1,32 @@
 var key = "two";
 
 ({
-  node: null,
-  template: {
-    el: "div",
-    props: {
-      "class": "my-class"
+  spec: {
+    render: function render() {
+      var node,
+          root = (node = document.createElement("div"), node.className = "my-class", node);
+      return root;
     }
-  }
+  },
+  _node: null
 });
 
 ({
-  node: null,
-  template: {
-    el: "div"
+  spec: {
+    render: function render() {
+      return document.createElement("div");
+    }
   },
+  _node: null,
   key: "one"
 });
 
 ({
-  node: null,
-  template: {
-    el: "div"
+  spec: {
+    render: function render() {
+      return document.createElement("div");
+    }
   },
+  _node: null,
   key: key
 });

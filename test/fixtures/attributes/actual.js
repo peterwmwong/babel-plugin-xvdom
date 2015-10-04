@@ -1,6 +1,6 @@
 var key = "two";
 
-<div class="my-class"></div>;
+<div className="my-class"></div>;
 
 <div key="one"></div>;
 
