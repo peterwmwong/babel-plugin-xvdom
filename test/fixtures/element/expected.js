@@ -1,7 +1,9 @@
 ({
   spec: {
     render: function render() {
-      return document.createElement("div");
+      var _n = document.createElement("div");
+
+      return _n;
     }
   },
   _node: null

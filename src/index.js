@@ -3,11 +3,11 @@ import {
   toReference
 } from "./helpers";
 
-function isDynamic(t, astNode){
-  return t.isIdentifier(astNode)
-          || t.isBinaryExpression(astNode)
-          || t.isCallExpression(astNode);
-}
+// function isDynamic(t, astNode){
+//   return t.isIdentifier(astNode)
+//           || t.isBinaryExpression(astNode)
+//           || t.isCallExpression(astNode);
+// }
 
 function objectProperty(t, key, value){
   return t.property("init", t.identifier(key), value);
@@ -23,62 +23,108 @@ function transformProp(t, prop){
   );
 }
 
-function createPropsSeqExprs(t, props){
+function createPropsStatements(t, nodeId, props){
+  if(!props) return [];
   return Object.keys(props).map(prop=>
-    t.assignmentExpression("=",
-      t.memberExpression(t.identifier("node"), t.identifier(prop)),
-      props[prop]
+    t.expressionStatement(
+      t.assignmentExpression("=",
+        t.memberExpression(nodeId, t.identifier(prop)),
+        props[prop]
+      )
     )
   );
 }
 
-function createElementCode(t, el, props){
-  const hasProps = props && Object.keys(props).length;
-  const createEl =  t.callExpression(
+function createElementsCode(t, generateUidIdentifier, parentId, children){
+  const result = {variableDeclarators:[], statements:[]};
+  if(!children) return result;
+
+  let tmpNodeId;
+  return children.reduce(
+    (acc, {el, props, children})=>{
+      const hasProps    = props    && Object.keys(props).length;
+      const hasChildren = children && children.length;
+      let   createEl    = t.callExpression(
+        t.memberExpression(t.identifier("document"), t.identifier("createElement")),
+        [t.literal(el)]
+      );
+
+      if(hasProps || hasChildren){
+        if(!tmpNodeId){
+          tmpNodeId = generateUidIdentifier("n");
+          acc.variableDeclarators.push(tmpNodeId);
+        }
+
+        acc.statements.push(
+          t.expressionStatement(t.assignmentExpression("=", tmpNodeId, createEl))
+        );
+        createEl = tmpNodeId;
+
+        if(hasProps) acc.statements.push(...createPropsStatements(t, tmpNodeId, props));
+
+        if(hasChildren){
+          const {variableDeclarators, statements} = createElementsCode(t, generateUidIdentifier, tmpNodeId, children);
+          acc.variableDeclarators.push(...variableDeclarators);
+          acc.statements.push(...statements);
+        }
+      }
+
+      acc.statements.push(
+        t.expressionStatement(
+          t.callExpression(
+            t.memberExpression(parentId, t.identifier("appendChild")),
+            [createEl]
+          )
+        )
+      );
+      return acc;
+    },
+    result
+  );
+}
+
+function createRootElementCode(t, generateUidIdentifier, {el, props, children}){
+  const nodeId   = generateUidIdentifier("n");
+  const createEl = t.callExpression(
     t.memberExpression(t.identifier("document"), t.identifier("createElement")),
     [t.literal(el)]
   );
+  const {variableDeclarators, statements} = createElementsCode(t, generateUidIdentifier, nodeId, children);
 
-  if(hasProps){
-    return t.sequenceExpression([
-      t.assignmentExpression("=", t.identifier("node"), createEl),
-      ...createPropsSeqExprs(t, props),
-      t.identifier("node")
-    ]);
-  }
-  else{
-    return createEl;
-  }
+  return {
+    variableDeclarators: [
+      t.variableDeclarator(nodeId, createEl),
+      ...variableDeclarators
+    ],
+    statements: [
+      ...createPropsStatements(t, nodeId, props),
+      ...statements
+    ]
+  };
 }
 
-function createRenderFunction(t, {el, props, hasDynamics}){
-  const params = hasDynamics ? [t.identifier("inst")] : [];
-  const hasProps = props && Object.keys(props).length;
-  const body = hasProps ?
-      t.blockStatement([
-        t.variableDeclaration("var", [
-          t.variableDeclarator(t.identifier("node")),
-          t.variableDeclarator(t.identifier("root"),
-            createElementCode(t, el, props)
-          )
-        ]),
-        t.returnStatement(
-          t.identifier("root")
-        )
-      ])
-    : t.blockStatement([
-        t.returnStatement(
-          createElementCode(t, el, props)
-        )
-      ]);
-  return t.functionExpression(null, params, body);
+function createRenderFunction(t, scope, rootElement){
+  let lastUidInt = 1;
+  function generateUidIdentifier(){
+    const id = (lastUidInt === 1) ? "_n" : `_n${lastUidInt}`;
+    ++lastUidInt;
+    return t.identifier(id);
+  }
+  const params                            = rootElement.hasDynamics ? [t.identifier("inst")] : [];
+  const {variableDeclarators, statements} = createRootElementCode(t, generateUidIdentifier, rootElement);
+
+  return t.functionExpression(null, params, t.blockStatement([
+    t.variableDeclaration("var", variableDeclarators),
+    ...statements,
+    t.returnStatement(variableDeclarators[0].id)
+  ]));
 }
 
-function createInstanceObject(t, desc){
+function createInstanceObject(t, scope, desc){
   const objectProps = [
     objectProperty(t, "spec",
       t.objectExpression([
-        objectProperty(t, "render", createRenderFunction(t, desc))
+        objectProperty(t, "render", createRenderFunction(t, scope, desc))
       ])
     ),
 
@@ -121,8 +167,13 @@ export default function ({ Plugin, types:t }){
       },
 
       JSXElement: {
-        exit(node, parent){
-          return createInstanceObject(t, node.openingElement.__xvdom_desc);
+        exit(node, parent, scope){
+          const children = buildChildren(t, node.children);
+          const desc = node.openingElement.__xvdom_desc;
+          desc.children = children.map(c=>c.openingElement && c.openingElement.__xvdom_desc);
+
+          if(t.isJSX(parent)) return node;
+          return createInstanceObject(t, scope, node.openingElement.__xvdom_desc);
         }
       }
     }

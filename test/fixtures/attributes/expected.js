@@ -3,9 +3,10 @@ var key = "two";
 ({
   spec: {
     render: function render() {
-      var node,
-          root = (node = document.createElement("div"), node.className = "my-class", node);
-      return root;
+      var _n = document.createElement("div");
+
+      _n.className = "my-class";
+      return _n;
     }
   },
   _node: null
@@ -14,7 +15,9 @@ var key = "two";
 ({
   spec: {
     render: function render() {
-      return document.createElement("div");
+      var _n = document.createElement("div");
+
+      return _n;
     }
   },
   _node: null,
@@ -24,7 +27,9 @@ var key = "two";
 ({
   spec: {
     render: function render() {
-      return document.createElement("div");
+      var _n = document.createElement("div");
+
+      return _n;
     }
   },
   _node: null,

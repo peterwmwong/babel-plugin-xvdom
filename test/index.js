@@ -10,8 +10,8 @@ describe("turn jsx into xvdom", ()=> {
   fs.readdirSync(fixturesDir).map(caseName=> {
     if([
       "element",
-      "attributes"//,
-      // "children",
+      "attributes",
+      "children"//,
       // "children-dynamic-values",
       // "expression",
       // "expression-nested"
