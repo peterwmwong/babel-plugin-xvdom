@@ -51,7 +51,7 @@ function createElementsCode(t, generateUidIdentifier, parentId, children){
 
       if(hasProps || hasChildren){
         if(!tmpNodeId){
-          tmpNodeId = generateUidIdentifier("n");
+          tmpNodeId = generateUidIdentifier();
           acc.variableDeclarators.push(tmpNodeId);
         }
 
@@ -88,7 +88,7 @@ function createElementsCode(t, generateUidIdentifier, parentId, children){
 }
 
 function createRootElementCode(t, generateUidIdentifier, {el, props, children}){
-  const nodeId   = generateUidIdentifier("n");
+  const nodeId   = generateUidIdentifier();
   const createEl = t.callExpression(
     t.memberExpression(t.identifier("document"), t.identifier("createElement")),
     [t.literal(el)]
