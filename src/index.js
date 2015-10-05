@@ -63,7 +63,11 @@ function createElementsCode(t, generateUidIdentifier, parentId, children){
         if(hasProps) acc.statements.push(...createPropsStatements(t, tmpNodeId, props));
 
         if(hasChildren){
-          const {variableDeclarators, statements} = createElementsCode(t, generateUidIdentifier, tmpNodeId, children);
+          const {
+            variableDeclarators,
+            statements
+          } = createElementsCode(t, generateUidIdentifier, tmpNodeId, children);
+
           acc.variableDeclarators.push(...variableDeclarators);
           acc.statements.push(...statements);
         }
@@ -89,7 +93,10 @@ function createRootElementCode(t, generateUidIdentifier, {el, props, children}){
     t.memberExpression(t.identifier("document"), t.identifier("createElement")),
     [t.literal(el)]
   );
-  const {variableDeclarators, statements} = createElementsCode(t, generateUidIdentifier, nodeId, children);
+  const {
+    variableDeclarators,
+    statements
+  } = createElementsCode(t, generateUidIdentifier, nodeId, children);
 
   return {
     variableDeclarators: [
@@ -169,7 +176,7 @@ export default function ({ Plugin, types:t }){
       JSXElement: {
         exit(node, parent, scope){
           const children = buildChildren(t, node.children);
-          const desc = node.openingElement.__xvdom_desc;
+          const desc     = node.openingElement.__xvdom_desc;
           desc.children = children.map(c=>c.openingElement && c.openingElement.__xvdom_desc);
 
           if(t.isJSX(parent)) return node;
