@@ -4,7 +4,8 @@ import {
 } from "./helpers";
 
 function objProp(t, key, value){
-  return t.property("init", t.identifier(key), value);
+  key = t.isIdentifier(key) ? key : t.identifier(key);
+  return t.property("init", key, value);
 }
 
 function transformProp(t, prop){
@@ -33,7 +34,7 @@ function createPropsStatements(t, nodeId, props){
   );
 }
 
-function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifier, parentId, children){
+function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifiers, parentId, children){
   const result = {variableDeclarators:[], statements:[]};
   if(!children) return result;
 
@@ -70,7 +71,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
             const {
               variableDeclarators,
               statements
-            } = createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifier, tmpNodeId, children);
+            } = createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifiers, tmpNodeId, children);
 
             acc.variableDeclarators.push(...variableDeclarators);
             acc.statements.push(...statements);
@@ -78,7 +79,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
         }
       }
       else{
-        const {valueId, rerenderId, contextId} = genDynamicIdentifier(child);
+        const {valueId, rerenderId, contextId} = genDynamicIdentifiers(child);
 
         // >>> xvdom.createDynamic(inst.v0, inst, "r0", "c0");
         createEl = t.callExpression(
@@ -107,7 +108,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
   );
 }
 
-function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifier, {el, props, children}){
+function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifiers, {el, props, children}){
   const nodeId   = genUidIdentifier();
 
   // >>> document.createElement("div")
@@ -118,7 +119,7 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
   const {
     variableDeclarators,
     statements
-  } = createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifier, nodeId, children);
+  } = createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifiers, nodeId, children);
 
   return {
     variableDeclarators: [
@@ -132,15 +133,14 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
   };
 }
 
-function createRenderFunction(t, genDynamicIdentifier, rootElement){
+function createRenderFunction(t, genDynamicIdentifiers, rootElement){
   let lastUidInt   = 0;
   function genUidIdentifier(){
-    const id = ++lastUidInt === 1 ? "_n" : `_n${lastUidInt}`;
-    return t.identifier(id);
+    return t.identifier(++lastUidInt === 1 ? "_n" : `_n${lastUidInt}`);
   }
   const instanceParamId = t.identifier("inst");
-  const {variableDeclarators, statements} = createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifier, rootElement);
-  const params = genDynamicIdentifier.dynamics.length ? [instanceParamId] : [];
+  const {variableDeclarators, statements} = createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifiers, rootElement);
+  const params = genDynamicIdentifiers.dynamics.length ? [instanceParamId] : [];
 
   return t.functionExpression(null, params, t.blockStatement([
     t.variableDeclaration("var", variableDeclarators),
@@ -201,7 +201,7 @@ function createInstanceObject(t, scope, desc){
   const dynamics = [];
 
   let lastDynamicUidInt = 0;
-  function genDynamicIdentifier(value, prop){
+  function genDynamicIdentifiers(value, prop){
     const idInt = lastDynamicUidInt++;
     const result = {
       prop,
@@ -213,17 +213,17 @@ function createInstanceObject(t, scope, desc){
     dynamics.push(result);
     return result;
   }
-  genDynamicIdentifier.dynamics = dynamics;
+  genDynamicIdentifiers.dynamics = dynamics;
 
   const specProperties = [
-    objProp(t, "render", createRenderFunction(t, genDynamicIdentifier, desc))
+    objProp(t, "render", createRenderFunction(t, genDynamicIdentifiers, desc))
   ];
   const instancePropsForDynamics = dynamics.reduce(
     (props, {value, valueId, rerenderId, contextId})=>[
       ...props,
-      t.property("init", valueId,    value),
-      t.property("init", rerenderId, nullId),
-      t.property("init", contextId,  nullId)
+      objProp(t, valueId,    value),
+      objProp(t, rerenderId, nullId),
+      objProp(t, contextId,  nullId)
     ],
     []
   );
