@@ -150,9 +150,9 @@ function createRenderFunction(t, genDynamicIdentifier, rootElement){
 }
 
 function createRerenderFunction(t, dynamics){
-  const instId = t.identifier("inst");
-  const prevInstId = t.identifier("pInst");
-  return t.functionExpression(null, [instId, prevInstId], t.blockStatement(
+  const instanceParamId     = t.identifier("inst");
+  const prevInstanceParamId = t.identifier("pInst");
+  return t.functionExpression(null, [instanceParamId, prevInstanceParamId], t.blockStatement(
     dynamics.reduce((statements, dyn)=>{
       return [
         ...statements,
@@ -161,8 +161,8 @@ function createRerenderFunction(t, dynamics){
         t.ifStatement(
           t.logicalExpression(
             "!==",
-            t.memberExpression(instId,     dyn.valueId),
-            t.memberExpression(prevInstId, dyn.valueId)
+            t.memberExpression(instanceParamId,     dyn.valueId),
+            t.memberExpression(prevInstanceParamId, dyn.valueId)
           ),
 
           t.blockStatement([
@@ -170,12 +170,12 @@ function createRerenderFunction(t, dynamics){
             // >>> pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
             t.expressionStatement(
               t.callExpression(
-                t.memberExpression(prevInstId, dyn.rerenderId),
+                t.memberExpression(prevInstanceParamId, dyn.rerenderId),
                 [
-                  t.memberExpression(instId,     dyn.valueId),
-                  t.memberExpression(prevInstId, dyn.valueId),
-                  t.memberExpression(prevInstId, dyn.contextId),
-                  prevInstId,
+                  t.memberExpression(instanceParamId,     dyn.valueId),
+                  t.memberExpression(prevInstanceParamId, dyn.valueId),
+                  t.memberExpression(prevInstanceParamId, dyn.contextId),
+                  prevInstanceParamId,
                   t.literal(dyn.rerenderId.name),
                   t.literal(dyn.contextId.name)
                 ]
@@ -185,8 +185,8 @@ function createRerenderFunction(t, dynamics){
             // >>> pInst.v0 = inst.v0;
             t.expressionStatement(
               t.assignmentExpression("=",
-                t.memberExpression(prevInstId, dyn.valueId),
-                t.memberExpression(instId,     dyn.valueId)
+                t.memberExpression(prevInstanceParamId, dyn.valueId),
+                t.memberExpression(instanceParamId,     dyn.valueId)
               )
             )
           ])
