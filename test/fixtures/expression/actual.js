@@ -1,5 +1,5 @@
 const msg = "hello";
-function translate(str){
+function translate(str) {
   return str;
 }
 

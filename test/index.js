@@ -14,9 +14,9 @@ describe("turn jsx into xvdom", ()=> {
       "children",
       "children-dynamic-values-simple",
       "children-dynamic-values",
-      "prop-dynamic-values-simple"//,
-      // "expression",
-      // "expression-nested"
+      "prop-dynamic-values-simple",
+      "expression",
+      "expression-nested"
     ].indexOf(caseName) === -1) return;
 
     it(`should ${caseName.split("-").join(" ")}`, ()=> {

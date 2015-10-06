@@ -126,6 +126,8 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
     t.memberExpression(t.identifier("document"), t.identifier("createElement")),
     [t.literal(el)]
   );
+  const propsStatements = createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId, props);
+
   const {
     variableDeclarators,
     statements
@@ -137,7 +139,7 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
       ...variableDeclarators
     ],
     statements: [
-      ...createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId, props),
+      ...propsStatements,
       ...statements
     ]
   };
