@@ -213,6 +213,21 @@ function createRerenderFunction(t, dynamics){
   ));
 }
 
+function createSpecObject(t, genDynamicIdentifiers, desc){
+  const dynamics       = genDynamicIdentifiers.dynamics;
+  const specProperties = [
+    objProp(t, "render", createRenderFunction(t, genDynamicIdentifiers, desc))
+  ];
+
+  if(dynamics.length){
+    specProperties.push(
+      objProp(t, "rerender", createRerenderFunction(t, dynamics))
+    );
+  }
+
+  return t.objectExpression(specProperties);
+}
+
 function createInstanceObject(t, scope, desc){
   const nullId   = t.identifier("null");
   const dynamics = [];
@@ -232,9 +247,7 @@ function createInstanceObject(t, scope, desc){
   }
   genDynamicIdentifiers.dynamics = dynamics;
 
-  const specProperties = [
-    objProp(t, "render", createRenderFunction(t, genDynamicIdentifiers, desc))
-  ];
+  const specObject               = createSpecObject(t, genDynamicIdentifiers, desc);
   const instancePropsForDynamics = dynamics.reduce(
     (props, {value, valueId, rerenderId, contextId})=>[
       ...props,
@@ -245,16 +258,8 @@ function createInstanceObject(t, scope, desc){
     []
   );
 
-  if(dynamics.length){
-    specProperties.push(
-      objProp(t, "rerender", createRerenderFunction(t, dynamics))
-    );
-  }
-
   const objectProps = [
-    objProp(t, "spec",
-      t.objectExpression(specProperties)
-    ),
+    objProp(t, "spec",  specObject),
     objProp(t, "_node", t.identifier("null")),
     ...instancePropsForDynamics
   ];
