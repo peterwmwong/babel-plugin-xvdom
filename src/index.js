@@ -3,6 +3,12 @@ import {
   toReference
 } from "./helpers";
 
+function isDynamic(t, astNode){
+  return t.isIdentifier(astNode)
+          || t.isBinaryExpression(astNode)
+          || t.isCallExpression(astNode);
+}
+
 function objProp(t, key, value){
   key = t.isIdentifier(key) ? key : t.identifier(key);
   return t.property("init", key, value);
@@ -18,20 +24,24 @@ function transformProp(t, prop){
   );
 }
 
-function createPropsStatements(t, nodeId, props){
+function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId, props){
   if(!props) return [];
 
   // >>> _n.prop1 = prop1Value;
   // >>> _n.prop2 = prop2Value;
   // >>> ...
-  return Object.keys(props).map(prop=>
-    t.expressionStatement(
+  return Object.keys(props).map(prop=>{
+    const value = props[prop];
+    const rhs = !isDynamic(t, value) ? value
+                  : t.memberExpression(instanceParamId, genDynamicIdentifiers(value, prop).valueId);
+
+    return t.expressionStatement(
       t.assignmentExpression("=",
         t.memberExpression(nodeId, t.identifier(prop)),
-        props[prop]
+        rhs
       )
-    )
-  );
+    );
+  });
 }
 
 function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifiers, parentId, children){
@@ -65,7 +75,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
           );
           createEl = tmpNodeId;
 
-          if(hasProps) acc.statements.push(...createPropsStatements(t, tmpNodeId, props));
+          if(hasProps) acc.statements.push(...createPropsStatements(t, instanceParamId, genDynamicIdentifiers, tmpNodeId, props));
 
           if(hasChildren){
             const {
@@ -127,7 +137,7 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
       ...variableDeclarators
     ],
     statements: [
-      ...createPropsStatements(t, nodeId, props),
+      ...createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId, props),
       ...statements
     ]
   };
@@ -169,17 +179,22 @@ function createRerenderFunction(t, dynamics){
 
             // >>> pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
             t.expressionStatement(
-              t.callExpression(
-                t.memberExpression(prevInstanceParamId, dyn.rerenderId),
-                [
-                  t.memberExpression(instanceParamId,     dyn.valueId),
-                  t.memberExpression(prevInstanceParamId, dyn.valueId),
-                  t.memberExpression(prevInstanceParamId, dyn.contextId),
-                  prevInstanceParamId,
-                  t.literal(dyn.rerenderId.name),
-                  t.literal(dyn.contextId.name)
-                ]
-              )
+              dyn.prop
+                ? t.assignmentExpression("=",
+                    t.memberExpression(t.memberExpression(prevInstanceParamId, dyn.contextId), t.identifier(dyn.prop)),
+                    t.memberExpression(instanceParamId, dyn.valueId)
+                  )
+                : t.callExpression(
+                    t.memberExpression(prevInstanceParamId, dyn.rerenderId),
+                    [
+                      t.memberExpression(instanceParamId,     dyn.valueId),
+                      t.memberExpression(prevInstanceParamId, dyn.valueId),
+                      t.memberExpression(prevInstanceParamId, dyn.contextId),
+                      prevInstanceParamId,
+                      t.literal(dyn.rerenderId.name),
+                      t.literal(dyn.contextId.name)
+                    ]
+                  )
             ),
 
             // >>> pInst.v0 = inst.v0;
