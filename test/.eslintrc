@@ -3,6 +3,7 @@
     "require": true,
     "describe": true,
     "it": true,
+    "xvdom": true,
     "__dirname": true
   },
   "rules": {
