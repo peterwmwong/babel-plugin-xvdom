@@ -220,10 +220,10 @@ function createInstanceObject(t, scope, desc){
   ];
   const instancePropsForDynamics = dynamics.reduce(
     (props, {value, valueId, rerenderId, contextId})=>[
+      ...props,
       t.property("init", valueId,    value),
       t.property("init", rerenderId, nullId),
-      t.property("init", contextId,  nullId),
-      ...props
+      t.property("init", contextId,  nullId)
     ],
     []
   );
