@@ -1,3 +1,12 @@
+var _xvdomSpec6 = {
+  render: function render() {
+    var _n = document.createElement("div");
+
+    _n.appendChild(document.createTextNode(("hello" + 5) || ""));
+
+    return _n;
+  }
+};
 var _xvdomSpec5 = {
   render: function render(inst) {
     var _n = document.createElement("div");
@@ -89,7 +98,6 @@ function translate(str) {
   r0: null,
   c0: null
 });
-
 ({
   spec: _xvdomSpec2,
   _node: null,
@@ -100,7 +108,6 @@ function translate(str) {
   r1: null,
   c1: null
 });
-
 ({
   spec: _xvdomSpec3,
   _node: null,
@@ -108,7 +115,6 @@ function translate(str) {
   r0: null,
   c0: null
 });
-
 ({
   spec: _xvdomSpec4,
   _node: null,
@@ -116,11 +122,14 @@ function translate(str) {
   r0: null,
   c0: null
 });
-
 ({
   spec: _xvdomSpec5,
   _node: null,
   v0: translate(msg),
   r0: null,
   c0: null
+});
+({
+  spec: _xvdomSpec6,
+  _node: null
 });

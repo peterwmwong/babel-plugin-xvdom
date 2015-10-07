@@ -1,3 +1,19 @@
+var _xvdomSpec5 = {
+  render: function render() {
+    var _n = document.createElement("input");
+
+    _n.disabled = false || true;
+    return _n;
+  }
+};
+var _xvdomSpec4 = {
+  render: function render() {
+    var _n = document.createElement("input");
+
+    _n.disabled = !false;
+    return _n;
+  }
+};
 var _xvdomSpec3 = {
   render: function render() {
     var _n = document.createElement("input");
@@ -32,5 +48,13 @@ var _xvdomSpec = {
 });
 ({
   spec: _xvdomSpec3,
+  _node: null
+});
+({
+  spec: _xvdomSpec4,
+  _node: null
+});
+({
+  spec: _xvdomSpec5,
   _node: null
 });

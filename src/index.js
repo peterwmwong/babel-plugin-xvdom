@@ -4,9 +4,16 @@ import {
 } from "./helpers";
 
 function isDynamic(t, astNode){
-  return t.isIdentifier(astNode)
-          || t.isBinaryExpression(astNode)
-          || t.isCallExpression(astNode);
+  if(t.isIdentifier(astNode) || t.isCallExpression(astNode)){
+    return true;
+  }
+  else if(t.isLogicalExpression(astNode) || t.isBinaryExpression(astNode)){
+    return isDynamic(t, astNode.left) || isDynamic(t, astNode.right);
+  }
+  else if(t.isUnaryExpression(astNode)){
+    return isDynamic(t, astNode.argument);
+  }
+  return false;
 }
 
 function objProp(t, key, value){
@@ -89,7 +96,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
           }
         }
       }
-      else{
+      else if(isDynamic(t, child)){
         const {valueId, rerenderId, contextId} = genDynamicIdentifiers(child);
 
         // >>> xvdom.createDynamic(inst.v0, inst, "r0", "c0");
@@ -100,6 +107,17 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
             instanceParamId,
             t.literal(rerenderId.name),
             t.literal(contextId.name)
+          ]
+        );
+      }
+      else{
+        createEl = t.callExpression(
+          t.memberExpression(t.identifier("document"), t.identifier("createTextNode")),
+          [
+            t.logicalExpression("||",
+              t.sequenceExpression([child]),
+              t.literal("")
+            )
           ]
         );
       }
