@@ -213,7 +213,8 @@ function createRerenderFunction(t, dynamics){
   ));
 }
 
-function createSpecObject(t, genDynamicIdentifiers, desc){
+function createSpecObject(t, file, genDynamicIdentifiers, desc){
+  const specId         = file.scope.generateUidIdentifier("xvdomSpec");
   const dynamics       = genDynamicIdentifiers.dynamics;
   const specProperties = [
     objProp(t, "render", createRenderFunction(t, genDynamicIdentifiers, desc))
@@ -225,10 +226,15 @@ function createSpecObject(t, genDynamicIdentifiers, desc){
     );
   }
 
-  return t.objectExpression(specProperties);
+  file.path.unshiftContainer("body",
+    t.variableDeclaration("var", [
+      t.variableDeclarator(specId, t.objectExpression(specProperties))
+    ])
+  );
+  return specId;
 }
 
-function createInstanceObject(t, scope, desc){
+function createInstanceObject(t, file, desc){
   const nullId   = t.identifier("null");
   const dynamics = [];
 
@@ -247,7 +253,7 @@ function createInstanceObject(t, scope, desc){
   }
   genDynamicIdentifiers.dynamics = dynamics;
 
-  const specObject               = createSpecObject(t, genDynamicIdentifiers, desc);
+  const specObject               = createSpecObject(t, file, genDynamicIdentifiers, desc);
   const instancePropsForDynamics = dynamics.reduce(
     (props, {value, valueId, rerenderId, contextId})=>[
       ...props,
@@ -302,13 +308,13 @@ export default function ({ Plugin, types:t }){
       },
 
       JSXElement: {
-        exit(node, parent, scope){
+        exit(node, parent, scope, file){
           const children = buildChildren(t, node.children);
           const desc     = node.openingElement.__xvdom_desc;
           desc.children  = children;
 
           if(t.isJSX(parent)) return node;
-          return createInstanceObject(t, scope, desc);
+          return createInstanceObject(t, file, desc);
         }
       }
     }
