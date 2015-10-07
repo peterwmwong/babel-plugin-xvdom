@@ -20,6 +20,7 @@ function transformProp(t, prop){
     : t.isJSXEmptyExpression(prop)     ? null
     : (t.isIdentifier(prop)
         || t.isMemberExpression(prop)) ? toReference(t, prop)
+    : prop == null                     ? t.literal(true)
     : prop
   );
 }
@@ -286,8 +287,12 @@ export default function ({ Plugin, types:t }){
               const propName = attr.name.name;
               const value    = transformProp(t, attr.value);
 
-              if(propName === "key") key = value;
-              else props[propName] = value;
+              if(propName === "key"){
+                key = value;
+              }
+              else if(value != null){
+                props[propName] = value;
+              }
 
               return props;
             },

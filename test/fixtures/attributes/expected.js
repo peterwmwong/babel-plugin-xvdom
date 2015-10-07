@@ -1,14 +1,16 @@
 var _xvdomSpec3 = {
   render: function render() {
-    var _n = document.createElement("div");
+    var _n = document.createElement("input");
 
+    _n.disabled = false;
     return _n;
   }
 };
 var _xvdomSpec2 = {
   render: function render() {
-    var _n = document.createElement("div");
+    var _n = document.createElement("input");
 
+    _n.disabled = true;
     return _n;
   }
 };
@@ -20,21 +22,15 @@ var _xvdomSpec = {
     return _n;
   }
 };
-var key = "two";
-
 ({
   spec: _xvdomSpec,
   _node: null
 });
-
 ({
   spec: _xvdomSpec2,
-  _node: null,
-  key: "one"
+  _node: null
 });
-
 ({
   spec: _xvdomSpec3,
-  _node: null,
-  key: key
+  _node: null
 });
