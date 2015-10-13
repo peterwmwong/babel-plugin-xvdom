@@ -20,12 +20,14 @@ function MyComponent() {}
   spec: _xvdomSpec,
   _node: null,
   r0: null,
-  c0: null
+  c0: null,
+  w0: null
 });
 
 ({
   spec: _xvdomSpec2,
   _node: null,
   r0: null,
-  c0: null
+  c0: null,
+  w0: null
 });

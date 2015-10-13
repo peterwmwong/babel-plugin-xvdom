@@ -336,12 +336,12 @@ function createInstanceObject(t, file, desc){
 
   const specObject               = createSpecObject(t, file, genDynamicIdentifiers, desc);
   const instancePropsForDynamics = dynamics.reduce(
-    (props, {isComponent, value, valueId, rerenderId, contextId, componentId})=>[
+    (props, {isCreateComponent, value, valueId, rerenderId, contextId, componentId})=>[
       ...props,
       ...(valueId ? [objProp(t, valueId, value)] : []),
       objProp(t, rerenderId, nullId),
       objProp(t, contextId,  nullId),
-      ...(isComponent ? [objProp(t, componentId, nullId)] : [])
+      ...(isCreateComponent ? [objProp(t, componentId, nullId)] : [])
     ],
     []
   );
