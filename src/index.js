@@ -283,7 +283,7 @@ function createSpecObject(t, file, genDynamicIdentifiers, desc){
   const specProperties = [
     objProp(t, "render", createRenderFunction(t, genDynamicIdentifiers, desc))
   ];
-  const dynamics = genDynamicIdentifiers.dynamics.filter(dyn=>!dyn.isCreateComponent || dyn.hasDynamicComponentProps);
+  const dynamics = genDynamicIdentifiers.dynamics.filter(dyn=>!dyn.isComponent || dyn.hasDynamicComponentProps);
 
   if(dynamics.length){
     specProperties.push(
@@ -315,16 +315,16 @@ function createInstanceObject(t, file, desc){
   const dynamics = [];
 
   let lastDynamicUidInt = 0;
-  function genDynamicIdentifiers(value, prop, isCreateComponent, componentProps){
+  function genDynamicIdentifiers(value, prop, isComponent, componentProps){
     const idInt = lastDynamicUidInt++;
     const componentPropMap = genComponentPropIdentifierMap(t, componentProps, idInt);
     const result = {
       prop,
       value,
-      isCreateComponent,
+      isComponent,
       componentPropMap,
       hasDynamicComponentProps: hasDynamicComponentProps(t, componentPropMap),
-      valueId:           (isCreateComponent ? null : t.identifier(`v${idInt}`)),
+      valueId:           (isComponent ? null : t.identifier(`v${idInt}`)),
       rerenderId:        t.identifier(`r${idInt}`),
       contextId:         t.identifier(`c${idInt}`),
       componentId:       t.identifier(`w${idInt}`)
@@ -336,12 +336,12 @@ function createInstanceObject(t, file, desc){
 
   const specObject               = createSpecObject(t, file, genDynamicIdentifiers, desc);
   const instancePropsForDynamics = dynamics.reduce(
-    (props, {isCreateComponent, value, valueId, rerenderId, contextId, componentId})=>[
+    (props, {isComponent, value, valueId, rerenderId, contextId, componentId})=>[
       ...props,
       ...(valueId ? [objProp(t, valueId, value)] : []),
       objProp(t, rerenderId, nullId),
       objProp(t, contextId,  nullId),
-      ...(isCreateComponent ? [objProp(t, componentId, nullId)] : [])
+      ...(isComponent ? [objProp(t, componentId, nullId)] : [])
     ],
     []
   );
