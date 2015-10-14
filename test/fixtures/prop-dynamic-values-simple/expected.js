@@ -2,6 +2,7 @@ var _xvdomSpec2 = {
   render: function render(inst) {
     var _n = document.createElement("input");
 
+    inst.c0 = _n;
     _n.disabled = inst.v0;
     return _n;
   },
@@ -16,6 +17,7 @@ var _xvdomSpec = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
+    inst.c0 = _n;
     _n.className = inst.v0;
     return _n;
   },

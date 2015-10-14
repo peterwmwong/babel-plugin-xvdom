@@ -46,18 +46,35 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
   // >>> _n.prop1 = prop1Value;
   // >>> _n.prop2 = prop2Value;
   // >>> ...
-  return Object.keys(props).map(prop=>{
+  return Object.keys(props).reduce((acc, prop)=>{
     const value = props[prop];
-    const rhs = !isDynamic(t, value) ? value
-                  : t.memberExpression(instanceParamId, genDynamicIdentifiers(value, prop).valueId);
-
-    return t.expressionStatement(
-      t.assignmentExpression("=",
-        t.memberExpression(nodeId, t.identifier(prop)),
-        rhs
+    let dyn;
+    const rhs = !isDynamic(t, value)
+                  ? value
+                  : t.memberExpression(
+                      instanceParamId,
+                      (dyn = genDynamicIdentifiers(value, prop)).valueId
+                    );
+    return [
+      ...acc,
+      ...(
+        dyn
+          ? [t.expressionStatement(
+              t.assignmentExpression("=",
+                t.memberExpression(instanceParamId, dyn.contextId),
+                nodeId
+              )
+            )]
+          : []
+      ),
+      t.expressionStatement(
+        t.assignmentExpression("=",
+          t.memberExpression(nodeId, t.identifier(prop)),
+          rhs
+        )
       )
-    );
-  });
+    ];
+  }, []);
 }
 
 function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
@@ -185,15 +202,17 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
 
   // >>> document.createElement("div")
   const createEl =
-      isComponent ? createComponentCode(
-        t, el, props, instanceParamId, genDynamicIdentifiers(null, null, el, props))
-    : t.callExpression(
-        t.memberExpression(t.identifier("document"), t.identifier("createElement")),
-        [t.literal(el)]
-      );
+      isComponent
+        ? createComponentCode(
+            t, el, props, instanceParamId, genDynamicIdentifiers(null, null, el, props))
+        : t.callExpression(
+            t.memberExpression(t.identifier("document"), t.identifier("createElement")),
+            [t.literal(el)]
+          );
   const propsStatements =
-      isComponent ? []
-    : createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId, props);
+      isComponent
+        ? []
+        : createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId, props);
 
   const {
     variableDeclarators,

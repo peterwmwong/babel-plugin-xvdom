@@ -56,7 +56,9 @@ var _xvdomSpec2 = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
+    inst.c0 = _n;
     _n.className = inst.v0;
+    inst.c1 = _n;
     _n.title = inst.v1;
     return _n;
   },
@@ -76,6 +78,7 @@ var _xvdomSpec = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
+    inst.c0 = _n;
     _n.className = inst.v0;
     return _n;
   },

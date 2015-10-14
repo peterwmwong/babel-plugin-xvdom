@@ -2,6 +2,7 @@ var _xvdomSpec2 = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
+    inst.c0 = _n;
     _n.id = inst.v0;
 
     _n.appendChild(xvdom.createDynamic(inst.v1, inst, "r1", "c1"));
