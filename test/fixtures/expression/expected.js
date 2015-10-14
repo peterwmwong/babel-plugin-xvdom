@@ -1,3 +1,18 @@
+var _xvdomSpec7 = {
+  render: function render(inst) {
+    var _n = document.createElement("div");
+
+    _n.appendChild(xvdom.createDynamic(inst.v0, inst, "r0", "c0"));
+
+    return _n;
+  },
+  rerender: function rerender(inst, pInst) {
+    if (inst.v0 !== pInst.v0) {
+      pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
+      pInst.v0 = inst.v0;
+    }
+  }
+};
 var _xvdomSpec6 = {
   render: function render() {
     var _n = document.createElement("div");
@@ -135,4 +150,11 @@ function translate(str) {
 ({
   spec: _xvdomSpec6,
   _node: null
+});
+({
+  spec: _xvdomSpec7,
+  _node: null,
+  v0: msg.length,
+  r0: null,
+  c0: null
 });

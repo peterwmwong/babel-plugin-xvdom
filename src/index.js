@@ -12,8 +12,8 @@ function hasDynamicComponentProps(t, props){
 }
 
 function isDynamic(t, astNode){
-  if(t.isIdentifier(astNode) || t.isCallExpression(astNode)){
-    return true;
+  if(t.isLiteral(astNode)){
+    return false;
   }
   else if(t.isLogicalExpression(astNode) || t.isBinaryExpression(astNode)){
     return isDynamic(t, astNode.left) || isDynamic(t, astNode.right);
@@ -21,7 +21,7 @@ function isDynamic(t, astNode){
   else if(t.isUnaryExpression(astNode)){
     return isDynamic(t, astNode.argument);
   }
-  return false;
+  return true;
 }
 
 function objProp(t, key, value){
@@ -78,6 +78,7 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
 }
 
 function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
+  props = props || {};
   const componentPropMap = dynamicIds.componentPropMap;
   const objProps = Object.keys(props).map(prop=>
     objProp(t, prop,
