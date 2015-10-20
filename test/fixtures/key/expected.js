@@ -24,15 +24,27 @@ var key = "one";
 ({
   spec: _xvdomSpec,
   _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null,
   key: "1"
 });
 ({
   spec: _xvdomSpec2,
   _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null,
   key: key
 });
 ({
   spec: _xvdomSpec3,
   _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null,
   key: key.length
 });

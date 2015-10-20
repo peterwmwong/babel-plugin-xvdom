@@ -42,6 +42,10 @@ var id = "blah";
 ({
   spec: _xvdomSpec2,
   _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null,
   v0: id,
   r0: null,
   c0: null,
@@ -49,6 +53,10 @@ var id = "blah";
     return {
       spec: _xvdomSpec,
       _node: null,
+      component: null,
+      state: null,
+      actions: null,
+      props: null,
       v0: el,
       r0: null,
       c0: null

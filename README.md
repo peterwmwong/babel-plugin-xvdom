@@ -2,14 +2,6 @@
 
 Turn jsx into [xvdom](https://github.com/peterwmwong/xvdom).
 
-## TODO
-
-- Add stateful component instance properties:
-  - `component`
-  - `state`
-  - `actions`
-  - `props`
-
 ## Example
 
 **In**

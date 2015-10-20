@@ -18,6 +18,10 @@ var message1 = "hello";
 ({
   spec: _xvdomSpec,
   _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null,
   v0: message1,
   r0: null,
   c0: null

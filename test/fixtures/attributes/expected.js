@@ -40,21 +40,41 @@ var _xvdomSpec = {
 };
 ({
   spec: _xvdomSpec,
-  _node: null
+  _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null
 });
 ({
   spec: _xvdomSpec2,
-  _node: null
+  _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null
 });
 ({
   spec: _xvdomSpec3,
-  _node: null
+  _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null
 });
 ({
   spec: _xvdomSpec4,
-  _node: null
+  _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null
 });
 ({
   spec: _xvdomSpec5,
-  _node: null
+  _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null
 });

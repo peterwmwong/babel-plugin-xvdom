@@ -33,6 +33,10 @@ var messageType = "unread";
 ({
   spec: _xvdomSpec,
   _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null,
   v0: messageType,
   r0: null,
   c0: null
@@ -40,6 +44,10 @@ var messageType = "unread";
 ({
   spec: _xvdomSpec2,
   _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null,
   v0: !messageType,
   r0: null,
   c0: null

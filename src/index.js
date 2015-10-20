@@ -454,8 +454,12 @@ function createInstanceObject(t, file, desc){
   );
 
   const objectProps = [
-    objProp(t, "spec",  specObject),
-    objProp(t, "_node", t.identifier("null")),
+    objProp(t, "spec",      specObject),
+    objProp(t, "_node",     t.identifier("null")),
+    objProp(t, "component", t.identifier("null")),
+    objProp(t, "state",     t.identifier("null")),
+    objProp(t, "actions",   t.identifier("null")),
+    objProp(t, "props",     t.identifier("null")),
     ...instancePropsForDynamics
   ];
 

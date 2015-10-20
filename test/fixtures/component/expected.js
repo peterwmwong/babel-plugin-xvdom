@@ -19,6 +19,10 @@ function MyComponent() {}
 ({
   spec: _xvdomSpec,
   _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null,
   r0: null,
   c0: null,
   w0: null
@@ -27,6 +31,10 @@ function MyComponent() {}
 ({
   spec: _xvdomSpec2,
   _node: null,
+  component: null,
+  state: null,
+  actions: null,
+  props: null,
   r0: null,
   c0: null,
   w0: null
