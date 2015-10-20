@@ -290,7 +290,6 @@ function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstan
             t.memberExpression(prevInstanceParamId, dyn.componentId),
             t.memberExpression(prevInstanceParamId, dyn.contextId),
             prevInstanceParamId,
-            t.literal(dyn.rerenderId.name),
             t.literal(dyn.contextId.name),
             t.literal(dyn.componentId.name)
           ]

@@ -16,7 +16,7 @@ var _xvdomSpec = {
         msg2: inst.p0msg2,
         one: 1,
         two: "two"
-      }, null, pInst.w0, pInst.c0, pInst, "r0", "c0", "w0");
+      }, null, pInst.w0, pInst.c0, pInst, "c0", "w0");
       pInst.p0msg = inst.p0msg;
       pInst.p0msg2 = inst.p0msg2;
     }
