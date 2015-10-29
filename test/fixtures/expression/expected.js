@@ -8,8 +8,7 @@ var _xvdomSpec7 = {
   },
   rerender: function rerender(inst, pInst) {
     if (inst.v0 !== pInst.v0) {
-      pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
-      pInst.v0 = inst.v0;
+      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
     }
   }
 };
@@ -32,8 +31,7 @@ var _xvdomSpec5 = {
   },
   rerender: function rerender(inst, pInst) {
     if (inst.v0 !== pInst.v0) {
-      pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
-      pInst.v0 = inst.v0;
+      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
     }
   }
 };
@@ -47,8 +45,7 @@ var _xvdomSpec4 = {
   },
   rerender: function rerender(inst, pInst) {
     if (inst.v0 !== pInst.v0) {
-      pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
-      pInst.v0 = inst.v0;
+      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
     }
   }
 };
@@ -62,8 +59,7 @@ var _xvdomSpec3 = {
   },
   rerender: function rerender(inst, pInst) {
     if (inst.v0 !== pInst.v0) {
-      pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
-      pInst.v0 = inst.v0;
+      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
     }
   }
 };

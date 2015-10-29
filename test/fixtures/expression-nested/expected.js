@@ -16,8 +16,7 @@ var _xvdomSpec2 = {
     }
 
     if (inst.v1 !== pInst.v1) {
-      pInst.r1(inst.v1, pInst.v1, pInst.c1, pInst, "r1", "c1");
-      pInst.v1 = inst.v1;
+      pInst.v1 = pInst.r1(inst.v1, pInst.v1, pInst.c1, pInst, "r1", "c1");
     }
   }
 };
@@ -31,8 +30,7 @@ var _xvdomSpec = {
   },
   rerender: function rerender(inst, pInst) {
     if (inst.v0 !== pInst.v0) {
-      pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
-      pInst.v0 = inst.v0;
+      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
     }
   }
 };

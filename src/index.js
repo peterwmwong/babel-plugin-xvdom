@@ -318,16 +318,28 @@ function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstance
       t.memberExpression(prevInstanceParamId, dyn.valueId)
     ),
 
-    t.blockStatement([
+    t.blockStatement(
+      dyn.prop ? [
+        t.expressionStatement(
+          t.assignmentExpression("=",
+            t.memberExpression(t.memberExpression(prevInstanceParamId, dyn.contextId), t.identifier(dyn.prop)),
+            t.memberExpression(instanceParamId, dyn.valueId)
+          )
+        ),
 
-      // >>> pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
-      t.expressionStatement(
-        dyn.prop
-          ? t.assignmentExpression("=",
-              t.memberExpression(t.memberExpression(prevInstanceParamId, dyn.contextId), t.identifier(dyn.prop)),
-              t.memberExpression(instanceParamId, dyn.valueId)
-            )
-          : t.callExpression(
+        // >>> pInst.v0 = inst.v0;
+        t.expressionStatement(
+          t.assignmentExpression("=",
+            t.memberExpression(prevInstanceParamId, dyn.valueId),
+            t.memberExpression(instanceParamId,     dyn.valueId)
+          )
+        )
+      ] : [
+        // >>> pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
+        t.expressionStatement(
+          t.assignmentExpression("=",
+            t.memberExpression(prevInstanceParamId, dyn.valueId),
+            t.callExpression(
               t.memberExpression(prevInstanceParamId, dyn.rerenderId),
               [
                 t.memberExpression(instanceParamId,     dyn.valueId),
@@ -338,16 +350,10 @@ function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstance
                 t.literal(dyn.contextId.name)
               ]
             )
-      ),
-
-      // >>> pInst.v0 = inst.v0;
-      t.expressionStatement(
-        t.assignmentExpression("=",
-          t.memberExpression(prevInstanceParamId, dyn.valueId),
-          t.memberExpression(instanceParamId,     dyn.valueId)
+          )
         )
-      )
-    ])
+      ]
+    )
   );
 }
 

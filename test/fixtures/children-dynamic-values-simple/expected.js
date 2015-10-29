@@ -8,8 +8,7 @@ var _xvdomSpec = {
   },
   rerender: function rerender(inst, pInst) {
     if (inst.v0 !== pInst.v0) {
-      pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
-      pInst.v0 = inst.v0;
+      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
     }
   }
 };
