@@ -26,7 +26,7 @@ function isDynamic(t, astNode){
 
 function objProp(t, key, value){
   key = t.isIdentifier(key) ? key : t.identifier(key);
-  return t.property("init", key, value);
+  return t.objectProperty(key, value);
 }
 
 function transformProp(t, prop){
@@ -35,7 +35,7 @@ function transformProp(t, prop){
     : t.isJSXEmptyExpression(prop)     ? null
     : (t.isIdentifier(prop)
         || t.isMemberExpression(prop)) ? toReference(t, prop)
-    : prop == null                     ? t.literal(true)
+    : prop == null                     ? t.booleanLiteral(true)
     : prop
   );
 }
@@ -91,11 +91,11 @@ function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
     t.memberExpression(t.identifier("xvdom"), t.identifier("createComponent")),
     [
       t.identifier(elCompName),
-      (objProps.length ? t.objectExpression(objProps) : t.literal(null)),
+      (objProps.length ? t.objectExpression(objProps) : t.nullLiteral()),
       instanceParamId,
-      t.literal(dynamicIds.rerenderId.name),
-      t.literal(dynamicIds.contextId.name),
-      t.literal(dynamicIds.componentId.name)
+      t.stringLiteral(dynamicIds.rerenderId.name),
+      t.stringLiteral(dynamicIds.contextId.name),
+      t.stringLiteral(dynamicIds.componentId.name)
     ]
   );
 }
@@ -123,14 +123,16 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
         else{
           createEl = t.callExpression(
             t.memberExpression(t.identifier("document"), t.identifier("createElement")),
-            [t.literal(el)]
+            [t.stringLiteral(el)]
           );
         }
 
         if(hasProps || hasChildren){
           if(!tmpNodeId){
             tmpNodeId = genUidIdentifier();
-            acc.variableDeclarators.push(tmpNodeId);
+            acc.variableDeclarators.push(
+              t.variableDeclarator(tmpNodeId)
+            );
           }
 
           acc.statements.push(
@@ -165,8 +167,8 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
           [
             t.memberExpression(instanceParamId, valueId),
             instanceParamId,
-            t.literal(rerenderId.name),
-            t.literal(contextId.name)
+            t.stringLiteral(rerenderId.name),
+            t.stringLiteral(contextId.name)
           ]
         );
       }
@@ -176,7 +178,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
           [
             t.logicalExpression("||",
               t.sequenceExpression([child]),
-              t.literal("")
+              t.stringLiteral("")
             )
           ]
         );
@@ -208,7 +210,7 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
             t, el, props, instanceParamId, genDynamicIdentifiers(null, null, el, props))
         : t.callExpression(
             t.memberExpression(t.identifier("document"), t.identifier("createElement")),
-            [t.literal(el)]
+            [t.stringLiteral(el)]
           );
   const propsStatements =
       isComponent
@@ -241,6 +243,7 @@ function createRenderFunction(t, genDynamicIdentifiers, rootElement){
   const {variableDeclarators, statements} = createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifiers, rootElement);
   const params = genDynamicIdentifiers.dynamics.length ? [instanceParamId] : [];
 
+  // console.log(variableDeclarators);
   return t.functionExpression(null, params, t.blockStatement([
     t.variableDeclaration("var", variableDeclarators),
     ...statements,
@@ -290,8 +293,8 @@ function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstan
             t.memberExpression(prevInstanceParamId, dyn.componentId),
             t.memberExpression(prevInstanceParamId, dyn.contextId),
             prevInstanceParamId,
-            t.literal(dyn.contextId.name),
-            t.literal(dyn.componentId.name)
+            t.stringLiteral(dyn.contextId.name),
+            t.stringLiteral(dyn.componentId.name)
           ]
         )
       ),
@@ -346,8 +349,8 @@ function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstance
                 t.memberExpression(prevInstanceParamId, dyn.valueId),
                 t.memberExpression(prevInstanceParamId, dyn.contextId),
                 prevInstanceParamId,
-                t.literal(dyn.rerenderId.name),
-                t.literal(dyn.contextId.name)
+                t.stringLiteral(dyn.rerenderId.name),
+                t.stringLiteral(dyn.contextId.name)
               ]
             )
           )
@@ -387,7 +390,10 @@ function createSpecObject(t, file, genDynamicIdentifiers, desc){
 
   file.path.unshiftContainer("body",
     t.variableDeclaration("var", [
-      t.variableDeclarator(specId, t.objectExpression(specProperties))
+      t.variableDeclarator(
+        specId,
+        t.objectExpression(specProperties)
+      )
     ])
   );
   return specId;
@@ -474,11 +480,11 @@ function createInstanceObject(t, file, desc){
   return t.objectExpression(objectProps);
 }
 
-export default function ({ Plugin, types:t }){
-  return new Plugin("xvdom", {
+export default function({types: t}){
+  return {
     visitor: {
       JSXOpeningElement: {
-        exit(node/*, parent, scope, file */){
+        exit({node}/*, parent, scope, file */){
           let key;
           const props = node.attributes.length && node.attributes.reduce(
             (props, attr)=>{
@@ -502,24 +508,27 @@ export default function ({ Plugin, types:t }){
             props,
             el: node.name.name
           };
-          return node;
         }
       },
 
       JSXClosingElement: {
-        exit(){ return this.dangerouslyRemove(); }
+        exit(path){ path.remove(); }
       },
 
       JSXElement: {
-        exit(node, parent, scope, file){
+        // exit(node, parent, scope, file){
+        exit(path, state){
+          const node = path.node;
+          // console.log(node.openingElement.__xvdom_desc);
           const children = buildChildren(t, node.children);
           const desc     = node.openingElement.__xvdom_desc;
           desc.children  = children;
 
-          if(t.isJSX(parent)) return node;
-          return createInstanceObject(t, file, desc);
+          if(!t.isJSX(path.parent)){
+            path.replaceWith(createInstanceObject(t, state.file, desc));
+          }
         }
       }
     }
-  });
+  };
 }

@@ -1,3 +1,5 @@
+"use strict";
+
 var _xvdomSpec = {
   render: function render() {
     var _n = document.createElement("div");

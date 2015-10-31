@@ -44,7 +44,7 @@ export function buildChildren(t, rawChildren){
       child = child.expression;
     }
 
-    if (t.isLiteral(child) && typeof child.value === "string"){
+    if ((t.isJSXText(child) || t.isLiteral(child)) && typeof child.value === "string"){
       const text = cleanText(child);
       if(!text){ return children; }
 

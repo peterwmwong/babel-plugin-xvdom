@@ -1,7 +1,7 @@
 const path   = require("path");
 const fs     = require("fs");
 const assert = require("assert");
-const babel  = require("babel");
+const babel  = require("babel-core");
 const plugin = require("../src/index");
 
 describe("turn jsx into xvdom", ()=> {
@@ -27,8 +27,7 @@ describe("turn jsx into xvdom", ()=> {
       const expected   = fs.readFileSync(path.join(fixtureDir, "expected.js")).toString();
       const actual     = babel.transformFileSync(
         path.join(fixtureDir, "actual.js"), {
-          blacklist: ["strict", "react"],
-          plugins: [plugin]
+          plugins: ["syntax-jsx", plugin.default]
         }
       ).code;
 

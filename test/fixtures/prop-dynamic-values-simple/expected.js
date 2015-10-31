@@ -1,3 +1,5 @@
+"use strict";
+
 var _xvdomSpec2 = {
   render: function render(inst) {
     var _n = document.createElement("input");

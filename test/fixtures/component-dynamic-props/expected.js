@@ -1,3 +1,5 @@
+"use strict";
+
 var _xvdomSpec = {
   render: function render(inst) {
     var _n = xvdom.createComponent(MyComponent, {
