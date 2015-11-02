@@ -28,7 +28,7 @@ export function toReference(t, node, identifier){
     return node;
   }
   if (t.isJSXIdentifier(node)){
-    return identifier ? t.identifier(node.name) : t.literal(node.name);
+    return identifier ? t.identifier(node.name) : t.stringLiteral(node.name);
   }
   return t.memberExpression(
     toReference(t, node.object, true),
@@ -48,7 +48,7 @@ export function buildChildren(t, rawChildren){
       const text = cleanText(child);
       if(!text){ return children; }
 
-      child = t.literal(text);
+      child = t.stringLiteral(text);
     }
     else if(t.isJSXEmptyExpression(child)){
       return children;
