@@ -6,7 +6,8 @@ var _xvdomSpec5 = {
 
     _n.disabled = false || true;
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 var _xvdomSpec4 = {
   render: function render() {
@@ -14,7 +15,8 @@ var _xvdomSpec4 = {
 
     _n.disabled = !false;
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 var _xvdomSpec3 = {
   render: function render() {
@@ -22,7 +24,8 @@ var _xvdomSpec3 = {
 
     _n.disabled = false;
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 var _xvdomSpec2 = {
   render: function render() {
@@ -30,7 +33,8 @@ var _xvdomSpec2 = {
 
     _n.disabled = true;
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 var _xvdomSpec = {
   render: function render() {
@@ -38,7 +42,8 @@ var _xvdomSpec = {
 
     _n.className = "my-class";
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 ({
   spec: _xvdomSpec,

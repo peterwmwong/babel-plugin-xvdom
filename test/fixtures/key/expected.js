@@ -5,21 +5,24 @@ var _xvdomSpec3 = {
     var _n = document.createElement("div");
 
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 var _xvdomSpec2 = {
   render: function render() {
     var _n = document.createElement("div");
 
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 var _xvdomSpec = {
   render: function render() {
     var _n = document.createElement("div");
 
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 var key = "one";
 

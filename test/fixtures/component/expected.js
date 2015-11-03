@@ -7,14 +7,16 @@ var _xvdomSpec2 = {
     }, inst, "r0", "c0", "w0");
 
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 var _xvdomSpec = {
   render: function render(inst) {
     var _n = xvdom.createComponent(MyComponent, null, inst, "r0", "c0", "w0");
 
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 function MyComponent() {}
 

@@ -5,7 +5,8 @@ var _xvdomSpec = {
     var _n = document.createElement("div");
 
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 ({
   spec: _xvdomSpec,

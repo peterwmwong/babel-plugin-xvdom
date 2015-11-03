@@ -15,7 +15,8 @@ var _xvdomSpec3 = {
     _n.appendChild(_n2);
 
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 var _xvdomSpec2 = {
   render: function render() {
@@ -31,7 +32,8 @@ var _xvdomSpec2 = {
     _n.appendChild(_n2);
 
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 var _xvdomSpec = {
   render: function render() {
@@ -45,7 +47,8 @@ var _xvdomSpec = {
     _n.appendChild(_n2);
 
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 ({
   spec: _xvdomSpec,

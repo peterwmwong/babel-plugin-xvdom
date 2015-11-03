@@ -21,7 +21,8 @@ var _xvdomSpec6 = {
     _n.appendChild(document.createTextNode(("hello" + 5) || ""));
 
     return _n;
-  }
+  },
+  rerender: function rerender() {}
 };
 var _xvdomSpec5 = {
   render: function render(inst) {

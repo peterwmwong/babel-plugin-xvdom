@@ -382,11 +382,12 @@ function createSpecObject(t, file, genDynamicIdentifiers, desc){
   ];
   const dynamics = genDynamicIdentifiers.dynamics.filter(dyn=>!dyn.isComponent || dyn.hasDynamicComponentProps);
 
-  if(dynamics.length){
-    specProperties.push(
-      objProp(t, "rerender", createRerenderFunction(t, dynamics))
-    );
-  }
+  specProperties.push(
+    objProp(t, "rerender",
+      dynamics.length ? createRerenderFunction(t, dynamics)
+        : t.functionExpression(null, [], t.blockStatement([]))
+    )
+  );
 
   file.path.unshiftContainer("body",
     t.variableDeclaration("var", [
