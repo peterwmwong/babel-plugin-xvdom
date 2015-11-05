@@ -21,7 +21,7 @@ var message1 = "hello";
   _node: null,
   component: null,
   state: null,
-  actions: null,
+  dispatch: null,
   props: null,
   v0: message1,
   r0: null,

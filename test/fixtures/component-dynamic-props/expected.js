@@ -34,7 +34,7 @@ var message2 = "goodbye";
   _node: null,
   component: null,
   state: null,
-  actions: null,
+  dispatch: null,
   props: null,
   r0: null,
   c0: null,

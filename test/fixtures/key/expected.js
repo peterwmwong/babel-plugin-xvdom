@@ -31,7 +31,7 @@ var key = "one";
   _node: null,
   component: null,
   state: null,
-  actions: null,
+  dispatch: null,
   props: null,
   key: "1"
 });
@@ -40,7 +40,7 @@ var key = "one";
   _node: null,
   component: null,
   state: null,
-  actions: null,
+  dispatch: null,
   props: null,
   key: key
 });
@@ -49,7 +49,7 @@ var key = "one";
   _node: null,
   component: null,
   state: null,
-  actions: null,
+  dispatch: null,
   props: null,
   key: key.length
 });

@@ -55,7 +55,7 @@ var _xvdomSpec = {
   _node: null,
   component: null,
   state: null,
-  actions: null,
+  dispatch: null,
   props: null
 });
 
@@ -64,7 +64,7 @@ var _xvdomSpec = {
   _node: null,
   component: null,
   state: null,
-  actions: null,
+  dispatch: null,
   props: null
 });
 
@@ -73,6 +73,6 @@ var _xvdomSpec = {
   _node: null,
   component: null,
   state: null,
-  actions: null,
+  dispatch: null,
   props: null
 });
