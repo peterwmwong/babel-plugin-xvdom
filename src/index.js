@@ -471,7 +471,7 @@ function createInstanceObject(t, file, desc){
     objProp(t, "_node",     t.identifier("null")),
     objProp(t, "component", t.identifier("null")),
     objProp(t, "state",     t.identifier("null")),
-    objProp(t, "dispatch",  t.identifier("null")),
+    objProp(t, "actions",   t.identifier("null")),
     objProp(t, "props",     t.identifier("null")),
     ...instancePropsForDynamics
   ];

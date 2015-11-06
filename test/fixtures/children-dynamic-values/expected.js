@@ -33,7 +33,7 @@ var message2 = "world";
   _node: null,
   component: null,
   state: null,
-  dispatch: null,
+  actions: null,
   props: null,
   v0: message1,
   r0: null,

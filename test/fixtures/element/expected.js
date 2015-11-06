@@ -13,6 +13,6 @@ var _xvdomSpec = {
   _node: null,
   component: null,
   state: null,
-  dispatch: null,
+  actions: null,
   props: null
 });
