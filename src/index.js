@@ -253,7 +253,7 @@ function createRenderFunction(t, genDynamicIdentifiers, rootElement){
 
 function binarify(t, expressions){
   return expressions.reduce(
-    (prevExp, exp)=>t.binaryExpression("||", exp, prevExp),
+    (prevExp, exp)=>t.logicalExpression("||", exp, prevExp),
     expressions.pop()
   );
 }
@@ -268,7 +268,7 @@ function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstan
   // >>> if (inst.v0 !== pInst.v0) {
   return t.ifStatement(
     binarify(t, dynamicProps.map(prop=>
-      t.logicalExpression(
+      t.binaryExpression(
         "!==",
         t.memberExpression(instanceParamId,     componentPropMap[prop].id),
         t.memberExpression(prevInstanceParamId, componentPropMap[prop].id)
@@ -315,7 +315,7 @@ function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstan
 function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstanceParamId){
   // >>> if (inst.v0 !== pInst.v0) {
   return t.ifStatement(
-    t.logicalExpression(
+    t.binaryExpression(
       "!==",
       t.memberExpression(instanceParamId,     dyn.valueId),
       t.memberExpression(prevInstanceParamId, dyn.valueId)
