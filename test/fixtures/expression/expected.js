@@ -72,7 +72,6 @@ var _xvdomSpec2 = {
 
     inst.c0 = _n;
     _n.className = inst.v0;
-    inst.c1 = _n;
     _n.title = inst.v1;
     return _n;
   },
@@ -83,7 +82,7 @@ var _xvdomSpec2 = {
     }
 
     if (inst.v1 !== pInst.v1) {
-      pInst.c1.title = inst.v1;
+      pInst.c0.title = inst.v1;
       pInst.v1 = inst.v1;
     }
   }
@@ -130,8 +129,7 @@ function translate(str) {
   r0: null,
   c0: null,
   v1: translate(msg),
-  r1: null,
-  c1: null
+  r1: null
 });
 ({
   spec: _xvdomSpec3,
