@@ -9,8 +9,8 @@ describe("turn jsx into xvdom", ()=> {
 
   fs.readdirSync(fixturesDir).map(caseName=> {
     if([
-      "multiple-attributes",
       "attributes",
+      "multiple-attributes",
       "children-dynamic-values-simple",
       "children-dynamic-values",
       "component",
@@ -20,7 +20,8 @@ describe("turn jsx into xvdom", ()=> {
       "expression-nested",
       "expression",
       "key",
-      "prop-dynamic-values-simple"
+      "prop-dynamic-values-simple",
+      "recycle"
     ].indexOf(caseName) === -1) return;
 
     it(`should ${caseName.split("-").join(" ")}`, ()=> {

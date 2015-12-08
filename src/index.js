@@ -393,6 +393,8 @@ function createSpecObject(t, file, genDynamicIdentifiers, desc){
     )
   );
 
+  if(desc.recycle) specProperties.push(objProp(t, "recycled", t.arrayExpression([])));
+
   file.path.unshiftContainer("body",
     t.variableDeclaration("var", [
       t.variableDeclarator(
@@ -495,6 +497,7 @@ export default function({types: t}){
       JSXOpeningElement: {
         exit({node}/*, parent, scope, file */){
           let key;
+          let recycle = false;
           const props = node.attributes.length && node.attributes.reduce(
             (props, attr)=>{
               const propName = attr.name.name;
@@ -502,6 +505,9 @@ export default function({types: t}){
 
               if(propName === "key"){
                 key = value;
+              }
+              else if(propName === "recycle"){
+                recycle = true;
               }
               else if(value != null){
                 props[propName] = value;
@@ -514,6 +520,7 @@ export default function({types: t}){
 
           node.__xvdom_desc = {
             key,
+            recycle,
             props,
             el: node.name.name
           };
