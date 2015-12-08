@@ -4,13 +4,13 @@ var _xvdomSpec7 = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(xvdom.createDynamic(inst.v0, inst, "r0", "c0"));
+    _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
 
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
+    if (inst.b !== pInst.b) {
+      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
   }
 };
@@ -28,13 +28,13 @@ var _xvdomSpec5 = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(xvdom.createDynamic(inst.v0, inst, "r0", "c0"));
+    _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
 
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
+    if (inst.b !== pInst.b) {
+      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
   }
 };
@@ -42,13 +42,13 @@ var _xvdomSpec4 = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(xvdom.createDynamic(inst.v0, inst, "r0", "c0"));
+    _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
 
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
+    if (inst.b !== pInst.b) {
+      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
   }
 };
@@ -56,13 +56,13 @@ var _xvdomSpec3 = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(xvdom.createDynamic(inst.v0, inst, "r0", "c0"));
+    _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
 
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
+    if (inst.b !== pInst.b) {
+      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
   }
 };
@@ -70,20 +70,20 @@ var _xvdomSpec2 = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
-    inst.c0 = _n;
-    _n.className = inst.v0;
-    _n.title = inst.v1;
+    inst.d = _n;
+    _n.className = inst.b;
+    _n.title = inst.g;
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.c0.className = inst.v0;
-      pInst.v0 = inst.v0;
+    if (inst.b !== pInst.b) {
+      pInst.d.className = inst.b;
+      pInst.b = inst.b;
     }
 
-    if (inst.v1 !== pInst.v1) {
-      pInst.c0.title = inst.v1;
-      pInst.v1 = inst.v1;
+    if (inst.g !== pInst.g) {
+      pInst.d.title = inst.g;
+      pInst.g = inst.g;
     }
   }
 };
@@ -91,14 +91,14 @@ var _xvdomSpec = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
-    inst.c0 = _n;
-    _n.className = inst.v0;
+    inst.d = _n;
+    _n.className = inst.b;
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.c0.className = inst.v0;
-      pInst.v0 = inst.v0;
+    if (inst.b !== pInst.b) {
+      pInst.d.className = inst.b;
+      pInst.b = inst.b;
     }
   }
 };
@@ -114,9 +114,9 @@ function translate(str) {
   state: null,
   actions: null,
   props: null,
-  v0: msg,
-  r0: null,
-  c0: null
+  b: msg,
+  c: null,
+  d: null
 });
 ({
   spec: _xvdomSpec2,
@@ -125,11 +125,11 @@ function translate(str) {
   state: null,
   actions: null,
   props: null,
-  v0: msg + "hello",
-  r0: null,
-  c0: null,
-  v1: translate(msg),
-  r1: null
+  b: msg + "hello",
+  c: null,
+  d: null,
+  g: translate(msg),
+  h: null
 });
 ({
   spec: _xvdomSpec3,
@@ -138,9 +138,9 @@ function translate(str) {
   state: null,
   actions: null,
   props: null,
-  v0: msg,
-  r0: null,
-  c0: null
+  b: msg,
+  c: null,
+  d: null
 });
 ({
   spec: _xvdomSpec4,
@@ -149,9 +149,9 @@ function translate(str) {
   state: null,
   actions: null,
   props: null,
-  v0: msg + "hello",
-  r0: null,
-  c0: null
+  b: msg + "hello",
+  c: null,
+  d: null
 });
 ({
   spec: _xvdomSpec5,
@@ -160,9 +160,9 @@ function translate(str) {
   state: null,
   actions: null,
   props: null,
-  v0: translate(msg),
-  r0: null,
-  c0: null
+  b: translate(msg),
+  c: null,
+  d: null
 });
 ({
   spec: _xvdomSpec6,
@@ -179,7 +179,7 @@ function translate(str) {
   state: null,
   actions: null,
   props: null,
-  v0: msg.length,
-  r0: null,
-  c0: null
+  b: msg.length,
+  c: null,
+  d: null
 });

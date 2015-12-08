@@ -4,7 +4,7 @@ var _xvdomSpec2 = {
   render: function render(inst) {
     var _n = xvdom.createComponent(MyComponent, {
       a: "hello"
-    }, inst, "r0", "c0", "w0");
+    }, inst, "b", "c", "d");
 
     return _n;
   },
@@ -12,7 +12,7 @@ var _xvdomSpec2 = {
 };
 var _xvdomSpec = {
   render: function render(inst) {
-    var _n = xvdom.createComponent(MyComponent, null, inst, "r0", "c0", "w0");
+    var _n = xvdom.createComponent(MyComponent, null, inst, "b", "c", "d");
 
     return _n;
   },
@@ -27,9 +27,9 @@ function MyComponent() {}
   state: null,
   actions: null,
   props: null,
-  r0: null,
-  c0: null,
-  w0: null
+  b: null,
+  c: null,
+  d: null
 });
 
 ({
@@ -39,7 +39,7 @@ function MyComponent() {}
   state: null,
   actions: null,
   props: null,
-  r0: null,
-  c0: null,
-  w0: null
+  b: null,
+  c: null,
+  d: null
 });

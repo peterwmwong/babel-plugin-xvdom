@@ -3,6 +3,8 @@ import {
   toReference
 } from "./helpers";
 
+import genId from "./genId";
+
 const EMPTY_ARRAY = [];
 
 function isComponentName(name){
@@ -450,10 +452,10 @@ function createInstanceObject(t, file, desc){
       componentName,
       componentPropMap,
       hasDynamicComponentProps: _hasDynamicComponentProps,
-      valueId:     (isComponent ? null : t.identifier(`v${idInt}`)),
-      rerenderId:  t.identifier(`r${idInt}`),
-      contextId:   (contextId || t.identifier(`c${idInt}`)),
-      componentId: t.identifier(`w${idInt}`)
+      valueId:     (isComponent ? null : t.identifier(genId(lastDynamicUidInt++))),
+      rerenderId:  t.identifier(genId(lastDynamicUidInt++)),
+      contextId:   (contextId || t.identifier(genId(lastDynamicUidInt++))),
+      componentId: t.identifier(genId(lastDynamicUidInt++))
     };
     dynamics.push(result);
     return result;

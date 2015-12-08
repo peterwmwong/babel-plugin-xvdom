@@ -4,14 +4,14 @@ var _xvdomSpec2 = {
   render: function render(inst) {
     var _n = document.createElement("input");
 
-    inst.c0 = _n;
-    _n.disabled = inst.v0;
+    inst.d = _n;
+    _n.disabled = inst.b;
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.c0.disabled = inst.v0;
-      pInst.v0 = inst.v0;
+    if (inst.b !== pInst.b) {
+      pInst.d.disabled = inst.b;
+      pInst.b = inst.b;
     }
   }
 };
@@ -19,14 +19,14 @@ var _xvdomSpec = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
-    inst.c0 = _n;
-    _n.className = inst.v0;
+    inst.d = _n;
+    _n.className = inst.b;
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.c0.className = inst.v0;
-      pInst.v0 = inst.v0;
+    if (inst.b !== pInst.b) {
+      pInst.d.className = inst.b;
+      pInst.b = inst.b;
     }
   }
 };
@@ -39,9 +39,9 @@ var messageType = "unread";
   state: null,
   actions: null,
   props: null,
-  v0: messageType,
-  r0: null,
-  c0: null
+  b: messageType,
+  c: null,
+  d: null
 });
 ({
   spec: _xvdomSpec2,
@@ -50,7 +50,7 @@ var messageType = "unread";
   state: null,
   actions: null,
   props: null,
-  v0: !messageType,
-  r0: null,
-  c0: null
+  b: !messageType,
+  c: null,
+  d: null
 });

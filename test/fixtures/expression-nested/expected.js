@@ -4,21 +4,21 @@ var _xvdomSpec2 = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
-    inst.c0 = _n;
-    _n.id = inst.v0;
+    inst.d = _n;
+    _n.id = inst.b;
 
-    _n.appendChild(xvdom.createDynamic(inst.v1, inst, "r1", "c1"));
+    _n.appendChild(xvdom.createDynamic(inst.g, inst, "h", "i"));
 
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.c0.id = inst.v0;
-      pInst.v0 = inst.v0;
+    if (inst.b !== pInst.b) {
+      pInst.d.id = inst.b;
+      pInst.b = inst.b;
     }
 
-    if (inst.v1 !== pInst.v1) {
-      pInst.v1 = pInst.r1(inst.v1, pInst.v1, pInst.c1, pInst, "r1", "c1");
+    if (inst.g !== pInst.g) {
+      pInst.g = pInst.h(inst.g, pInst.g, pInst.i, pInst, "h", "i");
     }
   }
 };
@@ -26,13 +26,13 @@ var _xvdomSpec = {
   render: function render(inst) {
     var _n = document.createElement("span");
 
-    _n.appendChild(xvdom.createDynamic(inst.v0, inst, "r0", "c0"));
+    _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
 
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
+    if (inst.b !== pInst.b) {
+      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
   }
 };
@@ -46,10 +46,10 @@ var id = "blah";
   state: null,
   actions: null,
   props: null,
-  v0: id,
-  r0: null,
-  c0: null,
-  v1: list.map(function (el) {
+  b: id,
+  c: null,
+  d: null,
+  g: list.map(function (el) {
     return {
       spec: _xvdomSpec,
       _node: null,
@@ -57,11 +57,11 @@ var id = "blah";
       state: null,
       actions: null,
       props: null,
-      v0: el,
-      r0: null,
-      c0: null
+      b: el,
+      c: null,
+      d: null
     };
   }),
-  r1: null,
-  c1: null
+  h: null,
+  i: null
 });

@@ -4,33 +4,33 @@ var _xvdomSpec = {
   render: function render(inst) {
     var _n = document.createElement("div");
 
-    inst.c0 = _n;
-    _n.className = inst.v0;
-    _n.id = inst.v1;
-    _n.title = inst.v2;
+    inst.d = _n;
+    _n.className = inst.b;
+    _n.id = inst.g;
+    _n.title = inst.k;
 
-    _n.appendChild(xvdom.createDynamic(inst.v3, inst, "r3", "c3"));
+    _n.appendChild(xvdom.createDynamic(inst.o, inst, "p", "q"));
 
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.c0.className = inst.v0;
-      pInst.v0 = inst.v0;
+    if (inst.b !== pInst.b) {
+      pInst.d.className = inst.b;
+      pInst.b = inst.b;
     }
 
-    if (inst.v1 !== pInst.v1) {
-      pInst.c0.id = inst.v1;
-      pInst.v1 = inst.v1;
+    if (inst.g !== pInst.g) {
+      pInst.d.id = inst.g;
+      pInst.g = inst.g;
     }
 
-    if (inst.v2 !== pInst.v2) {
-      pInst.c0.title = inst.v2;
-      pInst.v2 = inst.v2;
+    if (inst.k !== pInst.k) {
+      pInst.d.title = inst.k;
+      pInst.k = inst.k;
     }
 
-    if (inst.v3 !== pInst.v3) {
-      pInst.v3 = pInst.r3(inst.v3, pInst.v3, pInst.c3, pInst, "r3", "c3");
+    if (inst.o !== pInst.o) {
+      pInst.o = pInst.p(inst.o, pInst.o, pInst.q, pInst, "p", "q");
     }
   }
 };
@@ -46,14 +46,14 @@ var four = "4";
   state: null,
   actions: null,
   props: null,
-  v0: one,
-  r0: null,
-  c0: null,
-  v1: two,
-  r1: null,
-  v2: three,
-  r2: null,
-  v3: four,
-  r3: null,
-  c3: null
+  b: one,
+  c: null,
+  d: null,
+  g: two,
+  h: null,
+  k: three,
+  l: null,
+  o: four,
+  p: null,
+  q: null
 });

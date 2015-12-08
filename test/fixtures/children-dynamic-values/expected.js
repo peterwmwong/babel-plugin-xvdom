@@ -5,23 +5,23 @@ var _xvdomSpec = {
     var _n = document.createElement("div"),
         _n2;
 
-    _n.appendChild(xvdom.createDynamic(inst.v0, inst, "r0", "c0"));
+    _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
 
     _n2 = document.createElement("span");
 
-    _n2.appendChild(xvdom.createDynamic(inst.v1, inst, "r1", "c1"));
+    _n2.appendChild(xvdom.createDynamic(inst.g, inst, "h", "i"));
 
     _n.appendChild(_n2);
 
     return _n;
   },
   rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
+    if (inst.b !== pInst.b) {
+      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
 
-    if (inst.v1 !== pInst.v1) {
-      pInst.v1 = pInst.r1(inst.v1, pInst.v1, pInst.c1, pInst, "r1", "c1");
+    if (inst.g !== pInst.g) {
+      pInst.g = pInst.h(inst.g, pInst.g, pInst.i, pInst, "h", "i");
     }
   }
 };
@@ -35,10 +35,10 @@ var message2 = "world";
   state: null,
   actions: null,
   props: null,
-  v0: message1,
-  r0: null,
-  c0: null,
-  v1: message2,
-  r1: null,
-  c1: null
+  b: message1,
+  c: null,
+  d: null,
+  g: message2,
+  h: null,
+  i: null
 });
