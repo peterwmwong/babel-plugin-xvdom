@@ -1,7 +1,7 @@
 "use strict";
 
 var _xvdomSpec = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = xvdom.createComponent(MyComponent, {
       msg: inst.p0msg,
       msg2: inst.p0msg2,
@@ -11,7 +11,7 @@ var _xvdomSpec = {
 
     return _n;
   },
-  rerender: function rerender(inst, pInst) {
+  u: function u(inst, pInst) {
     if (inst.p0msg !== pInst.p0msg || inst.p0msg2 !== pInst.p0msg2) {
       pInst.b(MyComponent, {
         msg: inst.p0msg,
@@ -30,12 +30,12 @@ var message = "hello world";
 var message2 = "goodbye";
 
 ({
-  spec: _xvdomSpec,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   b: null,
   c: null,
   d: null,

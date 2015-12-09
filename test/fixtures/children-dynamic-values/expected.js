@@ -1,7 +1,7 @@
 "use strict";
 
 var _xvdomSpec = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = document.createElement("div"),
         _n2;
 
@@ -15,7 +15,7 @@ var _xvdomSpec = {
 
     return _n;
   },
-  rerender: function rerender(inst, pInst) {
+  u: function u(inst, pInst) {
     if (inst.b !== pInst.b) {
       pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
@@ -29,12 +29,12 @@ var message1 = "hello";
 var message2 = "world";
 
 ({
-  spec: _xvdomSpec,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   b: message1,
   c: null,
   d: null,

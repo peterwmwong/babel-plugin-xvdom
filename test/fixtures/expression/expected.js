@@ -1,73 +1,73 @@
 "use strict";
 
 var _xvdomSpec7 = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = document.createElement("div");
 
     _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
 
     return _n;
   },
-  rerender: function rerender(inst, pInst) {
+  u: function u(inst, pInst) {
     if (inst.b !== pInst.b) {
       pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
   }
 };
 var _xvdomSpec6 = {
-  render: function render() {
+  c: function c() {
     var _n = document.createElement("div");
 
     _n.appendChild(document.createTextNode(("hello" + 5) || ""));
 
     return _n;
   },
-  rerender: function rerender() {}
+  u: function u() {}
 };
 var _xvdomSpec5 = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = document.createElement("div");
 
     _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
 
     return _n;
   },
-  rerender: function rerender(inst, pInst) {
+  u: function u(inst, pInst) {
     if (inst.b !== pInst.b) {
       pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
   }
 };
 var _xvdomSpec4 = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = document.createElement("div");
 
     _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
 
     return _n;
   },
-  rerender: function rerender(inst, pInst) {
+  u: function u(inst, pInst) {
     if (inst.b !== pInst.b) {
       pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
   }
 };
 var _xvdomSpec3 = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = document.createElement("div");
 
     _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
 
     return _n;
   },
-  rerender: function rerender(inst, pInst) {
+  u: function u(inst, pInst) {
     if (inst.b !== pInst.b) {
       pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
   }
 };
 var _xvdomSpec2 = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = document.createElement("div");
 
     inst.d = _n;
@@ -75,7 +75,7 @@ var _xvdomSpec2 = {
     _n.title = inst.g;
     return _n;
   },
-  rerender: function rerender(inst, pInst) {
+  u: function u(inst, pInst) {
     if (inst.b !== pInst.b) {
       pInst.d.className = inst.b;
       pInst.b = inst.b;
@@ -88,14 +88,14 @@ var _xvdomSpec2 = {
   }
 };
 var _xvdomSpec = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = document.createElement("div");
 
     inst.d = _n;
     _n.className = inst.b;
     return _n;
   },
-  rerender: function rerender(inst, pInst) {
+  u: function u(inst, pInst) {
     if (inst.b !== pInst.b) {
       pInst.d.className = inst.b;
       pInst.b = inst.b;
@@ -108,23 +108,23 @@ function translate(str) {
 }
 
 ({
-  spec: _xvdomSpec,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   b: msg,
   c: null,
   d: null
 });
 ({
-  spec: _xvdomSpec2,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec2,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   b: msg + "hello",
   c: null,
   d: null,
@@ -132,53 +132,53 @@ function translate(str) {
   h: null
 });
 ({
-  spec: _xvdomSpec3,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec3,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   b: msg,
   c: null,
   d: null
 });
 ({
-  spec: _xvdomSpec4,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec4,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   b: msg + "hello",
   c: null,
   d: null
 });
 ({
-  spec: _xvdomSpec5,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec5,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   b: translate(msg),
   c: null,
   d: null
 });
 ({
-  spec: _xvdomSpec6,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null
+  $s: _xvdomSpec6,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null
 });
 ({
-  spec: _xvdomSpec7,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec7,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   b: msg.length,
   c: null,
   d: null

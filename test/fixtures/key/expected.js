@@ -1,55 +1,55 @@
 "use strict";
 
 var _xvdomSpec3 = {
-  render: function render() {
+  c: function c() {
     var _n = document.createElement("div");
 
     return _n;
   },
-  rerender: function rerender() {}
+  u: function u() {}
 };
 var _xvdomSpec2 = {
-  render: function render() {
+  c: function c() {
     var _n = document.createElement("div");
 
     return _n;
   },
-  rerender: function rerender() {}
+  u: function u() {}
 };
 var _xvdomSpec = {
-  render: function render() {
+  c: function c() {
     var _n = document.createElement("div");
 
     return _n;
   },
-  rerender: function rerender() {}
+  u: function u() {}
 };
 var key = "one";
 
 ({
-  spec: _xvdomSpec,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   key: "1"
 });
 ({
-  spec: _xvdomSpec2,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec2,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   key: key
 });
 ({
-  spec: _xvdomSpec3,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec3,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   key: key.length
 });

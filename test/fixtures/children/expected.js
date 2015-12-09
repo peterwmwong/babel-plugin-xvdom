@@ -1,7 +1,7 @@
 "use strict";
 
 var _xvdomSpec3 = {
-  render: function render() {
+  c: function c() {
     var _n = document.createElement("div"),
         _n2,
         _n3;
@@ -16,10 +16,10 @@ var _xvdomSpec3 = {
 
     return _n;
   },
-  rerender: function rerender() {}
+  u: function u() {}
 };
 var _xvdomSpec2 = {
-  render: function render() {
+  c: function c() {
     var _n = document.createElement("div"),
         _n2;
 
@@ -33,10 +33,10 @@ var _xvdomSpec2 = {
 
     return _n;
   },
-  rerender: function rerender() {}
+  u: function u() {}
 };
 var _xvdomSpec = {
-  render: function render() {
+  c: function c() {
     var _n = document.createElement("div"),
         _n2;
 
@@ -48,31 +48,31 @@ var _xvdomSpec = {
 
     return _n;
   },
-  rerender: function rerender() {}
+  u: function u() {}
 };
 ({
-  spec: _xvdomSpec,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null
+  $s: _xvdomSpec,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null
 });
 
 ({
-  spec: _xvdomSpec2,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null
+  $s: _xvdomSpec2,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null
 });
 
 ({
-  spec: _xvdomSpec3,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null
+  $s: _xvdomSpec3,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null
 });

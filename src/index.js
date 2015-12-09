@@ -384,12 +384,12 @@ function createRerenderFunction(t, dynamics){
 function createSpecObject(t, file, genDynamicIdentifiers, desc){
   const specId = file.scope.generateUidIdentifier("xvdomSpec");
   const specProperties = [
-    objProp(t, "render", createRenderFunction(t, genDynamicIdentifiers, desc))
+    objProp(t, "c", createRenderFunction(t, genDynamicIdentifiers, desc))
   ];
   const dynamics = genDynamicIdentifiers.dynamics.filter(dyn=>!dyn.isComponent || dyn.hasDynamicComponentProps);
 
   specProperties.push(
-    objProp(t, "rerender",
+    objProp(t, "u",
       dynamics.length ? createRerenderFunction(t, dynamics)
         : t.functionExpression(null, EMPTY_ARRAY, t.blockStatement(EMPTY_ARRAY))
     )
@@ -479,12 +479,12 @@ function createInstanceObject(t, file, desc){
   );
 
   const objectProps = [
-    objProp(t, "spec",      specObject),
-    objProp(t, "_node",     t.identifier("null")),
-    objProp(t, "component", t.identifier("null")),
-    objProp(t, "state",     t.identifier("null")),
-    objProp(t, "actions",   t.identifier("null")),
-    objProp(t, "props",     t.identifier("null")),
+    objProp(t, "$s", specObject),
+    objProp(t, "$n", t.identifier("null")),
+    objProp(t, "$c", t.identifier("null")),
+    objProp(t, "$t", t.identifier("null")),
+    objProp(t, "$a", t.identifier("null")),
+    objProp(t, "$p", t.identifier("null")),
     ...instancePropsForDynamics
   ];
 

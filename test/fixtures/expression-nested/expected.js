@@ -1,7 +1,7 @@
 "use strict";
 
 var _xvdomSpec2 = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = document.createElement("div");
 
     inst.d = _n;
@@ -11,7 +11,7 @@ var _xvdomSpec2 = {
 
     return _n;
   },
-  rerender: function rerender(inst, pInst) {
+  u: function u(inst, pInst) {
     if (inst.b !== pInst.b) {
       pInst.d.id = inst.b;
       pInst.b = inst.b;
@@ -23,14 +23,14 @@ var _xvdomSpec2 = {
   }
 };
 var _xvdomSpec = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = document.createElement("span");
 
     _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
 
     return _n;
   },
-  rerender: function rerender(inst, pInst) {
+  u: function u(inst, pInst) {
     if (inst.b !== pInst.b) {
       pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
     }
@@ -40,23 +40,23 @@ var list = [1, 2, 3];
 var id = "blah";
 
 ({
-  spec: _xvdomSpec2,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec2,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   b: id,
   c: null,
   d: null,
   g: list.map(function (el) {
     return {
-      spec: _xvdomSpec,
-      _node: null,
-      component: null,
-      state: null,
-      actions: null,
-      props: null,
+      $s: _xvdomSpec,
+      $n: null,
+      $c: null,
+      $t: null,
+      $a: null,
+      $p: null,
       b: el,
       c: null,
       d: null

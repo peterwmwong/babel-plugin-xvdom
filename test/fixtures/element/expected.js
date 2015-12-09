@@ -1,18 +1,18 @@
 "use strict";
 
 var _xvdomSpec = {
-  render: function render() {
+  c: function c() {
     var _n = document.createElement("div");
 
     return _n;
   },
-  rerender: function rerender() {}
+  u: function u() {}
 };
 ({
-  spec: _xvdomSpec,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null
+  $s: _xvdomSpec,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null
 });

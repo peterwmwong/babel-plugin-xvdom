@@ -1,44 +1,44 @@
 "use strict";
 
 var _xvdomSpec2 = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = xvdom.createComponent(MyComponent, {
       a: "hello"
     }, inst, "b", "c", "d");
 
     return _n;
   },
-  rerender: function rerender() {}
+  u: function u() {}
 };
 var _xvdomSpec = {
-  render: function render(inst) {
+  c: function c(inst) {
     var _n = xvdom.createComponent(MyComponent, null, inst, "b", "c", "d");
 
     return _n;
   },
-  rerender: function rerender() {}
+  u: function u() {}
 };
 function MyComponent() {}
 
 ({
-  spec: _xvdomSpec,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   b: null,
   c: null,
   d: null
 });
 
 ({
-  spec: _xvdomSpec2,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
+  $s: _xvdomSpec2,
+  $n: null,
+  $c: null,
+  $t: null,
+  $a: null,
+  $p: null,
   b: null,
   c: null,
   d: null
