@@ -153,7 +153,10 @@ require("babel-core").transform("code", {
 });
 ```
 
-
 ## TODO
 
+- Pass xvdom.EMPTY_PROPS instead of null
+- Update props on componentAPI, instead of generating objects
+- Re-evaluate component argument generation
 - `style-*` attributes
+- `class-*` attributes
