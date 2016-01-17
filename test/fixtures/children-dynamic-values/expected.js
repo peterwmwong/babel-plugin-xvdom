@@ -5,11 +5,11 @@ var _xvdomSpec = {
     var _n = document.createElement("div"),
         _n2;
 
-    _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
+    _n.appendChild(xvdom.createDynamic(false, inst.b, inst, "c", "d"));
 
     _n2 = document.createElement("span");
 
-    _n2.appendChild(xvdom.createDynamic(inst.g, inst, "h", "i"));
+    _n2.appendChild(xvdom.createDynamic(true, inst.g, inst, "h", "i"));
 
     _n.appendChild(_n2);
 

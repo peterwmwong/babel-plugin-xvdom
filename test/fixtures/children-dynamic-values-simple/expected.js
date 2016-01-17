@@ -4,7 +4,7 @@ var _xvdomSpec = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(xvdom.createDynamic(inst.b, inst, "c", "d"));
+    _n.appendChild(xvdom.createDynamic(true, inst.b, inst, "c", "d"));
 
     return _n;
   },
