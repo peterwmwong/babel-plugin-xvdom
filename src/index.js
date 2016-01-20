@@ -172,7 +172,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
         createEl = t.callExpression(
           t.memberExpression(t.identifier("xvdom"), t.identifier("createDynamic")),
           [
-            t.booleanLiteral(children.length === 1),
+            (children.length === 1 ? parentId : t.identifier("null")),
             t.memberExpression(instanceParamId, valueId),
             instanceParamId,
             t.stringLiteral(rerenderId.name),

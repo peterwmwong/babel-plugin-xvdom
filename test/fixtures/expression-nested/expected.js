@@ -7,7 +7,7 @@ var _xvdomSpec2 = {
     inst.d = _n;
     _n.id = inst.b;
 
-    _n.appendChild(xvdom.createDynamic(true, inst.g, inst, "h", "i"));
+    _n.appendChild(xvdom.createDynamic(_n, inst.g, inst, "h", "i"));
 
     return _n;
   },
@@ -26,7 +26,7 @@ var _xvdomSpec = {
   c: function c(inst) {
     var _n = document.createElement("span");
 
-    _n.appendChild(xvdom.createDynamic(true, inst.b, inst, "c", "d"));
+    _n.appendChild(xvdom.createDynamic(_n, inst.b, inst, "c", "d"));
 
     return _n;
   },

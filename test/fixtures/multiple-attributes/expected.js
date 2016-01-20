@@ -9,7 +9,7 @@ var _xvdomSpec = {
     _n.id = inst.g;
     _n.title = inst.k;
 
-    _n.appendChild(xvdom.createDynamic(true, inst.o, inst, "p", "q"));
+    _n.appendChild(xvdom.createDynamic(_n, inst.o, inst, "p", "q"));
 
     return _n;
   },
