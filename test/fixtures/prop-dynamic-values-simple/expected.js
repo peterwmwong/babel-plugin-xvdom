@@ -4,31 +4,33 @@ var _xvdomSpec2 = {
   c: function c(inst) {
     var _n = document.createElement("input");
 
-    inst.d = _n;
-    _n.disabled = inst.b;
+    inst.b = _n;
+    _n.disabled = inst.a;
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) {
-      pInst.d.disabled = inst.b;
-      pInst.b = inst.b;
+    if (inst.a !== pInst.a) {
+      pInst.b.disabled = inst.a;
+      pInst.a = inst.a;
     }
-  }
+  },
+  r: null
 };
 var _xvdomSpec = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    inst.d = _n;
-    _n.className = inst.b;
+    inst.b = _n;
+    _n.className = inst.a;
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) {
-      pInst.d.className = inst.b;
-      pInst.b = inst.b;
+    if (inst.a !== pInst.a) {
+      pInst.b.className = inst.a;
+      pInst.a = inst.a;
     }
-  }
+  },
+  r: null
 };
 var messageType = "unread";
 
@@ -39,9 +41,8 @@ var messageType = "unread";
   $t: null,
   $a: null,
   $p: null,
-  b: messageType,
-  c: null,
-  d: null
+  a: messageType,
+  b: null
 });
 ({
   $s: _xvdomSpec2,
@@ -50,7 +51,6 @@ var messageType = "unread";
   $t: null,
   $a: null,
   $p: null,
-  b: !messageType,
-  c: null,
-  d: null
+  a: !messageType,
+  b: null
 });

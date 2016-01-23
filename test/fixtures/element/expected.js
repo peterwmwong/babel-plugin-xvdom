@@ -6,7 +6,8 @@ var _xvdomSpec = {
 
     return _n;
   },
-  u: function u() {}
+  u: function u() {},
+  r: null
 };
 ({
   $s: _xvdomSpec,

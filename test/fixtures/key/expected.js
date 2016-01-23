@@ -6,7 +6,8 @@ var _xvdomSpec3 = {
 
     return _n;
   },
-  u: function u() {}
+  u: function u() {},
+  r: null
 };
 var _xvdomSpec2 = {
   c: function c() {
@@ -14,7 +15,8 @@ var _xvdomSpec2 = {
 
     return _n;
   },
-  u: function u() {}
+  u: function u() {},
+  r: null
 };
 var _xvdomSpec = {
   c: function c() {
@@ -22,7 +24,8 @@ var _xvdomSpec = {
 
     return _n;
   },
-  u: function u() {}
+  u: function u() {},
+  r: null
 };
 var key = "one";
 

@@ -4,15 +4,16 @@ var _xvdomSpec = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(xvdom.createDynamic(_n, inst.b, inst, "c", "d"));
+    _n.appendChild(xvdom.createDynamicOnlyChild(_n, inst.a, inst, "b", "c"));
 
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) {
-      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
+    if (inst.a !== pInst.a) {
+      pInst.a = pInst.b(inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
-  }
+  },
+  r: null
 };
 var message1 = "hello";
 
@@ -23,7 +24,7 @@ var message1 = "hello";
   $t: null,
   $a: null,
   $p: null,
-  b: message1,
-  c: null,
-  d: null
+  a: message1,
+  b: null,
+  c: null
 });

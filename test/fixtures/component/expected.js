@@ -8,7 +8,8 @@ var _xvdomSpec2 = {
 
     return _n;
   },
-  u: function u() {}
+  u: function u() {},
+  r: null
 };
 var _xvdomSpec = {
   c: function c(inst) {
@@ -16,7 +17,8 @@ var _xvdomSpec = {
 
     return _n;
   },
-  u: function u() {}
+  u: function u() {},
+  r: null
 };
 function MyComponent() {}
 

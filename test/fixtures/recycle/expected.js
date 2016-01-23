@@ -7,7 +7,7 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u() {},
-  recycled: []
+  r: {}
 };
 ({
   $s: _xvdomSpec,

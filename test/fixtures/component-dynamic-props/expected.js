@@ -22,7 +22,8 @@ var _xvdomSpec = {
       pInst.p0msg = inst.p0msg;
       pInst.p0msg2 = inst.p0msg2;
     }
-  }
+  },
+  r: null
 };
 function MyComponent() {}
 

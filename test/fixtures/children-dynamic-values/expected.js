@@ -5,25 +5,26 @@ var _xvdomSpec = {
     var _n = document.createElement("div"),
         _n2;
 
-    _n.appendChild(xvdom.createDynamic(null, inst.b, inst, "c", "d"));
+    _n.appendChild(xvdom.createDynamic(inst.a, inst, "b", "c"));
 
     _n2 = document.createElement("span");
 
-    _n2.appendChild(xvdom.createDynamic(_n2, inst.g, inst, "h", "i"));
+    _n2.appendChild(xvdom.createDynamicOnlyChild(_n2, inst.d, inst, "e", "f"));
 
     _n.appendChild(_n2);
 
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) {
-      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
+    if (inst.a !== pInst.a) {
+      pInst.a = pInst.b(inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
 
-    if (inst.g !== pInst.g) {
-      pInst.g = pInst.h(inst.g, pInst.g, pInst.i, pInst, "h", "i");
+    if (inst.d !== pInst.d) {
+      pInst.d = pInst.e(inst.d, pInst.d, pInst.f, pInst, "e", "f");
     }
-  }
+  },
+  r: null
 };
 var message1 = "hello";
 var message2 = "world";
@@ -35,10 +36,10 @@ var message2 = "world";
   $t: null,
   $a: null,
   $p: null,
-  b: message1,
+  a: message1,
+  b: null,
   c: null,
-  d: null,
-  g: message2,
-  h: null,
-  i: null
+  d: message2,
+  e: null,
+  f: null
 });

@@ -4,15 +4,16 @@ var _xvdomSpec7 = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(xvdom.createDynamic(_n, inst.b, inst, "c", "d"));
+    _n.appendChild(xvdom.createDynamicOnlyChild(_n, inst.a, inst, "b", "c"));
 
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) {
-      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
+    if (inst.a !== pInst.a) {
+      pInst.a = pInst.b(inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
-  }
+  },
+  r: null
 };
 var _xvdomSpec6 = {
   c: function c() {
@@ -22,85 +23,91 @@ var _xvdomSpec6 = {
 
     return _n;
   },
-  u: function u() {}
+  u: function u() {},
+  r: null
 };
 var _xvdomSpec5 = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(xvdom.createDynamic(_n, inst.b, inst, "c", "d"));
+    _n.appendChild(xvdom.createDynamicOnlyChild(_n, inst.a, inst, "b", "c"));
 
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) {
-      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
+    if (inst.a !== pInst.a) {
+      pInst.a = pInst.b(inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
-  }
+  },
+  r: null
 };
 var _xvdomSpec4 = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(xvdom.createDynamic(_n, inst.b, inst, "c", "d"));
+    _n.appendChild(xvdom.createDynamicOnlyChild(_n, inst.a, inst, "b", "c"));
 
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) {
-      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
+    if (inst.a !== pInst.a) {
+      pInst.a = pInst.b(inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
-  }
+  },
+  r: null
 };
 var _xvdomSpec3 = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(xvdom.createDynamic(_n, inst.b, inst, "c", "d"));
+    _n.appendChild(xvdom.createDynamicOnlyChild(_n, inst.a, inst, "b", "c"));
 
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) {
-      pInst.b = pInst.c(inst.b, pInst.b, pInst.d, pInst, "c", "d");
+    if (inst.a !== pInst.a) {
+      pInst.a = pInst.b(inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
-  }
+  },
+  r: null
 };
 var _xvdomSpec2 = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    inst.d = _n;
-    _n.className = inst.b;
-    _n.title = inst.g;
+    inst.b = _n;
+    _n.className = inst.a;
+    _n.title = inst.c;
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) {
-      pInst.d.className = inst.b;
-      pInst.b = inst.b;
+    if (inst.a !== pInst.a) {
+      pInst.b.className = inst.a;
+      pInst.a = inst.a;
     }
 
-    if (inst.g !== pInst.g) {
-      pInst.d.title = inst.g;
-      pInst.g = inst.g;
+    if (inst.c !== pInst.c) {
+      pInst.b.title = inst.c;
+      pInst.c = inst.c;
     }
-  }
+  },
+  r: null
 };
 var _xvdomSpec = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    inst.d = _n;
-    _n.className = inst.b;
+    inst.b = _n;
+    _n.className = inst.a;
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) {
-      pInst.d.className = inst.b;
-      pInst.b = inst.b;
+    if (inst.a !== pInst.a) {
+      pInst.b.className = inst.a;
+      pInst.a = inst.a;
     }
-  }
+  },
+  r: null
 };
 var msg = "hello";
 function translate(str) {
@@ -114,9 +121,8 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
-  b: msg,
-  c: null,
-  d: null
+  a: msg,
+  b: null
 });
 ({
   $s: _xvdomSpec2,
@@ -125,11 +131,9 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
-  b: msg + "hello",
-  c: null,
-  d: null,
-  g: translate(msg),
-  h: null
+  a: msg + "hello",
+  b: null,
+  c: translate(msg)
 });
 ({
   $s: _xvdomSpec3,
@@ -138,9 +142,9 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
-  b: msg,
-  c: null,
-  d: null
+  a: msg,
+  b: null,
+  c: null
 });
 ({
   $s: _xvdomSpec4,
@@ -149,9 +153,9 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
-  b: msg + "hello",
-  c: null,
-  d: null
+  a: msg + "hello",
+  b: null,
+  c: null
 });
 ({
   $s: _xvdomSpec5,
@@ -160,9 +164,9 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
-  b: translate(msg),
-  c: null,
-  d: null
+  a: translate(msg),
+  b: null,
+  c: null
 });
 ({
   $s: _xvdomSpec6,
@@ -179,7 +183,7 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
-  b: msg.length,
-  c: null,
-  d: null
+  a: msg.length,
+  b: null,
+  c: null
 });
