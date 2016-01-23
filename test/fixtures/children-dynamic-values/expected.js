@@ -5,11 +5,11 @@ var _xvdomSpec = {
     var _n = document.createElement("div"),
         _n2;
 
-    _n.appendChild(xvdom.createDynamic(inst.a, inst, "b", "c"));
+    _n.appendChild(xvdom.createDynamic(false, _n, inst.a, inst, "b", "c"));
 
     _n2 = document.createElement("span");
 
-    _n2.appendChild(xvdom.createDynamicOnlyChild(_n2, inst.d, inst, "e", "f"));
+    _n2.appendChild(xvdom.createDynamic(true, _n2, inst.d, inst, "e", "f"));
 
     _n.appendChild(_n2);
 
@@ -17,11 +17,11 @@ var _xvdomSpec = {
   },
   u: function u(inst, pInst) {
     if (inst.a !== pInst.a) {
-      pInst.a = pInst.b(inst.a, pInst.a, pInst.c, pInst, "b", "c");
+      pInst.a = pInst.b(false, inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
 
     if (inst.d !== pInst.d) {
-      pInst.d = pInst.e(inst.d, pInst.d, pInst.f, pInst, "e", "f");
+      pInst.d = pInst.e(true, inst.d, pInst.d, pInst.f, pInst, "e", "f");
     }
   },
   r: null

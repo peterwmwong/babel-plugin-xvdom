@@ -9,7 +9,7 @@ var _xvdomSpec = {
     _n.id = inst.c;
     _n.title = inst.d;
 
-    _n.appendChild(xvdom.createDynamicOnlyChild(_n, inst.e, inst, "f", "g"));
+    _n.appendChild(xvdom.createDynamic(true, _n, inst.e, inst, "f", "g"));
 
     return _n;
   },
@@ -30,7 +30,7 @@ var _xvdomSpec = {
     }
 
     if (inst.e !== pInst.e) {
-      pInst.e = pInst.f(inst.e, pInst.e, pInst.g, pInst, "f", "g");
+      pInst.e = pInst.f(true, inst.e, pInst.e, pInst.g, pInst, "f", "g");
     }
   },
   r: null

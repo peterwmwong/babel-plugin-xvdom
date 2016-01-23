@@ -7,7 +7,7 @@ var _xvdomSpec2 = {
     inst.b = _n;
     _n.id = inst.a;
 
-    _n.appendChild(xvdom.createDynamicOnlyChild(_n, inst.c, inst, "d", "e"));
+    _n.appendChild(xvdom.createDynamic(true, _n, inst.c, inst, "d", "e"));
 
     return _n;
   },
@@ -18,7 +18,7 @@ var _xvdomSpec2 = {
     }
 
     if (inst.c !== pInst.c) {
-      pInst.c = pInst.d(inst.c, pInst.c, pInst.e, pInst, "d", "e");
+      pInst.c = pInst.d(true, inst.c, pInst.c, pInst.e, pInst, "d", "e");
     }
   },
   r: null
@@ -27,13 +27,13 @@ var _xvdomSpec = {
   c: function c(inst) {
     var _n = document.createElement("span");
 
-    _n.appendChild(xvdom.createDynamicOnlyChild(_n, inst.a, inst, "b", "c"));
+    _n.appendChild(xvdom.createDynamic(true, _n, inst.a, inst, "b", "c"));
 
     return _n;
   },
   u: function u(inst, pInst) {
     if (inst.a !== pInst.a) {
-      pInst.a = pInst.b(inst.a, pInst.a, pInst.c, pInst, "b", "c");
+      pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
   },
   r: null

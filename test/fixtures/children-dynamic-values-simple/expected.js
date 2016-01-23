@@ -4,13 +4,13 @@ var _xvdomSpec = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(xvdom.createDynamicOnlyChild(_n, inst.a, inst, "b", "c"));
+    _n.appendChild(xvdom.createDynamic(true, _n, inst.a, inst, "b", "c"));
 
     return _n;
   },
   u: function u(inst, pInst) {
     if (inst.a !== pInst.a) {
-      pInst.a = pInst.b(inst.a, pInst.a, pInst.c, pInst, "b", "c");
+      pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
   },
   r: null

@@ -171,14 +171,21 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
         }
       }
       else if(isDynamic(t, child)){
-        const {valueId, rerenderId, contextId} = genDynamicIdentifiers(child);
-        const createDynamicMethod = isOnlyChild ? "createDynamicOnlyChild" : "createDynamic";
+        const {valueId, rerenderId, contextId} = genDynamicIdentifiers(
+          child,
+          null/*prop*/,
+          null/*componentName*/,
+          null/*componentProps*/,
+          null/*contextId*/,
+          isOnlyChild
+        );
 
         // >>> xvdom.createDynamic(inst.v0, inst, "r0", "c0");
         createEl = t.callExpression(
-          t.memberExpression(t.identifier("xvdom"), t.identifier(createDynamicMethod)),
+          t.memberExpression(t.identifier("xvdom"), t.identifier("createDynamic")),
           [
-            ...(isOnlyChild ? [parentId] : []),
+            t.booleanLiteral(isOnlyChild),
+            parentId,
             t.memberExpression(instanceParamId, valueId),
             instanceParamId,
             t.stringLiteral(rerenderId.name),
@@ -359,6 +366,7 @@ function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstance
             t.callExpression(
               t.memberExpression(prevInstanceParamId, dyn.rerenderId),
               [
+                t.booleanLiteral(dyn.isOnlyChild),
                 t.memberExpression(instanceParamId,     dyn.valueId),
                 t.memberExpression(prevInstanceParamId, dyn.valueId),
                 t.memberExpression(prevInstanceParamId, dyn.contextId),
@@ -450,9 +458,14 @@ function createInstanceObject(t, file, desc){
   const nullId = t.identifier("null");
   let lastDynamicUidInt = 0;
 
-  function genDynamicIdentifiers(value, prop, componentName, componentProps, contextId){
+  // TODO: Split up genDynamicIdentifiers:
+  //        - dynamicIdGenerator.generateForProp(prop)
+  //        - dynamicIdGenerator.generateForDynamic(value, isOnlyChild)
+  //        - dynamicIdGenerator.generateForComponent(componentName, componentProps)
+  function genDynamicIdentifiers(value, prop, componentName, componentProps, contextId, isOnlyChild){
     const isComponent = !!componentName;
     const result = {
+      isOnlyChild,
       prop,
       value,
       isComponent,
