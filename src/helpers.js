@@ -27,13 +27,12 @@ export function toReference(t, node, identifier){
   if (t.isIdentifier(node)){
     return node;
   }
-  if (t.isJSXIdentifier(node)){
+  else if (t.isJSXIdentifier(node)){
     return identifier ? t.identifier(node.name) : t.stringLiteral(node.name);
   }
-  return t.memberExpression(
-    toReference(t, node.object, true),
-    toReference(t, node.property, true)
-  );
+  else{
+    return node;
+  }
 }
 
 // Filters out empty children, and transform JSX expressions

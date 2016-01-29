@@ -13,6 +13,12 @@ var _xvdomSpec = {
 
     _n.appendChild(_n2);
 
+    _n2 = document.createElement("span");
+
+    _n2.appendChild(xvdom.createDynamic(true, _n2, inst.g, inst, "h", "i"));
+
+    _n.appendChild(_n2);
+
     return _n;
   },
   u: function u(inst, pInst) {
@@ -22,6 +28,10 @@ var _xvdomSpec = {
 
     if (inst.d !== pInst.d) {
       pInst.d = pInst.e(true, inst.d, pInst.d, pInst.f, pInst, "e", "f");
+    }
+
+    if (inst.g !== pInst.g) {
+      pInst.g = pInst.h(true, inst.g, pInst.g, pInst.i, pInst, "h", "i");
     }
   },
   r: null
@@ -41,5 +51,8 @@ var message2 = "world";
   c: null,
   d: message2,
   e: null,
-  f: null
+  f: null,
+  g: message2[0],
+  h: null,
+  i: null
 });
