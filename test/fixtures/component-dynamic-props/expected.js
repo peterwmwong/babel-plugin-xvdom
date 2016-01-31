@@ -23,7 +23,7 @@ var _xvdomSpec = {
       pInst.p0msg2 = inst.p0msg2;
     }
   },
-  r: null
+  r: xvdom.DeadPool
 };
 function MyComponent() {}
 

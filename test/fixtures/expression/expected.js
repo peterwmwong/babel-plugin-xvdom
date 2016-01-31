@@ -13,7 +13,7 @@ var _xvdomSpec7 = {
       pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
   },
-  r: null
+  r: xvdom.DeadPool
 };
 var _xvdomSpec6 = {
   c: function c() {
@@ -24,7 +24,7 @@ var _xvdomSpec6 = {
     return _n;
   },
   u: function u() {},
-  r: null
+  r: xvdom.DeadPool
 };
 var _xvdomSpec5 = {
   c: function c(inst) {
@@ -39,7 +39,7 @@ var _xvdomSpec5 = {
       pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
   },
-  r: null
+  r: xvdom.DeadPool
 };
 var _xvdomSpec4 = {
   c: function c(inst) {
@@ -54,7 +54,7 @@ var _xvdomSpec4 = {
       pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
   },
-  r: null
+  r: xvdom.DeadPool
 };
 var _xvdomSpec3 = {
   c: function c(inst) {
@@ -69,7 +69,7 @@ var _xvdomSpec3 = {
       pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
   },
-  r: null
+  r: xvdom.DeadPool
 };
 var _xvdomSpec2 = {
   c: function c(inst) {
@@ -91,7 +91,7 @@ var _xvdomSpec2 = {
       pInst.c = inst.c;
     }
   },
-  r: null
+  r: xvdom.DeadPool
 };
 var _xvdomSpec = {
   c: function c(inst) {
@@ -107,7 +107,7 @@ var _xvdomSpec = {
       pInst.a = inst.a;
     }
   },
-  r: null
+  r: xvdom.DeadPool
 };
 var msg = "hello";
 function translate(str) {

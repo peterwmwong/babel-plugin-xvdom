@@ -399,6 +399,7 @@ function createRerenderFunction(t, dynamics){
 
 function createSpecObject(t, file, genDynamicIdentifiers, desc){
   const specId = file.scope.generateUidIdentifier("xvdomSpec");
+  const xvdomId = t.identifier("xvdom");
   const renderFunc = createRenderFunction(t, genDynamicIdentifiers, desc);
   const dynamics = genDynamicIdentifiers.dynamics.filter(dyn=>
                      !dyn.isComponent || dyn.hasDynamicComponentProps
@@ -410,8 +411,11 @@ function createSpecObject(t, file, genDynamicIdentifiers, desc){
         ? createRerenderFunction(t, dynamics)
         : t.functionExpression(null, EMPTY_ARRAY, t.blockStatement(EMPTY_ARRAY)),
     r: desc.recycle
-        ? t.objectExpression([])
-        : t.identifier("null")
+        ? t.newExpression(
+            t.memberExpression(xvdomId, t.identifier("Pool")),
+            EMPTY_ARRAY
+          )
+        : t.memberExpression(xvdomId, t.identifier("DeadPool"))
   });
 
   file.path.unshiftContainer("body",
