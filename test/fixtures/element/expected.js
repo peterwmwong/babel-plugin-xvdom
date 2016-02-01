@@ -7,7 +7,7 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u() {},
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 ({
   $s: _xvdomSpec,

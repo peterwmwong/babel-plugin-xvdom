@@ -17,7 +17,7 @@ var _xvdomSpec3 = {
     return _n;
   },
   u: function u() {},
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 var _xvdomSpec2 = {
   c: function c() {
@@ -35,7 +35,7 @@ var _xvdomSpec2 = {
     return _n;
   },
   u: function u() {},
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 var _xvdomSpec = {
   c: function c() {
@@ -51,7 +51,7 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u() {},
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 ({
   $s: _xvdomSpec,

@@ -21,7 +21,7 @@ var _xvdomSpec2 = {
       pInst.c = pInst.d(true, inst.c, pInst.c, pInst.e, pInst, "d", "e");
     }
   },
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 var _xvdomSpec = {
   c: function c(inst) {
@@ -36,7 +36,7 @@ var _xvdomSpec = {
       pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
   },
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 var list = [1, 2, 3];
 var id = "blah";

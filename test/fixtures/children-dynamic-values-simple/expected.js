@@ -13,7 +13,7 @@ var _xvdomSpec = {
       pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
   },
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 var message1 = "hello";
 

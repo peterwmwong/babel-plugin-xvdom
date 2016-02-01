@@ -14,7 +14,7 @@ var _xvdomSpec2 = {
       pInst.a = inst.a;
     }
   },
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 var _xvdomSpec = {
   c: function c(inst) {
@@ -30,7 +30,7 @@ var _xvdomSpec = {
       pInst.a = inst.a;
     }
   },
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 var messageType = "unread";
 

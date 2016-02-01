@@ -9,7 +9,7 @@ var _xvdomSpec2 = {
     return _n;
   },
   u: function u() {},
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 var _xvdomSpec = {
   c: function c(inst) {
@@ -18,7 +18,7 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u() {},
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 function MyComponent() {}
 

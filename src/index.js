@@ -415,7 +415,7 @@ function createSpecObject(t, file, genDynamicIdentifiers, desc){
             t.memberExpression(xvdomId, t.identifier("Pool")),
             EMPTY_ARRAY
           )
-        : t.memberExpression(xvdomId, t.identifier("DeadPool"))
+        : t.memberExpression(xvdomId, t.identifier("DEADPOOL"))
   });
 
   file.path.unshiftContainer("body",

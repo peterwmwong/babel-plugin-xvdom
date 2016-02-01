@@ -33,7 +33,7 @@ var _xvdomSpec = {
       pInst.e = pInst.f(true, inst.e, pInst.e, pInst.g, pInst, "f", "g");
     }
   },
-  r: xvdom.DeadPool
+  r: xvdom.DEADPOOL
 };
 var one = "1";
 var two = "2";
