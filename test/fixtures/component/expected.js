@@ -29,6 +29,7 @@ function MyComponent() {}
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   b: null,
   c: null,
   d: null
@@ -41,6 +42,7 @@ function MyComponent() {}
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   b: null,
   c: null,
   d: null

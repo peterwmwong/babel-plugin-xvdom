@@ -121,6 +121,7 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   a: msg,
   b: null
 });
@@ -131,6 +132,7 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   a: msg + "hello",
   b: null,
   c: translate(msg)
@@ -142,6 +144,7 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   a: msg,
   b: null,
   c: null
@@ -153,6 +156,7 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   a: msg + "hello",
   b: null,
   c: null
@@ -164,6 +168,7 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   a: translate(msg),
   b: null,
   c: null
@@ -174,7 +179,8 @@ function translate(str) {
   $c: null,
   $t: null,
   $a: null,
-  $p: null
+  $p: null,
+  $x: null
 });
 ({
   $s: _xvdomSpec7,
@@ -183,6 +189,7 @@ function translate(str) {
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   a: msg.length,
   b: null,
   c: null

@@ -41,6 +41,7 @@ var messageType = "unread";
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   a: messageType,
   b: null
 });
@@ -51,6 +52,7 @@ var messageType = "unread";
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   a: !messageType,
   b: null
 });

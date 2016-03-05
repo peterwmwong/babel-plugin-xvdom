@@ -411,7 +411,7 @@ function createSpecObject(t, file, genDynamicIdentifiers, desc){
         ? createRerenderFunction(t, dynamics)
         : t.functionExpression(null, EMPTY_ARRAY, t.blockStatement(EMPTY_ARRAY)),
     r: desc.recycle
-        ? t.newExpression(
+        ? t.callExpression(
             t.memberExpression(xvdomId, t.identifier("Pool")),
             EMPTY_ARRAY
           )
@@ -509,7 +509,8 @@ function createInstanceObject(t, file, desc){
       $c: t.identifier("null"),
       $t: t.identifier("null"),
       $a: t.identifier("null"),
-      $p: t.identifier("null")
+      $p: t.identifier("null"),
+      $x: t.identifier("null")
     }),
     ...instancePropsForDynamics
   ];

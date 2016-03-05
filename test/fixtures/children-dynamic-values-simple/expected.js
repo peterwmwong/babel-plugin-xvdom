@@ -24,6 +24,7 @@ var message1 = "hello";
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   a: message1,
   b: null,
   c: null

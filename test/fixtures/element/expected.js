@@ -15,5 +15,6 @@ var _xvdomSpec = {
   $c: null,
   $t: null,
   $a: null,
-  $p: null
+  $p: null,
+  $x: null
 });

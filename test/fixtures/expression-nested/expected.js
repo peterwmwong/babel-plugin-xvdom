@@ -48,6 +48,7 @@ var id = "blah";
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   a: id,
   b: null,
   c: list.map(function (el) {
@@ -58,6 +59,7 @@ var id = "blah";
       $t: null,
       $a: null,
       $p: null,
+      $x: null,
       a: el,
       b: null,
       c: null

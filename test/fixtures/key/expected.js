@@ -36,6 +36,7 @@ var key = "one";
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   key: "1"
 });
 ({
@@ -45,6 +46,7 @@ var key = "one";
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   key: key
 });
 ({
@@ -54,5 +56,6 @@ var key = "one";
   $t: null,
   $a: null,
   $p: null,
+  $x: null,
   key: key.length
 });

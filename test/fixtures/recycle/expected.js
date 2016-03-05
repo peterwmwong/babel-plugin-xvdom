@@ -7,7 +7,7 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u() {},
-  r: new xvdom.Pool()
+  r: xvdom.Pool()
 };
 ({
   $s: _xvdomSpec,
@@ -15,5 +15,6 @@ var _xvdomSpec = {
   $c: null,
   $t: null,
   $a: null,
-  $p: null
+  $p: null,
+  $x: null
 });

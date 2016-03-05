@@ -56,7 +56,8 @@ var _xvdomSpec = {
   $c: null,
   $t: null,
   $a: null,
-  $p: null
+  $p: null,
+  $x: null
 });
 ({
   $s: _xvdomSpec2,
@@ -64,7 +65,8 @@ var _xvdomSpec = {
   $c: null,
   $t: null,
   $a: null,
-  $p: null
+  $p: null,
+  $x: null
 });
 ({
   $s: _xvdomSpec3,
@@ -72,7 +74,8 @@ var _xvdomSpec = {
   $c: null,
   $t: null,
   $a: null,
-  $p: null
+  $p: null,
+  $x: null
 });
 ({
   $s: _xvdomSpec4,
@@ -80,7 +83,8 @@ var _xvdomSpec = {
   $c: null,
   $t: null,
   $a: null,
-  $p: null
+  $p: null,
+  $x: null
 });
 ({
   $s: _xvdomSpec5,
@@ -88,5 +92,6 @@ var _xvdomSpec = {
   $c: null,
   $t: null,
   $a: null,
-  $p: null
+  $p: null,
+  $x: null
 });
