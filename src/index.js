@@ -91,7 +91,7 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
 function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
   props = props || {};
   const componentPropMap = dynamicIds.componentPropMap;
-  const objProps = Object.keys(props).map(prop=>
+  const componentObjProps = Object.keys(props).map(prop=>
     objProp(t, prop,
       (isDynamic(t, props[prop]) ? t.memberExpression(instanceParamId, componentPropMap[prop].id) : props[prop])
     )
@@ -102,7 +102,10 @@ function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
     t.memberExpression(t.identifier("xvdom"), t.identifier("createComponent")),
     [
       t.identifier(elCompName),
-      (objProps.length ? t.objectExpression(objProps) : t.nullLiteral()),
+      (componentObjProps.length
+        ? t.objectExpression(componentObjProps)
+        : t.nullLiteral()
+      ),
       instanceParamId,
       t.stringLiteral(dynamicIds.rerenderId.name),
       t.stringLiteral(dynamicIds.contextId.name),
@@ -310,7 +313,7 @@ function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstan
                 );
               })
             ),
-            t.identifier("null"),
+            t.nullLiteral(),
             t.memberExpression(prevInstanceParamId, dyn.componentId),
             t.memberExpression(prevInstanceParamId, dyn.contextId),
             prevInstanceParamId,
@@ -443,23 +446,17 @@ function genComponentPropIdentifierMap(t, props, idInt){
 }
 
 function instancePropsForComponent(t, {componentId, componentPropMap}){
-  return [
-    objProp(t, componentId, t.identifier("null")),
-    ...(
-      !componentPropMap
-        ? EMPTY_ARRAY
-        : Object.keys(componentPropMap)
-          .filter(prop=>isDynamic(t, componentPropMap[prop].value))
-          .map(prop=>{
-            const {id, value} = componentPropMap[prop];
-            return objProp(t, id, value);
-          })
-    )
-  ];
+  return !componentPropMap
+    ? EMPTY_ARRAY
+    : Object.keys(componentPropMap)
+      .filter(prop=>isDynamic(t, componentPropMap[prop].value))
+      .map(prop=>{
+        const {id, value} = componentPropMap[prop];
+        return objProp(t, id, value);
+      });
 }
 
 function createInstanceObject(t, file, desc){
-  const nullId = t.identifier("null");
   let lastDynamicUidInt = 0;
 
   // TODO: Split up genDynamicIdentifiers:
@@ -487,31 +484,17 @@ function createInstanceObject(t, file, desc){
   genDynamicIdentifiers.dynamics = [];
 
   const specObject     = createSpecObject(t, file, genDynamicIdentifiers, desc);
-  const usedContextIds = {};
   const instancePropsForDynamics = genDynamicIdentifiers.dynamics.reduce(
     (props, {isComponent, value, valueId, rerenderId, contextId, componentId, componentPropMap})=>[
       ...props,
       ...(valueId ? [objProp(t, valueId, value)] : EMPTY_ARRAY),
-      ...(rerenderId ? [objProp(t, rerenderId, nullId)] : EMPTY_ARRAY),
-      ...(!usedContextIds[contextId.name]
-        ? (usedContextIds[contextId.name] = true, [objProp(t, contextId,  nullId)])
-        : EMPTY_ARRAY
-      ),
       ...(isComponent ? instancePropsForComponent(t, {componentPropMap, componentId}) : EMPTY_ARRAY)
     ],
     []
   );
 
   const objectProps = [
-    ...objProps(t, {
-      $s: specObject,
-      $n: t.identifier("null"),
-      $c: t.identifier("null"),
-      $t: t.identifier("null"),
-      $a: t.identifier("null"),
-      $p: t.identifier("null"),
-      $x: t.identifier("null")
-    }),
+    objProp(t, "$s", specObject),
     ...instancePropsForDynamics
   ];
 

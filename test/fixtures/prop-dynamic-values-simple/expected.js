@@ -36,23 +36,9 @@ var messageType = "unread";
 
 ({
   $s: _xvdomSpec,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
-  a: messageType,
-  b: null
+  a: messageType
 });
 ({
   $s: _xvdomSpec2,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
-  a: !messageType,
-  b: null
+  a: !messageType
 });

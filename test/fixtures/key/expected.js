@@ -31,31 +31,13 @@ var key = "one";
 
 ({
   $s: _xvdomSpec,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
   key: "1"
 });
 ({
   $s: _xvdomSpec2,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
   key: key
 });
 ({
   $s: _xvdomSpec3,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
   key: key.length
 });

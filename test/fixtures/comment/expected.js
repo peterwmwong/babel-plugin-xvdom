@@ -6,6 +6,5 @@ var _xvdomSpec = {
   }
 };
 ({
-  $s: _xvdomSpec,
-  $n: null
+  $s: _xvdomSpec
 });

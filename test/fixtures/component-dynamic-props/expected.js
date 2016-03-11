@@ -32,15 +32,6 @@ var message2 = "goodbye";
 
 ({
   $s: _xvdomSpec,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
-  b: null,
-  c: null,
-  d: null,
   p0msg: message,
   p0msg2: message2
 });

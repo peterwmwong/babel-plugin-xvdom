@@ -41,19 +41,7 @@ var message2 = "world";
 
 ({
   $s: _xvdomSpec,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
   a: message1,
-  b: null,
-  c: null,
   d: message2,
-  e: null,
-  f: null,
-  g: message2[0],
-  h: null,
-  i: null
+  g: message2[0]
 });

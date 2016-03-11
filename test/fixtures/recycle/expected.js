@@ -10,11 +10,5 @@ var _xvdomSpec = {
   r: xvdom.Pool()
 };
 ({
-  $s: _xvdomSpec,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null
+  $s: _xvdomSpec
 });

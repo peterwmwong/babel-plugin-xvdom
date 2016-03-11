@@ -54,31 +54,13 @@ var _xvdomSpec = {
   r: xvdom.DEADPOOL
 };
 ({
-  $s: _xvdomSpec,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null
+  $s: _xvdomSpec
 });
 
 ({
-  $s: _xvdomSpec2,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null
+  $s: _xvdomSpec2
 });
 
 ({
-  $s: _xvdomSpec3,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null
+  $s: _xvdomSpec3
 });

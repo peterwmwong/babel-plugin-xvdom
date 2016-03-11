@@ -23,27 +23,9 @@ var _xvdomSpec = {
 function MyComponent() {}
 
 ({
-  $s: _xvdomSpec,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
-  b: null,
-  c: null,
-  d: null
+  $s: _xvdomSpec
 });
 
 ({
-  $s: _xvdomSpec2,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
-  b: null,
-  c: null,
-  d: null
+  $s: _xvdomSpec2
 });

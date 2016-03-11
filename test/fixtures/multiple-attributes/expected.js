@@ -42,17 +42,8 @@ var four = "4";
 
 ({
   $s: _xvdomSpec,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
   a: one,
-  b: null,
   c: two,
   d: three,
-  e: four,
-  f: null,
-  g: null
+  e: four
 });

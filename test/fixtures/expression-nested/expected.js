@@ -43,28 +43,11 @@ var id = "blah";
 
 ({
   $s: _xvdomSpec2,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
   a: id,
-  b: null,
   c: list.map(function (el) {
     return {
       $s: _xvdomSpec,
-      $n: null,
-      $c: null,
-      $t: null,
-      $a: null,
-      $p: null,
-      $x: null,
-      a: el,
-      b: null,
-      c: null
+      a: el
     };
-  }),
-  d: null,
-  e: null
+  })
 });

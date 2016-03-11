@@ -19,13 +19,5 @@ var message1 = "hello";
 
 ({
   $s: _xvdomSpec,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
-  a: message1,
-  b: null,
-  c: null
+  a: message1
 });

@@ -116,81 +116,29 @@ function translate(str) {
 
 ({
   $s: _xvdomSpec,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
-  a: msg,
-  b: null
+  a: msg
 });
 ({
   $s: _xvdomSpec2,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
   a: msg + "hello",
-  b: null,
   c: translate(msg)
 });
 ({
   $s: _xvdomSpec3,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
-  a: msg,
-  b: null,
-  c: null
+  a: msg
 });
 ({
   $s: _xvdomSpec4,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
-  a: msg + "hello",
-  b: null,
-  c: null
+  a: msg + "hello"
 });
 ({
   $s: _xvdomSpec5,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
-  a: translate(msg),
-  b: null,
-  c: null
+  a: translate(msg)
 });
 ({
-  $s: _xvdomSpec6,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null
+  $s: _xvdomSpec6
 });
 ({
   $s: _xvdomSpec7,
-  $n: null,
-  $c: null,
-  $t: null,
-  $a: null,
-  $p: null,
-  $x: null,
-  a: msg.length,
-  b: null,
-  c: null
+  a: msg.length
 });
