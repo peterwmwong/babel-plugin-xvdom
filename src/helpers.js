@@ -13,13 +13,13 @@ function lineFilter(lines, line, i, { length }){
 // Cleans the whitespace from a text node.
 function cleanText(node){
   if(!nonWhitespace.test(node.value)){
-    return "";
+    return '';
   }
 
   let lines = node.value.split(newlines);
   lines = lines.reduce(lineFilter, []);
 
-  return lines.join(" ");
+  return lines.join(' ');
 }
 
 // Helper to transform a JSX identifier into a normal reference.
@@ -38,12 +38,12 @@ export function toReference(t, node, identifier){
 // Filters out empty children, and transform JSX expressions
 // into normal expressions.
 export function buildChildren(t, rawChildren){
-  return rawChildren.reduce((children, child)=>{
+  return rawChildren.reduce((children, child)=> {
     if (t.isJSXExpressionContainer(child)){
       child = child.expression;
     }
 
-    if ((t.isJSXText(child) || t.isLiteral(child)) && typeof child.value === "string"){
+    if ((t.isJSXText(child) || t.isLiteral(child)) && typeof child.value === 'string'){
       const text = cleanText(child);
       if(!text){ return children; }
 

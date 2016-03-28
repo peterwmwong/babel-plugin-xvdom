@@ -1,9 +1,9 @@
 import {
   buildChildren,
   toReference
-} from "./helpers";
+} from './helpers';
 
-import genId from "./genId";
+import genId from './genId';
 
 const EMPTY_ARRAY = [];
 
@@ -11,30 +11,32 @@ function isComponentName(name){
   return /^[A-Z]/.test(name);
 }
 
-function hasDynamicComponentProps(t, props){
-  return props && Object.keys(props).some(prop=>isDynamic(t, props[prop]));
-}
-
 function isDynamic(t, astNode){
   if(t.isLiteral(astNode)){
     return false;
   }
-  if(t.isLogicalExpression(astNode) || t.isBinaryExpression(astNode)){
+  else if(t.isLogicalExpression(astNode) || t.isBinaryExpression(astNode)){
     return isDynamic(t, astNode.left) || isDynamic(t, astNode.right);
   }
-  if(t.isUnaryExpression(astNode)){
+  else if(t.isUnaryExpression(astNode)){
     return isDynamic(t, astNode.argument);
   }
   return true;
 }
 
+function hasDynamicComponentProps(t, props){
+  return props && Object.keys(props).some((prop)=> isDynamic(t, props[prop]));
+}
+
 function objProp(t, key, value){
-  key = t.isIdentifier(key) ? key : t.identifier(key);
-  return t.objectProperty(key, value);
+  return t.objectProperty(
+    (t.isIdentifier(key) ? key : t.identifier(key)),
+    value
+  );
 }
 
 function objProps(t, keyValues){
-  return Object.keys(keyValues).map(key=>objProp(t, key, keyValues[key]));
+  return Object.keys(keyValues).map((key)=> objProp(t, key, keyValues[key]));
 }
 
 function transformProp(t, prop){
@@ -55,7 +57,7 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
   // >>> _n.prop1 = prop1Value;
   // >>> _n.prop2 = prop2Value;
   // >>> ...
-  return Object.keys(props).reduce((acc, prop)=>{
+  return Object.keys(props).reduce((acc, prop)=> {
     const value = props[prop];
     let dyn;
     const rhs = !isDynamic(t, value)
@@ -71,7 +73,7 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
         (!contextId && dyn) ? (
           (contextId = dyn.contextId),
           [t.expressionStatement(
-              t.assignmentExpression("=",
+              t.assignmentExpression('=',
                 t.memberExpression(instanceParamId, dyn.contextId),
                 nodeId
               )
@@ -79,7 +81,7 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
         ) : EMPTY_ARRAY
       ),
       t.expressionStatement(
-        t.assignmentExpression("=",
+        t.assignmentExpression('=',
           t.memberExpression(nodeId, t.identifier(prop)),
           rhs
         )
@@ -91,7 +93,7 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
 function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
   props = props || {};
   const componentPropMap = dynamicIds.componentPropMap;
-  const componentObjProps = Object.keys(props).map(prop=>
+  const componentObjProps = Object.keys(props).map((prop)=>
     objProp(t, prop,
       (isDynamic(t, props[prop]) ? t.memberExpression(instanceParamId, componentPropMap[prop].id) : props[prop])
     )
@@ -99,7 +101,7 @@ function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
 
   // >>> xvdom.createComponent(MyComponent, props, )
   return t.callExpression(
-    t.memberExpression(t.identifier("xvdom"), t.identifier("createComponent")),
+    t.memberExpression(t.identifier('xvdom'), t.identifier('createComponent')),
     [
       t.identifier(elCompName),
       (componentObjProps.length
@@ -121,7 +123,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
   let tmpNodeId;
   const isOnlyChild = children.length === 1;
   return children.reduce(
-    (acc, child)=>{
+    (acc, child)=> {
       let createEl;
       if(t.isJSXElement(child)){
         const {el, props, children} = child.openingElement.__xvdom_desc;
@@ -129,7 +131,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
         const hasChildren           = children && children.length;
         const isComponent           = isComponentName(el);
 
-        // >>> document.createElement("div")
+        // >>> document.createElement('div')
         if(isComponent){
           createEl = createComponentCode(t, el, props, instanceParamId,
                         genDynamicIdentifiers(null, null, el, props)
@@ -137,7 +139,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
         }
         else{
           createEl = t.callExpression(
-            t.memberExpression(t.identifier("document"), t.identifier("createElement")),
+            t.memberExpression(t.identifier('document'), t.identifier('createElement')),
             [t.stringLiteral(el)]
           );
         }
@@ -151,8 +153,8 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
           }
 
           acc.statements.push(
-            // >>> _n = document.createElement("div")
-            t.expressionStatement(t.assignmentExpression("=", tmpNodeId, createEl))
+            // >>> _n = document.createElement('div')
+            t.expressionStatement(t.assignmentExpression('=', tmpNodeId, createEl))
           );
           createEl = tmpNodeId;
 
@@ -183,9 +185,9 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
           isOnlyChild
         );
 
-        // >>> xvdom.createDynamic(inst.v0, inst, "r0", "c0");
+        // >>> xvdom.createDynamic(inst.v0, inst, 'r0', 'c0');
         createEl = t.callExpression(
-          t.memberExpression(t.identifier("xvdom"), t.identifier("createDynamic")),
+          t.memberExpression(t.identifier('xvdom'), t.identifier('createDynamic')),
           [
             t.booleanLiteral(isOnlyChild),
             parentId,
@@ -198,11 +200,11 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
       }
       else{
         createEl = t.callExpression(
-          t.memberExpression(t.identifier("document"), t.identifier("createTextNode")),
+          t.memberExpression(t.identifier('document'), t.identifier('createTextNode')),
           [
-            t.logicalExpression("||",
+            t.logicalExpression('||',
               t.sequenceExpression([child]),
-              t.stringLiteral("")
+              t.stringLiteral('')
             )
           ]
         );
@@ -212,7 +214,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
         // >>> parentNode.appendChild(...);
         t.expressionStatement(
           t.callExpression(
-            t.memberExpression(parentId, t.identifier("appendChild")),
+            t.memberExpression(parentId, t.identifier('appendChild')),
             [createEl]
           )
         )
@@ -227,13 +229,13 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
   const nodeId      = genUidIdentifier();
   const isComponent = isComponentName(el);
 
-  // >>> document.createElement("div")
+  // >>> document.createElement('div')
   const createEl =
       isComponent
         ? createComponentCode(
             t, el, props, instanceParamId, genDynamicIdentifiers(null, null, el, props))
         : t.callExpression(
-            t.memberExpression(t.identifier("document"), t.identifier("createElement")),
+            t.memberExpression(t.identifier('document'), t.identifier('createElement')),
             [t.stringLiteral(el)]
           );
   const propsStatements =
@@ -259,9 +261,10 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
 }
 
 function createRenderFunction(t, genDynamicIdentifiers, rootElement){
-  let lastUidInt   = 0;
-  const genUidIdentifier = ()=>t.identifier(`_n${++lastUidInt === 1 ? "" : lastUidInt}`);
-  const instanceParamId = t.identifier("inst");
+  let lastUidInt = 0;
+  const instanceParamId = t.identifier('inst');
+  const genUidIdentifier = ()=>
+    t.identifier(`_n${++lastUidInt === 1 ? '' : lastUidInt}`);
   const {
     variableDeclarators,
     statements
@@ -269,7 +272,7 @@ function createRenderFunction(t, genDynamicIdentifiers, rootElement){
   const params = genDynamicIdentifiers.dynamics.length ? [instanceParamId] : EMPTY_ARRAY;
 
   return t.functionExpression(null, params, t.blockStatement([
-    t.variableDeclaration("var", variableDeclarators),
+    t.variableDeclaration('var', variableDeclarators),
     ...statements,
     t.returnStatement(variableDeclarators[0].id)
   ]));
@@ -277,7 +280,7 @@ function createRenderFunction(t, genDynamicIdentifiers, rootElement){
 
 function binarify(t, expressions){
   return expressions.reduce(
-    (prevExp, exp)=>t.logicalExpression("||", exp, prevExp),
+    (prevExp, exp)=> t.logicalExpression('||', exp, prevExp),
     expressions.pop()
   );
 }
@@ -285,15 +288,15 @@ function binarify(t, expressions){
 function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstanceParamId){
   const componentPropMap = dyn.componentPropMap;
   const dynamicProps = Object.keys(dyn.componentPropMap)
-                        .filter(prop=>isDynamic(t, dyn.componentPropMap[prop].value));
+                        .filter((prop)=> isDynamic(t, dyn.componentPropMap[prop].value));
 
   if(!dynamicProps.length) return;
 
   // >>> if (inst.v0 !== pInst.v0) {
   return t.ifStatement(
-    binarify(t, dynamicProps.map(prop=>
+    binarify(t, dynamicProps.map((prop)=>
       t.binaryExpression(
-        "!==",
+        '!==',
         t.memberExpression(instanceParamId,     componentPropMap[prop].id),
         t.memberExpression(prevInstanceParamId, componentPropMap[prop].id)
       )
@@ -306,7 +309,7 @@ function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstan
           [
             t.identifier(dyn.componentName),
             t.objectExpression(
-              Object.keys(dyn.componentPropMap).map(prop=>{
+              Object.keys(dyn.componentPropMap).map((prop)=> {
                 const {id, value} = componentPropMap[prop];
                 return objProp(t, prop,
                   isDynamic(t, value) ? t.memberExpression(instanceParamId, id) : value
@@ -324,9 +327,9 @@ function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstan
       ),
 
       // >>> pInst.p0prop = inst.p0prop;
-      ...dynamicProps.map(prop=>
+      ...dynamicProps.map((prop)=>
         t.expressionStatement(
-          t.assignmentExpression("=",
+          t.assignmentExpression('=',
             t.memberExpression(prevInstanceParamId, componentPropMap[prop].id),
             t.memberExpression(instanceParamId,     componentPropMap[prop].id)
           )
@@ -340,7 +343,7 @@ function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstance
   // >>> if (inst.v0 !== pInst.v0) {
   return t.ifStatement(
     t.binaryExpression(
-      "!==",
+      '!==',
       t.memberExpression(instanceParamId,     dyn.valueId),
       t.memberExpression(prevInstanceParamId, dyn.valueId)
     ),
@@ -348,7 +351,7 @@ function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstance
     t.blockStatement(
       dyn.prop ? [
         t.expressionStatement(
-          t.assignmentExpression("=",
+          t.assignmentExpression('=',
             t.memberExpression(t.memberExpression(prevInstanceParamId, dyn.contextId), t.identifier(dyn.prop)),
             t.memberExpression(instanceParamId, dyn.valueId)
           )
@@ -356,15 +359,15 @@ function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstance
 
         // >>> pInst.v0 = inst.v0;
         t.expressionStatement(
-          t.assignmentExpression("=",
+          t.assignmentExpression('=',
             t.memberExpression(prevInstanceParamId, dyn.valueId),
             t.memberExpression(instanceParamId,     dyn.valueId)
           )
         )
       ] : [
-        // >>> pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, "r0", "c0");
+        // >>> pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, 'r0', 'c0');
         t.expressionStatement(
-          t.assignmentExpression("=",
+          t.assignmentExpression('=',
             t.memberExpression(prevInstanceParamId, dyn.valueId),
             t.callExpression(
               t.memberExpression(prevInstanceParamId, dyn.rerenderId),
@@ -386,10 +389,10 @@ function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstance
 }
 
 function createRerenderFunction(t, dynamics){
-  const instanceParamId     = t.identifier("inst");
-  const prevInstanceParamId = t.identifier("pInst");
+  const instanceParamId     = t.identifier('inst');
+  const prevInstanceParamId = t.identifier('pInst');
   return t.functionExpression(null, [instanceParamId, prevInstanceParamId], t.blockStatement(
-    dynamics.reduce((statements, dyn)=>{
+    dynamics.reduce((statements, dyn)=> {
       return [
         ...statements,
         (dyn.isComponent
@@ -401,10 +404,10 @@ function createRerenderFunction(t, dynamics){
 }
 
 function createSpecObject(t, file, genDynamicIdentifiers, desc){
-  const specId = file.scope.generateUidIdentifier("xvdomSpec");
-  const xvdomId = t.identifier("xvdom");
+  const specId = file.scope.generateUidIdentifier('xvdomSpec');
+  const xvdomId = t.identifier('xvdom');
   const renderFunc = createRenderFunction(t, genDynamicIdentifiers, desc);
-  const dynamics = genDynamicIdentifiers.dynamics.filter(dyn=>
+  const dynamics = genDynamicIdentifiers.dynamics.filter((dyn)=>
                      !dyn.isComponent || dyn.hasDynamicComponentProps
                    );
 
@@ -415,14 +418,14 @@ function createSpecObject(t, file, genDynamicIdentifiers, desc){
         : t.functionExpression(null, EMPTY_ARRAY, t.blockStatement(EMPTY_ARRAY)),
     r: desc.recycle
         ? t.callExpression(
-            t.memberExpression(xvdomId, t.identifier("Pool")),
+            t.memberExpression(xvdomId, t.identifier('Pool')),
             EMPTY_ARRAY
           )
-        : t.memberExpression(xvdomId, t.identifier("DEADPOOL"))
+        : t.memberExpression(xvdomId, t.identifier('DEADPOOL'))
   });
 
-  file.path.unshiftContainer("body",
-    t.variableDeclaration("var", [
+  file.path.unshiftContainer('body',
+    t.variableDeclaration('var', [
       t.variableDeclarator(
         specId,
         t.objectExpression(specProperties)
@@ -445,12 +448,12 @@ function genComponentPropIdentifierMap(t, props, idInt){
   }
 }
 
-function instancePropsForComponent(t, {componentId, componentPropMap}){
+function instancePropsForComponent(t, {componentPropMap}){
   return !componentPropMap
     ? EMPTY_ARRAY
     : Object.keys(componentPropMap)
-      .filter(prop=>isDynamic(t, componentPropMap[prop].value))
-      .map(prop=>{
+      .filter((prop)=> isDynamic(t, componentPropMap[prop].value))
+      .map((prop)=> {
         const {id, value} = componentPropMap[prop];
         return objProp(t, id, value);
       });
@@ -485,7 +488,7 @@ function createInstanceObject(t, file, desc){
 
   const specObject     = createSpecObject(t, file, genDynamicIdentifiers, desc);
   const instancePropsForDynamics = genDynamicIdentifiers.dynamics.reduce(
-    (props, {isComponent, value, valueId, rerenderId, contextId, componentId, componentPropMap})=>[
+    (props, {isComponent, value, valueId, componentId, componentPropMap})=> [
       ...props,
       ...(valueId ? [objProp(t, valueId, value)] : EMPTY_ARRAY),
       ...(isComponent ? instancePropsForComponent(t, {componentPropMap, componentId}) : EMPTY_ARRAY)
@@ -494,11 +497,11 @@ function createInstanceObject(t, file, desc){
   );
 
   const objectProps = [
-    objProp(t, "$s", specObject),
+    objProp(t, '$s', specObject),
     ...instancePropsForDynamics
   ];
 
-  if(desc.key) objectProps.push(objProp(t, "key", desc.key));
+  if(desc.key) objectProps.push(objProp(t, 'key', desc.key));
 
   return t.objectExpression(objectProps);
 }
@@ -511,14 +514,14 @@ export default function({types: t}){
           let key;
           let recycle = false;
           const props = node.attributes.length && node.attributes.reduce(
-            (props, attr)=>{
+            (props, attr)=> {
               const propName = attr.name.name;
               const value    = transformProp(t, attr.value);
 
-              if(propName === "key"){
+              if(propName === 'key'){
                 key = value;
               }
-              else if(propName === "recycle"){
+              else if(propName === 'recycle'){
                 recycle = true;
               }
               else if(value != null){
