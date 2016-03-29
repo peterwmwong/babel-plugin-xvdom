@@ -24,10 +24,6 @@ function isDynamic(t, astNode){
   return true;
 }
 
-function hasDynamicComponentProps(t, props){
-  return props && Object.keys(props).some((prop)=> isDynamic(t, props[prop]));
-}
-
 function objProp(t, key, value){
   return t.objectProperty(
     (t.isIdentifier(key) ? key : t.identifier(key)),
@@ -435,17 +431,24 @@ function createSpecObject(t, file, genDynamicIdentifiers, desc){
   return specId;
 }
 
-function genComponentPropIdentifierMap(t, props, idInt){
+function getComponentDescriptor(t, props, idInt){
+  let nextIdInt = idInt;
+  let componentPropMap;
+  let numDynamicProps = 0;
+
   if(props){
-    const map = {};
+    componentPropMap = {};
     for(let prop in props){
-      map[prop] = {
-        id: t.identifier(`p${idInt}${prop}`),
-        value: props[prop]
-      };
+      if(isDynamic(t, props[prop])){
+        ++numDynamicProps;
+        componentPropMap[prop] = {id: t.identifier(genId(nextIdInt++)), value: props[prop]}
+      }
+      else {
+        componentPropMap[prop] = {value: props[prop]}
+      }
     }
-    return map;
   }
+  return {numDynamicProps, componentPropMap};
 }
 
 function instancePropsForComponent(t, {componentPropMap}){
@@ -468,14 +471,20 @@ function createInstanceObject(t, file, desc){
   //        - dynamicIdGenerator.generateForComponent(componentName, componentProps)
   function genDynamicIdentifiers(value, prop, componentName, componentProps, contextId, isOnlyChild){
     const isComponent = !!componentName;
+    const {
+      componentPropMap,
+      numDynamicProps
+    } = getComponentDescriptor(t, componentProps, lastDynamicUidInt);
+    lastDynamicUidInt += numDynamicProps;
+
     const result = {
       isOnlyChild,
       prop,
       value,
       isComponent,
       componentName,
-      componentPropMap:         ( isComponent && genComponentPropIdentifierMap(t, componentProps, lastDynamicUidInt++)),
-      hasDynamicComponentProps: hasDynamicComponentProps(t, componentProps),
+      componentPropMap:         componentPropMap,
+      hasDynamicComponentProps: !!numDynamicProps,
       valueId:                  (!isComponent && t.identifier(genId(lastDynamicUidInt++))),
       rerenderId:               (!prop        && t.identifier(genId(lastDynamicUidInt++))),
       contextId:                ( contextId   || t.identifier(genId(lastDynamicUidInt++))),

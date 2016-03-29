@@ -3,24 +3,24 @@
 var _xvdomSpec = {
   c: function c(inst) {
     var _n = xvdom.createComponent(MyComponent, {
-      msg: inst.p0msg,
-      msg2: inst.p0msg2,
+      msg: inst.a,
+      msg2: inst.b,
       one: 1,
       two: "two"
-    }, inst, "b", "c", "d");
+    }, inst, "c", "d", "e");
 
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.p0msg !== pInst.p0msg || inst.p0msg2 !== pInst.p0msg2) {
-      pInst.b(MyComponent, {
-        msg: inst.p0msg,
-        msg2: inst.p0msg2,
+    if (inst.a !== pInst.a || inst.b !== pInst.b) {
+      pInst.c(MyComponent, {
+        msg: inst.a,
+        msg2: inst.b,
         one: 1,
         two: "two"
-      }, null, pInst.d, pInst.c, pInst, "c", "d");
-      pInst.p0msg = inst.p0msg;
-      pInst.p0msg2 = inst.p0msg2;
+      }, null, pInst.e, pInst.d, pInst, "d", "e");
+      pInst.a = inst.a;
+      pInst.b = inst.b;
     }
   },
   r: xvdom.DEADPOOL
@@ -32,6 +32,6 @@ var message2 = "goodbye";
 
 ({
   $s: _xvdomSpec,
-  p0msg: message,
-  p0msg2: message2
+  a: message,
+  b: message2
 });

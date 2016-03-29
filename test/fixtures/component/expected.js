@@ -4,7 +4,7 @@ var _xvdomSpec2 = {
   c: function c(inst) {
     var _n = xvdom.createComponent(MyComponent, {
       a: "hello"
-    }, inst, "b", "c", "d");
+    }, inst, "a", "b", "c");
 
     return _n;
   },
@@ -13,7 +13,7 @@ var _xvdomSpec2 = {
 };
 var _xvdomSpec = {
   c: function c(inst) {
-    var _n = xvdom.createComponent(MyComponent, null, inst, "b", "c", "d");
+    var _n = xvdom.createComponent(MyComponent, null, inst, "a", "b", "c");
 
     return _n;
   },
