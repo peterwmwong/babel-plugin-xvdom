@@ -14,19 +14,26 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.a !== pInst.a) {
-      pInst.b.className = inst.a;
-      pInst.a = inst.a;
+    var v;
+    v = inst.a;
+
+    if (v !== pInst.a) {
+      pInst.b.className = v;
+      pInst.a = v;
     }
 
-    if (inst.c !== pInst.c) {
-      pInst.b.id = inst.c;
-      pInst.c = inst.c;
+    v = inst.c;
+
+    if (v !== pInst.c) {
+      pInst.b.id = v;
+      pInst.c = v;
     }
 
-    if (inst.d !== pInst.d) {
-      pInst.b.title = inst.d;
-      pInst.d = inst.d;
+    v = inst.d;
+
+    if (v !== pInst.d) {
+      pInst.b.title = v;
+      pInst.d = v;
     }
 
     if (inst.e !== pInst.e) {

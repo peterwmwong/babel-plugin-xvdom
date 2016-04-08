@@ -8,7 +8,7 @@ import genId from './genId';
 const EMPTY_ARRAY = [];
 
 function isComponentName(name){
-  return /^[A-Z]/.test(name);
+  return name && /^[A-Z]/.test(name);
 }
 
 function isDynamic(t, astNode){
@@ -46,7 +46,7 @@ function transformProp(t, prop){
   );
 }
 
-function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId, props){
+function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId, props, elementName){
   if(!props) return [];
   let contextId;
 
@@ -60,7 +60,7 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
                   ? value
                   : t.memberExpression(
                       instanceParamId,
-                      (dyn = genDynamicIdentifiers(value, prop, null, null, contextId)).valueId
+                      (dyn = genDynamicIdentifiers(value, prop, elementName, null, contextId)).valueId
                     );
 
     return [
@@ -156,7 +156,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
 
           if(!isComponent && hasProps){
             acc.statements.push(
-              ...createPropsStatements(t, instanceParamId, genDynamicIdentifiers, tmpNodeId, props)
+              ...createPropsStatements(t, instanceParamId, genDynamicIdentifiers, tmpNodeId, props, el)
             );
           }
 
@@ -237,7 +237,7 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
   const propsStatements =
       isComponent
         ? EMPTY_ARRAY
-        : createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId, props);
+        : createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId, props, el);
 
   const {
     variableDeclarators,
@@ -335,68 +335,97 @@ function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstan
   );
 }
 
-function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstanceParamId){
-  // >>> if (inst.v0 !== pInst.v0) {
-  return t.ifStatement(
-    t.binaryExpression(
-      '!==',
-      t.memberExpression(instanceParamId,     dyn.valueId),
-      t.memberExpression(prevInstanceParamId, dyn.valueId)
-    ),
-
-    t.blockStatement(
-      dyn.prop ? [
-        t.expressionStatement(
-          t.assignmentExpression('=',
-            t.memberExpression(t.memberExpression(prevInstanceParamId, dyn.contextId), t.identifier(dyn.prop)),
-            t.memberExpression(instanceParamId, dyn.valueId)
-          )
-        ),
-
-        // >>> pInst.v0 = inst.v0;
-        t.expressionStatement(
-          t.assignmentExpression('=',
-            t.memberExpression(prevInstanceParamId, dyn.valueId),
-            t.memberExpression(instanceParamId,     dyn.valueId)
-          )
-        )
-      ] : [
-        // >>> pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, 'r0', 'c0');
-        t.expressionStatement(
-          t.assignmentExpression('=',
-            t.memberExpression(prevInstanceParamId, dyn.valueId),
-            t.callExpression(
-              t.memberExpression(prevInstanceParamId, dyn.rerenderId),
-              [
-                t.booleanLiteral(dyn.isOnlyChild),
-                t.memberExpression(instanceParamId,     dyn.valueId),
-                t.memberExpression(prevInstanceParamId, dyn.valueId),
-                t.memberExpression(prevInstanceParamId, dyn.contextId),
-                prevInstanceParamId,
-                t.stringLiteral(dyn.rerenderId.name),
-                t.stringLiteral(dyn.contextId.name)
-              ]
-            )
-          )
-        )
-      ]
+function createPropAssignmentStatement(t, prevInstanceParamId, tempVarId, dyn){
+  const assignStmt = t.expressionStatement(
+    t.assignmentExpression('=',
+      t.memberExpression(t.memberExpression(prevInstanceParamId, dyn.contextId), t.identifier(dyn.prop)),
+      tempVarId
     )
   );
+
+  if(dyn.componentName === 'input' && dyn.prop === 'value'){
+    return t.ifStatement(
+      t.binaryExpression(
+        '!==',
+        t.memberExpression(t.memberExpression(prevInstanceParamId, dyn.contextId), t.identifier(dyn.prop)),
+        tempVarId
+      ),
+      t.blockStatement([assignStmt])
+    )
+  }
+  else {
+    return assignStmt;
+  }
+}
+
+function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstanceParamId, tempVarId){
+  return [
+    ...(dyn.prop ? [t.expressionStatement(
+      t.assignmentExpression('=',
+        tempVarId,
+        t.memberExpression(instanceParamId, dyn.valueId)
+      )
+    )] : []),
+
+    // >>> if (inst.v0 !== pInst.v0) {
+    t.ifStatement(
+      t.binaryExpression(
+        '!==',
+        (dyn.prop ? tempVarId : t.memberExpression(instanceParamId, dyn.valueId)),
+        t.memberExpression(prevInstanceParamId, dyn.valueId)
+      ),
+
+      t.blockStatement(
+        dyn.prop ? [
+          createPropAssignmentStatement(t, prevInstanceParamId, tempVarId, dyn),
+
+          // >>> pInst.v0 = inst.v0;
+          t.expressionStatement(
+            t.assignmentExpression('=',
+              t.memberExpression(prevInstanceParamId, dyn.valueId),
+              tempVarId
+            )
+          )
+        ] : [
+          // >>> pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, 'r0', 'c0');
+          t.expressionStatement(
+            t.assignmentExpression('=',
+              t.memberExpression(prevInstanceParamId, dyn.valueId),
+              t.callExpression(
+                t.memberExpression(prevInstanceParamId, dyn.rerenderId),
+                [
+                  t.booleanLiteral(dyn.isOnlyChild),
+                  t.memberExpression(instanceParamId,     dyn.valueId),
+                  t.memberExpression(prevInstanceParamId, dyn.valueId),
+                  t.memberExpression(prevInstanceParamId, dyn.contextId),
+                  prevInstanceParamId,
+                  t.stringLiteral(dyn.rerenderId.name),
+                  t.stringLiteral(dyn.contextId.name)
+                ]
+              )
+            )
+          )
+        ]
+      )
+    )
+  ];
 }
 
 function createRerenderFunction(t, dynamics){
   const instanceParamId     = t.identifier('inst');
   const prevInstanceParamId = t.identifier('pInst');
-  return t.functionExpression(null, [instanceParamId, prevInstanceParamId], t.blockStatement(
-    dynamics.reduce((statements, dyn)=> {
-      return [
-        ...statements,
-        (dyn.isComponent
-          ? createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstanceParamId)
-          : createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstanceParamId))
-      ];
-    }, [])
-  ));
+  const tempVarId           = t.identifier('v');
+  return t.functionExpression(null, [instanceParamId, prevInstanceParamId], t.blockStatement([
+    t.variableDeclaration('var', [
+      t.variableDeclarator(tempVarId)
+    ]),
+    ...dynamics.reduce((acc, dyn)=> [
+      ...acc,
+      ...(dyn.isComponent
+        ? [createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstanceParamId)]
+        : createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstanceParamId, tempVarId))
+    ], [])
+  ]));
 }
 
 function createSpecObject(t, file, genDynamicIdentifiers, desc){
@@ -470,7 +499,7 @@ function createInstanceObject(t, file, desc){
   //        - dynamicIdGenerator.generateForDynamic(value, isOnlyChild)
   //        - dynamicIdGenerator.generateForComponent(componentName, componentProps)
   function genDynamicIdentifiers(value, prop, componentName, componentProps, contextId, isOnlyChild){
-    const isComponent = !!componentName;
+    const isComponent = isComponentName(componentName);
     const {
       componentPropMap,
       numDynamicProps

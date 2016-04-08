@@ -22,6 +22,8 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u(inst, pInst) {
+    var v;
+
     if (inst.a !== pInst.a) {
       pInst.a = pInst.b(false, inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }

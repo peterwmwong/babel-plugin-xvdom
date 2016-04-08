@@ -1,5 +1,27 @@
 "use strict";
 
+var _xvdomSpec3 = {
+  c: function c(inst) {
+    var _n = document.createElement("input");
+
+    inst.b = _n;
+    _n.value = inst.a;
+    return _n;
+  },
+  u: function u(inst, pInst) {
+    var v;
+    v = inst.a;
+
+    if (v !== pInst.a) {
+      if (pInst.b.value !== v) {
+        pInst.b.value = v;
+      }
+
+      pInst.a = v;
+    }
+  },
+  r: xvdom.DEADPOOL
+};
 var _xvdomSpec2 = {
   c: function c(inst) {
     var _n = document.createElement("input");
@@ -9,9 +31,12 @@ var _xvdomSpec2 = {
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.a !== pInst.a) {
-      pInst.b.disabled = inst.a;
-      pInst.a = inst.a;
+    var v;
+    v = inst.a;
+
+    if (v !== pInst.a) {
+      pInst.b.disabled = v;
+      pInst.a = v;
     }
   },
   r: xvdom.DEADPOOL
@@ -25,9 +50,12 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.a !== pInst.a) {
-      pInst.b.className = inst.a;
-      pInst.a = inst.a;
+    var v;
+    v = inst.a;
+
+    if (v !== pInst.a) {
+      pInst.b.className = v;
+      pInst.a = v;
     }
   },
   r: xvdom.DEADPOOL
@@ -41,4 +69,8 @@ var messageType = "unread";
 ({
   $s: _xvdomSpec2,
   a: !messageType
+});
+({
+  $s: _xvdomSpec3,
+  a: messageType
 });

@@ -12,9 +12,12 @@ var _xvdomSpec2 = {
     return _n;
   },
   u: function u(inst, pInst) {
-    if (inst.a !== pInst.a) {
-      pInst.b.id = inst.a;
-      pInst.a = inst.a;
+    var v;
+    v = inst.a;
+
+    if (v !== pInst.a) {
+      pInst.b.id = v;
+      pInst.a = v;
     }
 
     if (inst.c !== pInst.c) {
@@ -32,6 +35,8 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u(inst, pInst) {
+    var v;
+
     if (inst.a !== pInst.a) {
       pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
     }
