@@ -2,7 +2,7 @@
 
 var _xvdomSpec = {
   c: function c(inst) {
-    var _n = xvdom.createComponent(MyComponent, {
+    var _n = xvdom.createComponent(MyComponent, MyComponent.state, {
       msg: inst.a,
       msg2: inst.b,
       one: 1,

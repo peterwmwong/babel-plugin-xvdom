@@ -95,11 +95,15 @@ function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
     )
   );
 
-  // >>> xvdom.createComponent(MyComponent, props, )
+  // >>> xvdom.createComponent(MyComponent, MyComponent.state, props, instance, rerenderProp, contextProp, componentInstanceProp)
   return t.callExpression(
     t.memberExpression(t.identifier('xvdom'), t.identifier('createComponent')),
     [
       t.identifier(elCompName),
+      t.memberExpression(
+        t.identifier(elCompName),
+        t.identifier('state')
+      ),
       (componentObjProps.length
         ? t.objectExpression(componentObjProps)
         : t.nullLiteral()
