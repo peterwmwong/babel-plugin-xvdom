@@ -442,7 +442,7 @@ function createSpecObject(t, file, genDynamicIdentifiers, desc){
         ? createRerenderFunction(t, dynamics)
         : t.functionExpression(null, EMPTY_ARRAY, t.blockStatement(EMPTY_ARRAY)),
     r: desc.recycle
-        ? t.callExpression(
+        ? t.newExpression(
             t.memberExpression(xvdomId, t.identifier('Pool')),
             EMPTY_ARRAY
           )
