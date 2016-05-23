@@ -110,7 +110,6 @@ function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
       ),
       instanceParamId,
       t.stringLiteral(dynamicIds.rerenderId.name),
-      t.stringLiteral(dynamicIds.contextId.name),
       t.stringLiteral(dynamicIds.componentId.name)
     ]
   );
@@ -134,7 +133,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
         // >>> document.createElement('div')
         if(isComponent){
           createEl = createComponentCode(t, el, props, instanceParamId,
-                        genDynamicIdentifiers(null, null, el, props)
+                        genDynamicIdentifiers(null, null, el, props, 'PREVENT')
                      );
         }
         else{
@@ -233,7 +232,7 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
   const createEl =
       isComponent
         ? createComponentCode(
-            t, el, props, instanceParamId, genDynamicIdentifiers(null, null, el, props))
+            t, el, props, instanceParamId, genDynamicIdentifiers(null, null, el, props, 'PREVENT'))
         : t.callExpression(
             t.memberExpression(t.identifier('document'), t.identifier('createElement')),
             [t.stringLiteral(el)]
@@ -316,11 +315,8 @@ function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstan
                 );
               })
             ),
-            t.nullLiteral(),
             t.memberExpression(prevInstanceParamId, dyn.componentId),
-            t.memberExpression(prevInstanceParamId, dyn.contextId),
             prevInstanceParamId,
-            t.stringLiteral(dyn.contextId.name),
             t.stringLiteral(dyn.componentId.name)
           ]
         )
