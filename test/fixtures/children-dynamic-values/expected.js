@@ -1,21 +1,22 @@
 "use strict";
 
+var _xvdomCreateDynamic = xvdom.createDynamic;
 var _xvdomSpec = {
   c: function c(inst) {
     var _n = document.createElement("div"),
         _n2;
 
-    _n.appendChild(xvdom.createDynamic(false, _n, inst.a, inst, "b", "c"));
+    _n.appendChild(_xvdomCreateDynamic(false, _n, inst.a, inst, "b", "c"));
 
     _n2 = document.createElement("span");
 
-    _n2.appendChild(xvdom.createDynamic(true, _n2, inst.d, inst, "e", "f"));
+    _n2.appendChild(_xvdomCreateDynamic(true, _n2, inst.d, inst, "e", "f"));
 
     _n.appendChild(_n2);
 
     _n2 = document.createElement("span");
 
-    _n2.appendChild(xvdom.createDynamic(true, _n2, inst.g, inst, "h", "i"));
+    _n2.appendChild(_xvdomCreateDynamic(true, _n2, inst.g, inst, "h", "i"));
 
     _n.appendChild(_n2);
 

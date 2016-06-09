@@ -1,3 +1,7 @@
+//TODO(design): conditionally including globals (createDynamic, createDynamic, createComponent)
+//TODO(design): More specific xvdom AST node information (element, component, w/dynamic-props? etc.)
+//                - There is waaayyyy to many arguments being passed between the create*Code functions
+//                - Need an abstraction to group all relevant information necessary for the code generating functions
 import {
   buildChildren,
   toReference
@@ -6,6 +10,18 @@ import {
 import genId from './genId';
 
 const EMPTY_ARRAY = [];
+
+const _globalsForFile = new Map();
+const globals = {
+  get: (file, name)=> {
+    const prefixedName = `xvdom${name[0].toUpperCase()}${name.slice(1)}`;
+    const fileGlobals = _globalsForFile.get(file)
+                          || _globalsForFile.set(file, {}).get(file);
+    return fileGlobals[name]
+            || (fileGlobals[name] = file.scope.generateUidIdentifier(prefixedName));
+  },
+  forFile: (file)=> _globalsForFile.get(file)
+};
 
 function isComponentName(name){
   return name && /^[A-Z]/.test(name);
@@ -86,6 +102,8 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
   }, []);
 }
 
+// TODO[xvdom]: if there are NO dynamic props, call a specialized createComponent
+//              that doesn't bother with rerendering functions or contexts.
 function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
   props = props || {};
   const componentPropMap = dynamicIds.componentPropMap;
@@ -97,7 +115,7 @@ function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
 
   // >>> xvdom.createComponent(MyComponent, MyComponent.state, props, instance, rerenderProp, contextProp, componentInstanceProp)
   return t.callExpression(
-    t.memberExpression(t.identifier('xvdom'), t.identifier('createComponent')),
+    dynamicIds.createComponentId,
     [
       t.identifier(elCompName),
       t.memberExpression(
@@ -175,7 +193,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
         }
       }
       else if(isDynamic(t, child)){
-        const {valueId, rerenderId, contextId} = genDynamicIdentifiers(
+        const {valueId, rerenderId, contextId, createDynamicId} = genDynamicIdentifiers(
           child,
           null/*prop*/,
           null/*componentName*/,
@@ -186,7 +204,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
 
         // >>> xvdom.createDynamic(inst.v0, inst, 'r0', 'c0');
         createEl = t.callExpression(
-          t.memberExpression(t.identifier('xvdom'), t.identifier('createDynamic')),
+          createDynamicId,
           [
             t.booleanLiteral(isOnlyChild),
             parentId,
@@ -224,6 +242,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
   );
 }
 
+// TODO: Consolidate createRootElementCode and createElementsCode
 function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifiers, {el, props, children}){
   const nodeId      = genUidIdentifier();
   const isComponent = isComponentName(el);
@@ -505,6 +524,7 @@ function createInstanceObject(t, file, desc){
       numDynamicProps
     } = getComponentDescriptor(t, componentProps, lastDynamicUidInt);
     lastDynamicUidInt += numDynamicProps;
+    const hasDynamicComponentProps = !!numDynamicProps;
 
     const result = {
       isOnlyChild,
@@ -512,8 +532,17 @@ function createInstanceObject(t, file, desc){
       value,
       isComponent,
       componentName,
+      hasDynamicComponentProps,
+      get createDynamicId(){
+        return globals.get(file, 'createDynamic');
+      },
+      get passId(){
+        return globals.get(file, 'pass');
+      },
+      get createComponentId(){
+        return globals.get(file, 'createComponent');
+      },
       componentPropMap:         componentPropMap,
-      hasDynamicComponentProps: !!numDynamicProps,
       valueId:                  (!isComponent && t.identifier(genId(lastDynamicUidInt++))),
       rerenderId:               (!prop        && t.identifier(genId(lastDynamicUidInt++))),
       contextId:                ( contextId   || t.identifier(genId(lastDynamicUidInt++))),
@@ -547,11 +576,29 @@ function createInstanceObject(t, file, desc){
 export default function({types: t}){
   return {
     visitor: {
+      Program: {
+        exit(path, {file}){
+          const fileGlobals = globals.forFile(file);
+          if(fileGlobals && Object.keys(fileGlobals).length){
+            file.path.unshiftContainer('body',
+              t.variableDeclaration('var',
+                Object.keys(fileGlobals).sort().map((key)=>
+                  t.variableDeclarator(
+                    fileGlobals[key],
+                    t.memberExpression(t.identifier('xvdom'), t.identifier(key))
+                  )
+                )
+              )
+            );
+          }
+        }
+      },
+
       JSXOpeningElement: {
-        exit({node}/*, parent, scope, file */){
+        exit({node, node:{attributes}}/*, parent, scope, file */){
           let key;
           let recycle = false;
-          const props = node.attributes.length && node.attributes.reduce(
+          const props = attributes.length && attributes.reduce(
             (props, attr)=> {
               const propName = attr.name.name;
               const value    = transformProp(t, attr.value);
@@ -578,10 +625,6 @@ export default function({types: t}){
             el: node.name.name
           };
         }
-      },
-
-      JSXClosingElement: {
-        exit(path){ path.remove(); }
       },
 
       JSXElement: {

@@ -1,11 +1,12 @@
 "use strict";
 
+var _xvdomCreateComponent = xvdom.createComponent;
 var _xvdomSpec3 = {
   c: function c(inst) {
     var _n = document.createElement("div"),
         _n2;
 
-    _n2 = xvdom.createComponent(MyComponent, MyComponent.state, {
+    _n2 = _xvdomCreateComponent(MyComponent, MyComponent.state, {
       b: "goodbye"
     }, inst, "a", "b");
 
@@ -18,7 +19,7 @@ var _xvdomSpec3 = {
 };
 var _xvdomSpec2 = {
   c: function c(inst) {
-    var _n = xvdom.createComponent(MyComponent, MyComponent.state, {
+    var _n = _xvdomCreateComponent(MyComponent, MyComponent.state, {
       a: "hello"
     }, inst, "a", "b");
 
@@ -29,7 +30,7 @@ var _xvdomSpec2 = {
 };
 var _xvdomSpec = {
   c: function c(inst) {
-    var _n = xvdom.createComponent(MyComponent, MyComponent.state, null, inst, "a", "b");
+    var _n = _xvdomCreateComponent(MyComponent, MyComponent.state, null, inst, "a", "b");
 
     return _n;
   },
