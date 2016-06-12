@@ -1,10 +1,11 @@
 "use strict";
 
 var _xvdomCreateDynamic = xvdom.createDynamic,
+    _xvdomEl = xvdom.el,
     _xvdomUpdateDynamic = xvdom.updateDynamic;
 var _xvdomSpec = {
   c: function c(inst) {
-    var _n = document.createElement("div");
+    var _n = _xvdomEl("div");
 
     inst.b = _n;
     _n.className = inst.a;

@@ -1,8 +1,9 @@
 "use strict";
 
+var _xvdomEl = xvdom.el;
 var _xvdomSpec = {
   c: function c() {
-    var _n = document.createElement("div");
+    var _n = _xvdomEl("div");
 
     return _n;
   },

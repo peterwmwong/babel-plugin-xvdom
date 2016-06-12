@@ -1,10 +1,11 @@
 "use strict";
 
 var _xvdomCreateDynamic = xvdom.createDynamic,
+    _xvdomEl = xvdom.el,
     _xvdomUpdateDynamic = xvdom.updateDynamic;
 var _xvdomSpec7 = {
   c: function c(inst) {
-    var _n = document.createElement("div");
+    var _n = _xvdomEl("div");
 
     _n.appendChild(inst.b = _xvdomCreateDynamic(true, _n, inst.a));
 
@@ -21,7 +22,7 @@ var _xvdomSpec7 = {
 };
 var _xvdomSpec6 = {
   c: function c() {
-    var _n = document.createElement("div");
+    var _n = _xvdomEl("div");
 
     _n.appendChild(document.createTextNode(("hello" + 5) || ""));
 
@@ -32,7 +33,7 @@ var _xvdomSpec6 = {
 };
 var _xvdomSpec5 = {
   c: function c(inst) {
-    var _n = document.createElement("div");
+    var _n = _xvdomEl("div");
 
     _n.appendChild(inst.b = _xvdomCreateDynamic(true, _n, inst.a));
 
@@ -49,7 +50,7 @@ var _xvdomSpec5 = {
 };
 var _xvdomSpec4 = {
   c: function c(inst) {
-    var _n = document.createElement("div");
+    var _n = _xvdomEl("div");
 
     _n.appendChild(inst.b = _xvdomCreateDynamic(true, _n, inst.a));
 
@@ -66,7 +67,7 @@ var _xvdomSpec4 = {
 };
 var _xvdomSpec3 = {
   c: function c(inst) {
-    var _n = document.createElement("div");
+    var _n = _xvdomEl("div");
 
     _n.appendChild(inst.b = _xvdomCreateDynamic(true, _n, inst.a));
 
@@ -83,7 +84,7 @@ var _xvdomSpec3 = {
 };
 var _xvdomSpec2 = {
   c: function c(inst) {
-    var _n = document.createElement("div");
+    var _n = _xvdomEl("div");
 
     inst.b = _n;
     _n.className = inst.a;
@@ -110,7 +111,7 @@ var _xvdomSpec2 = {
 };
 var _xvdomSpec = {
   c: function c(inst) {
-    var _n = document.createElement("div");
+    var _n = _xvdomEl("div");
 
     inst.b = _n;
     _n.className = inst.a;

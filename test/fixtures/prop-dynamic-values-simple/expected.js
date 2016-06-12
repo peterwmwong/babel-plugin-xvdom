@@ -1,8 +1,9 @@
 "use strict";
 
+var _xvdomEl = xvdom.el;
 var _xvdomSpec3 = {
   c: function c(inst) {
-    var _n = document.createElement("input");
+    var _n = _xvdomEl("input");
 
     inst.b = _n;
     _n.value = inst.a;
@@ -24,7 +25,7 @@ var _xvdomSpec3 = {
 };
 var _xvdomSpec2 = {
   c: function c(inst) {
-    var _n = document.createElement("input");
+    var _n = _xvdomEl("input");
 
     inst.b = _n;
     _n.disabled = inst.a;
@@ -43,7 +44,7 @@ var _xvdomSpec2 = {
 };
 var _xvdomSpec = {
   c: function c(inst) {
-    var _n = document.createElement("div");
+    var _n = _xvdomEl("div");
 
     inst.b = _n;
     _n.className = inst.a;

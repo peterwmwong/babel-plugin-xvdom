@@ -157,7 +157,7 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
         }
         else{
           createEl = t.callExpression(
-            t.memberExpression(t.identifier('document'), t.identifier('createElement')),
+            genDynamicIdentifiers.globalGet('el'),
             [t.stringLiteral(el)]
           );
         }
@@ -255,7 +255,7 @@ function createRootElementCode(t, instanceParamId, genUidIdentifier, genDynamicI
         ? createComponentCode(
             t, el, props, instanceParamId, genDynamicIdentifiers(null, null, el, props, 'PREVENT'))
         : t.callExpression(
-            t.memberExpression(t.identifier('document'), t.identifier('createElement')),
+            genDynamicIdentifiers.globalGet('el'),
             [t.stringLiteral(el)]
           );
   const propsStatements =
@@ -553,6 +553,7 @@ function createInstanceObject(t, file, desc){
     genDynamicIdentifiers.dynamics.push(result);
     return result;
   }
+  genDynamicIdentifiers.globalGet = (name)=> globals.get(file, name);
   genDynamicIdentifiers.dynamics = [];
 
   const specObject     = createSpecObject(t, file, genDynamicIdentifiers, desc);
