@@ -1,6 +1,7 @@
 "use strict";
 
-var _xvdomCreateDynamic = xvdom.createDynamic;
+var _xvdomCreateDynamic = xvdom.createDynamic,
+    _xvdomUpdateDynamic = xvdom.updateDynamic;
 var _xvdomSpec2 = {
   c: function c(inst) {
     var _n = document.createElement("div");
@@ -8,7 +9,7 @@ var _xvdomSpec2 = {
     inst.b = _n;
     _n.id = inst.a;
 
-    _n.appendChild(_xvdomCreateDynamic(true, _n, inst.c, inst, "d", "e"));
+    _n.appendChild(inst.d = _xvdomCreateDynamic(true, _n, inst.c));
 
     return _n;
   },
@@ -22,7 +23,7 @@ var _xvdomSpec2 = {
     }
 
     if (inst.c !== pInst.c) {
-      pInst.c = pInst.d(true, inst.c, pInst.c, pInst.e, pInst, "d", "e");
+      pInst.d = _xvdomUpdateDynamic(true, pInst.c, pInst.c = inst.c, pInst.d);
     }
   },
   r: xvdom.DEADPOOL
@@ -31,7 +32,7 @@ var _xvdomSpec = {
   c: function c(inst) {
     var _n = document.createElement("span");
 
-    _n.appendChild(_xvdomCreateDynamic(true, _n, inst.a, inst, "b", "c"));
+    _n.appendChild(inst.b = _xvdomCreateDynamic(true, _n, inst.a));
 
     return _n;
   },
@@ -39,7 +40,7 @@ var _xvdomSpec = {
     var v;
 
     if (inst.a !== pInst.a) {
-      pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
+      pInst.b = _xvdomUpdateDynamic(true, pInst.a, pInst.a = inst.a, pInst.b);
     }
   },
   r: xvdom.DEADPOOL

@@ -1,6 +1,7 @@
 "use strict";
 
-var _xvdomCreateDynamic = xvdom.createDynamic;
+var _xvdomCreateDynamic = xvdom.createDynamic,
+    _xvdomUpdateDynamic = xvdom.updateDynamic;
 var _xvdomSpec = {
   c: function c(inst) {
     var _n = document.createElement("div");
@@ -10,7 +11,7 @@ var _xvdomSpec = {
     _n.id = inst.c;
     _n.title = inst.d;
 
-    _n.appendChild(_xvdomCreateDynamic(true, _n, inst.e, inst, "f", "g"));
+    _n.appendChild(inst.f = _xvdomCreateDynamic(true, _n, inst.e));
 
     return _n;
   },
@@ -38,7 +39,7 @@ var _xvdomSpec = {
     }
 
     if (inst.e !== pInst.e) {
-      pInst.e = pInst.f(true, inst.e, pInst.e, pInst.g, pInst, "f", "g");
+      pInst.f = _xvdomUpdateDynamic(true, pInst.e, pInst.e = inst.e, pInst.f);
     }
   },
   r: xvdom.DEADPOOL

@@ -1,11 +1,12 @@
 "use strict";
 
-var _xvdomCreateDynamic = xvdom.createDynamic;
+var _xvdomCreateDynamic = xvdom.createDynamic,
+    _xvdomUpdateDynamic = xvdom.updateDynamic;
 var _xvdomSpec7 = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(_xvdomCreateDynamic(true, _n, inst.a, inst, "b", "c"));
+    _n.appendChild(inst.b = _xvdomCreateDynamic(true, _n, inst.a));
 
     return _n;
   },
@@ -13,7 +14,7 @@ var _xvdomSpec7 = {
     var v;
 
     if (inst.a !== pInst.a) {
-      pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
+      pInst.b = _xvdomUpdateDynamic(true, pInst.a, pInst.a = inst.a, pInst.b);
     }
   },
   r: xvdom.DEADPOOL
@@ -33,7 +34,7 @@ var _xvdomSpec5 = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(_xvdomCreateDynamic(true, _n, inst.a, inst, "b", "c"));
+    _n.appendChild(inst.b = _xvdomCreateDynamic(true, _n, inst.a));
 
     return _n;
   },
@@ -41,7 +42,7 @@ var _xvdomSpec5 = {
     var v;
 
     if (inst.a !== pInst.a) {
-      pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
+      pInst.b = _xvdomUpdateDynamic(true, pInst.a, pInst.a = inst.a, pInst.b);
     }
   },
   r: xvdom.DEADPOOL
@@ -50,7 +51,7 @@ var _xvdomSpec4 = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(_xvdomCreateDynamic(true, _n, inst.a, inst, "b", "c"));
+    _n.appendChild(inst.b = _xvdomCreateDynamic(true, _n, inst.a));
 
     return _n;
   },
@@ -58,7 +59,7 @@ var _xvdomSpec4 = {
     var v;
 
     if (inst.a !== pInst.a) {
-      pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
+      pInst.b = _xvdomUpdateDynamic(true, pInst.a, pInst.a = inst.a, pInst.b);
     }
   },
   r: xvdom.DEADPOOL
@@ -67,7 +68,7 @@ var _xvdomSpec3 = {
   c: function c(inst) {
     var _n = document.createElement("div");
 
-    _n.appendChild(_xvdomCreateDynamic(true, _n, inst.a, inst, "b", "c"));
+    _n.appendChild(inst.b = _xvdomCreateDynamic(true, _n, inst.a));
 
     return _n;
   },
@@ -75,7 +76,7 @@ var _xvdomSpec3 = {
     var v;
 
     if (inst.a !== pInst.a) {
-      pInst.a = pInst.b(true, inst.a, pInst.a, pInst.c, pInst, "b", "c");
+      pInst.b = _xvdomUpdateDynamic(true, pInst.a, pInst.a = inst.a, pInst.b);
     }
   },
   r: xvdom.DEADPOOL

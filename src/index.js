@@ -113,7 +113,7 @@ function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
     )
   );
 
-  // >>> xvdom.createComponent(MyComponent, MyComponent.state, props, instance, rerenderProp, contextProp, componentInstanceProp)
+  // >>> _xvdomCreateComponent(MyComponent, MyComponent.state, props, instance, rerenderProp, contextProp, componentInstanceProp)
   return t.callExpression(
     dynamicIds.createComponentId,
     [
@@ -133,6 +133,7 @@ function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
   );
 }
 
+// TODO: global for `document.createElement`
 function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIdentifiers, parentId, children){
   const result = {variableDeclarators:[], statements:[]};
   if(!children) return result;
@@ -199,21 +200,22 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
           null/*componentName*/,
           null/*componentProps*/,
           null/*contextId*/,
-          isOnlyChild
+          isOnlyChild,
+          true
         );
 
         // >>> xvdom.createDynamic(inst.v0, inst, 'r0', 'c0');
-        createEl = t.callExpression(
-          createDynamicId,
-          [
-            t.booleanLiteral(isOnlyChild),
-            parentId,
-            t.memberExpression(instanceParamId, valueId),
-            instanceParamId,
-            t.stringLiteral(rerenderId.name),
-            t.stringLiteral(contextId.name)
-          ]
-        );
+        createEl =  t.assignmentExpression('=',
+          t.memberExpression(instanceParamId, contextId),
+          t.callExpression(
+            createDynamicId,
+            [
+              t.booleanLiteral(isOnlyChild),
+              parentId,
+              t.memberExpression(instanceParamId, valueId)
+            ]
+          )
+        )
       }
       else{
         createEl = t.callExpression(
@@ -406,20 +408,20 @@ function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstance
             )
           )
         ] : [
-          // >>> pInst.v0 = pInst.r0(inst.v0, pInst.v0, pInst.c0, pInst, 'r0', 'c0');
+          // >>> pInst.context = _xvdomUpdateDynamic(isOnlyChild, pInst.value, (pInst.value = inst.value), pInst.context);
           t.expressionStatement(
             t.assignmentExpression('=',
-              t.memberExpression(prevInstanceParamId, dyn.valueId),
+              t.memberExpression(prevInstanceParamId, dyn.contextId),
               t.callExpression(
-                t.memberExpression(prevInstanceParamId, dyn.rerenderId),
+                dyn.updateDynamicId,
                 [
                   t.booleanLiteral(dyn.isOnlyChild),
-                  t.memberExpression(instanceParamId,     dyn.valueId),
                   t.memberExpression(prevInstanceParamId, dyn.valueId),
-                  t.memberExpression(prevInstanceParamId, dyn.contextId),
-                  prevInstanceParamId,
-                  t.stringLiteral(dyn.rerenderId.name),
-                  t.stringLiteral(dyn.contextId.name)
+                  t.assignmentExpression('=',
+                    t.memberExpression(prevInstanceParamId, dyn.valueId),
+                    t.memberExpression(instanceParamId,     dyn.valueId)
+                  ),
+                  t.memberExpression(prevInstanceParamId, dyn.contextId)
                 ]
               )
             )
@@ -517,7 +519,7 @@ function createInstanceObject(t, file, desc){
   //        - dynamicIdGenerator.generateForProp(prop)
   //        - dynamicIdGenerator.generateForDynamic(value, isOnlyChild)
   //        - dynamicIdGenerator.generateForComponent(componentName, componentProps)
-  function genDynamicIdentifiers(value, prop, componentName, componentProps, contextId, isOnlyChild){
+  function genDynamicIdentifiers(value, prop, componentName, componentProps, contextId, isOnlyChild, noRerenderId){
     const isComponent = isComponentName(componentName);
     const {
       componentPropMap,
@@ -536,15 +538,15 @@ function createInstanceObject(t, file, desc){
       get createDynamicId(){
         return globals.get(file, 'createDynamic');
       },
-      get passId(){
-        return globals.get(file, 'pass');
+      get updateDynamicId(){
+        return globals.get(file, 'updateDynamic');
       },
       get createComponentId(){
         return globals.get(file, 'createComponent');
       },
       componentPropMap:         componentPropMap,
       valueId:                  (!isComponent && t.identifier(genId(lastDynamicUidInt++))),
-      rerenderId:               (!prop        && t.identifier(genId(lastDynamicUidInt++))),
+      rerenderId:               ((!prop && !noRerenderId) && t.identifier(genId(lastDynamicUidInt++))),
       contextId:                ( contextId   || t.identifier(genId(lastDynamicUidInt++))),
       componentId:              ( isComponent && t.identifier(genId(lastDynamicUidInt++)))
     };
