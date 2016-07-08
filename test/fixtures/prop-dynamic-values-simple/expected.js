@@ -1,12 +1,34 @@
 "use strict";
 
 var _xvdomEl = xvdom.el;
+var _xvdomSpec4 = {
+  c: function c(inst) {
+    var _n = _xvdomEl("a");
+
+    inst.b = _n;
+    if (inst.a != null) _n.href = inst.a;
+    return _n;
+  },
+  u: function u(inst, pInst) {
+    var v;
+    v = inst.a;
+
+    if (v !== pInst.a) {
+      if (pInst.b.href !== v) {
+        pInst.b.href = v;
+      }
+
+      pInst.a = v;
+    }
+  },
+  r: xvdom.DEADPOOL
+};
 var _xvdomSpec3 = {
   c: function c(inst) {
     var _n = _xvdomEl("input");
 
     inst.b = _n;
-    _n.value = inst.a;
+    if (inst.a != null) _n.value = inst.a;
     return _n;
   },
   u: function u(inst, pInst) {
@@ -73,5 +95,9 @@ var messageType = "unread";
 });
 ({
   $s: _xvdomSpec3,
+  a: messageType
+});
+({
+  $s: _xvdomSpec4,
   a: messageType
 });

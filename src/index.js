@@ -11,6 +11,13 @@ import genId from './genId';
 
 const EMPTY_ARRAY = [];
 
+function hasSideEffects(dyn){
+  return dyn && (
+    (dyn.componentName === 'input' && dyn.prop === 'value') ||
+    (dyn.componentName === 'a'     && dyn.prop === 'href')
+  )
+}
+
 const _globalsForFile = new Map();
 const globals = {
   get: (file, name)=> {
@@ -79,6 +86,24 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
                       (dyn = genDynamicIdentifiers(value, prop, elementName, null, contextId)).valueId
                     );
 
+    let assignStmt = t.expressionStatement(
+      t.assignmentExpression('=',
+        t.memberExpression(nodeId, t.identifier(prop)),
+        rhs
+      )
+    );
+
+    if(hasSideEffects(dyn)){
+      assignStmt = t.ifStatement(
+        t.binaryExpression(
+          '!=',
+          rhs,
+          t.identifier('null')
+        ),
+        assignStmt
+      );
+    }
+
     return [
       ...acc,
       ...(
@@ -92,12 +117,7 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
             )]
         ) : EMPTY_ARRAY
       ),
-      t.expressionStatement(
-        t.assignmentExpression('=',
-          t.memberExpression(nodeId, t.identifier(prop)),
-          rhs
-        )
-      )
+      assignStmt
     ];
   }, []);
 }
@@ -364,7 +384,7 @@ function createPropAssignmentStatement(t, prevInstanceParamId, tempVarId, dyn){
     )
   );
 
-  if(dyn.componentName === 'input' && dyn.prop === 'value'){
+  if(hasSideEffects(dyn)){
     return t.ifStatement(
       t.binaryExpression(
         '!==',
