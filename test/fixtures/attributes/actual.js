@@ -3,3 +3,4 @@
 <input disabled={false} />;
 <input disabled={!false} />;
 <input disabled={false || true} />;
+<div />;

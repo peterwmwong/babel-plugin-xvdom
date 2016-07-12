@@ -1,0 +1,1 @@
+<div>{"my-class"}</div>;

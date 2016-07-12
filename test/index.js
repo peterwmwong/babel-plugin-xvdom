@@ -12,17 +12,18 @@ describe("turn jsx into xvdom", ()=> {
     if([
       "attributes",
       "multiple-attributes",
+      "children-static-value",
       "children-dynamic-values-simple",
       "children-dynamic-values",
-      "component",
-      "component-dynamic-props",
-      "children",
-      "element",
-      "expression-nested",
-      "expression",
-      "key",
-      "prop-dynamic-values-simple",
-      "recycle"
+      // "component",
+      // "component-dynamic-props",
+      // "children",
+      // "element",
+      // "expression-nested",
+      // "expression",
+      // "key",
+      // "prop-dynamic-values-simple",
+      // "recycle"
     ].indexOf(caseName) === -1) return;
 
     it(`should ${caseName.split("-").join(" ")}`, ()=> {
