@@ -1,7 +1,7 @@
 "use strict";
 
 var _xvdomSpec = {
-  b: [1, 2, 0, 6, 4, 0],
+  b: [0, 2, 0, 4, 2],
   s: []
 };
 var message1 = "hello";

@@ -7,6 +7,15 @@ import {
   toReference
 } from './helpers';
 
+const BYTECODE = {
+  el        : 0,
+  component : 1,
+  dynamic   : 2,
+  static    : 3,
+  child     : 4,
+  parent    : 5
+};
+
 const REF_TO_TAG = [
   'a',
   'b',
@@ -24,9 +33,7 @@ const TAG_TO_REF = REF_TO_TAG.reduce(
   {}
 );
 
-function isComponentName(name){
-  return name && /^[A-Z]/.test(name);
-}
+function isComponentName(name){ return name && /^[A-Z]/.test(name); }
 
 function isDynamic(t, astNode){
   if(t.isLiteral(astNode)){
@@ -67,19 +74,21 @@ function transformProp(t, prop){
   );
 }
 
+const STATIC_BYTECODES = [BYTECODE.static];
 function staticBytecode(t, s, staticsAcc){
-  const i = staticsAcc.push(s.node);
-  return [5, i - 1];
+  staticsAcc.push(s.node);
+  return STATIC_BYTECODES;
 }
 
+const DYNAMIC_BYTECODES = [BYTECODE.dynamic];
 function dynamicBytecode(t, d, dynamicsAcc){
-  const i = dynamicsAcc.push(d.node);
-  return [4, i - 1];
+  dynamicsAcc.push(d.node);
+  return DYNAMIC_BYTECODES;
 }
 
 function elChildBytecode(t, child, staticsAcc, dynamicsAcc){
   switch (child.type){
-  case 'el':      return elCode(t, child, staticsAcc, dynamicsAcc);
+  case 'el':      return elBytecode(t, child, staticsAcc, dynamicsAcc);
   case 'static':  return staticBytecode(t, child, staticsAcc);
   case 'dynamic': return dynamicBytecode(t, child, dynamicsAcc);
   default: throw 'unknown child type';
@@ -87,43 +96,42 @@ function elChildBytecode(t, child, staticsAcc, dynamicsAcc){
 }
 
 function elChildrenBytecode(t, children, staticsAcc, dynamicsAcc){
-  const result = (
+  return (
     children && children.length
       ? [
-        6,
+        BYTECODE.child,
         ...children.reduce((acc, child)=> {
           return acc.concat(elChildBytecode(t, child, staticsAcc, dynamicsAcc))
         }, []),
-        7
+        BYTECODE.parent
       ]
       : []
   );
-  return result;
 }
 
-const propBytecode = (t, {dynamics=[], statics=[]}, staticsAcc, dynamicsAcc)=> {
-  const numProps = dynamics.length + statics.length;
-  const staticProps = numProps > 0 ? [statics.length] : [];
-  return [
-    numProps,
-    ...staticProps,
-    ...dynamics.map((s)=> dynamicsAcc.push(s.value) - 1),
-    ...statics.map( (s)=> staticsAcc.push(s.value)  - 1)
-  ]
-};
+function propBytecode(t, props, staticProps, staticsAcc, dynamicsAcc){
+  const numProps = props ? props.length : 0;
+  if(numProps === 0) return [numProps];
 
-function elCode(t, {el, props, children}, staticsAcc, dynamicsAcc){
+  props.forEach(({isDynamic, name, value})=> {
+    staticsAcc.push(t.stringLiteral(name));
+    (isDynamic ? dynamicsAcc : staticsAcc).push(value);
+  }, []);
+
+  return [numProps, staticProps];
+}
+
+function elBytecode(t, {el, props, staticProps, children}, staticsAcc, dynamicsAcc){
   return [
-    (props.length ? 0 : 1),
-    TAG_TO_REF[el],
-    ...propBytecode(t, props, staticsAcc, dynamicsAcc),
-    ...elChildrenBytecode(t, children, staticsAcc, dynamicsAcc)
+    BYTECODE.el, TAG_TO_REF[el],
+      ...propBytecode(t, props, staticProps, staticsAcc, dynamicsAcc),
+      ...elChildrenBytecode(t, children, staticsAcc, dynamicsAcc)
   ];
 }
 
 function trimPops(t, bytecode){
   let code;
-  while(bytecode.length && t.isNumericLiteral(code = bytecode.pop()) && code.value === 7);
+  while(bytecode.length && (code = bytecode.pop()) === BYTECODE.parent);
   bytecode.push(code);
   return bytecode;
 }
@@ -131,10 +139,8 @@ function trimPops(t, bytecode){
 function specBytecode(t, desc, staticsAcc, dynamicsAcc){
   return t.arrayExpression(
     trimPops(t,
-      elCode(t, desc, staticsAcc, dynamicsAcc)
-        .map((code)=> t.numericLiteral(code)
-      )
-    )
+      elBytecode(t, desc, staticsAcc, dynamicsAcc)
+    ).map((code)=> t.numericLiteral(code))
   );
 }
 
@@ -145,7 +151,7 @@ function createSpecBytecodeStaticArrays(t, desc){
 
   return {
     bytecode,
-    statics: t.arrayExpression(staticsAcc),
+    statics:  t.arrayExpression(staticsAcc),
     dynamics: t.arrayExpression(dynamicsAcc)
   };
 }
@@ -156,8 +162,7 @@ function createSpecObject(t, file, desc){
 
   file.path.unshiftContainer('body',
     t.variableDeclaration('var', [
-      t.variableDeclarator(
-        id,
+      t.variableDeclarator(id,
         obj(t, {
           b: bytecode,
           s: statics
@@ -184,10 +189,12 @@ export default function({types: t}){
         exit({node, node:{attributes}}/*, parent, scope, file */){
           let key;
           let recycle = false;
+          let staticProps = 0;
           const props = attributes.length && attributes.reduce(
             (props, attr)=> {
               const propName = attr.name.name;
               const value    = transformProp(t, attr.value);
+              let _isDynamic  = false;
 
               if(propName === 'key'){
                 key = value;
@@ -196,15 +203,17 @@ export default function({types: t}){
                 recycle = true;
               }
               else if(value != null){
-                props[isDynamic(t, value) ? 'dynamics' : 'statics'].push({
+                if(!(_isDynamic = isDynamic(t, value))) staticProps++;
+                props.push({
+                  isDynamic: _isDynamic,
                   name: propName,
                   value: value
-                })
+                });
               }
 
               return props;
             },
-            {dynamics:[], statics:[]}
+            []
           );
 
           node.__xvdom_desc = {
@@ -212,6 +221,7 @@ export default function({types: t}){
             key,
             recycle,
             props,
+            staticProps,
             el: node.name.name
           };
         }

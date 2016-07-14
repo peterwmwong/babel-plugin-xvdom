@@ -11,10 +11,11 @@ describe("turn jsx into xvdom", ()=> {
   fs.readdirSync(fixturesDir).map(caseName=> {
     if([
       "attributes",
-      "multiple-attributes",
+      "attributes-dynamic",
+      "attributes-dynamic-static",
       "children-static-value",
       "children-dynamic-values-simple",
-      "children-dynamic-values",
+      // "children-dynamic-values",
       // "component",
       // "component-dynamic-props",
       // "children",

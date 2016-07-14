@@ -1,28 +1,28 @@
 "use strict";
 
 var _xvdomSpec6 = {
-  b: [1, 2, 0],
+  b: [0, 2, 0],
   s: []
 };
 var _xvdomSpec5 = {
-  b: [1, 4, 1, 1, 0],
-  s: [false || true]
+  b: [0, 4, 1, 1],
+  s: ["disabled", false || true]
 };
 var _xvdomSpec4 = {
-  b: [1, 4, 1, 1, 0],
-  s: [!false]
+  b: [0, 4, 1, 1],
+  s: ["disabled", !false]
 };
 var _xvdomSpec3 = {
-  b: [1, 4, 1, 1, 0],
-  s: [false]
+  b: [0, 4, 1, 1],
+  s: ["disabled", false]
 };
 var _xvdomSpec2 = {
-  b: [1, 4, 1, 1, 0],
-  s: [true]
+  b: [0, 4, 1, 1],
+  s: ["disabled", true]
 };
 var _xvdomSpec = {
-  b: [1, 2, 1, 1, 0],
-  s: ["my-class"]
+  b: [0, 2, 1, 1],
+  s: ["className", "my-class"]
 };
 ({
   t: _xvdomSpec,

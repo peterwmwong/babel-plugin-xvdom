@@ -1,8 +1,8 @@
 "use strict";
 
 var _xvdomSpec = {
-  b: [1, 2, 3, 0, 0, 1, 2],
-  s: []
+  b: [0, 2, 3, 0],
+  s: ["className", "id", "title"]
 };
 var one = "1";
 var two = "2";
