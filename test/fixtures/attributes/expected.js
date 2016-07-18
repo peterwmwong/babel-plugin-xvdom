@@ -2,27 +2,33 @@
 
 var _xvdomSpec6 = {
   b: [0, 2, 0],
-  s: []
+  s: [],
+  u: []
 };
 var _xvdomSpec5 = {
   b: [0, 4, 1, 1],
-  s: ["disabled", false || true]
+  s: ["disabled", false || true],
+  u: []
 };
 var _xvdomSpec4 = {
   b: [0, 4, 1, 1],
-  s: ["disabled", !false]
+  s: ["disabled", !false],
+  u: []
 };
 var _xvdomSpec3 = {
   b: [0, 4, 1, 1],
-  s: ["disabled", false]
+  s: ["disabled", false],
+  u: []
 };
 var _xvdomSpec2 = {
   b: [0, 4, 1, 1],
-  s: ["disabled", true]
+  s: ["disabled", true],
+  u: []
 };
 var _xvdomSpec = {
   b: [0, 2, 1, 1],
-  s: ["className", "my-class"]
+  s: ["className", "my-class"],
+  u: []
 };
 ({
   t: _xvdomSpec,

@@ -15,8 +15,9 @@ describe("turn jsx into xvdom", ()=> {
       "attributes-dynamic-static",
       "children-static-value",
       "children-dynamic-values-simple",
-      // "children-dynamic-values",
-      // "component",
+      "children-dynamic-values",
+      "component",
+
       // "component-dynamic-props",
       // "children",
       // "element",

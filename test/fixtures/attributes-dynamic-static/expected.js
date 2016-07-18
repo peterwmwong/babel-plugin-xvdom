@@ -2,7 +2,8 @@
 
 var _xvdomSpec = {
   b: [0, 2, 2, 1],
-  s: ["className", "my-class", "title"]
+  s: ["className", "my-class", "title"],
+  u: [0, 131072]
 };
 var msg = "yolo";
 
