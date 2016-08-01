@@ -92,7 +92,8 @@ function elChildBytecode(t, child, context){
   switch (child.type){
   case 'el':      return elBytecode(t, child, context);
   case 'static':  return staticBytecode(t, child, context);
-  case 'dynamic': return dynamicBytecode(t, child, context);
+  case 'dynamic':  return dynamicBytecode(t, child, context);
+  case 'component': return componentBytecode(t, child, context);
   default: throw 'unknown child type';
   }
 }
@@ -279,7 +280,7 @@ export default function({types: t}){
           const node     = path.node;
           const desc     = node.__xvdom_desc = node.openingElement.__xvdom_desc;
           desc.children  = buildChildren(t, node.children).map((child)=> {
-            const isDynamicChild = isDynamic(t, child);
+            const isDynamicChild = isDynamic(t, child) && !t.isJSXElement(child);
             desc.hasDynamicChildren = desc.hasDynamicChildren || isDynamicChild;
             return child.__xvdom_desc || {
               type   : isDynamicChild ? 'dynamic' : 'static',
