@@ -73,32 +73,33 @@ function transformProp(t, prop){
 }
 
 const STATIC_BYTECODES = [BYTECODE_STATIC];
-function staticBytecode(t, s, {staticsAcc}){
+function staticBytecode(t, {staticsAcc}, s){
   staticsAcc.push(s.node);
   return STATIC_BYTECODES;
 }
 
 const DYNAMIC_BYTECODES = [BYTECODE_DYNAMIC];
-function dynamicBytecode(t, d, {dynamicsAcc, updateAcc}){
+function dynamicBytecode(t, context, d){
+  const {dynamicsAcc, updateAcc} = context;
   dynamicsAcc.push(d.node);
   updateAcc.push(
     t.numericLiteral(RERENDER_BYTECODE_CHILD),
-    t.numericLiteral(d.parent.contextNodeOffset)
+    t.numericLiteral(context.contextNodeOffset++)
   );
   return DYNAMIC_BYTECODES;
 }
 
 function elChildBytecode(t, child, context){
   switch (child.type){
-  case 'el':      return elBytecode(t, child, context);
-  case 'static':  return staticBytecode(t, child, context);
-  case 'dynamic':  return dynamicBytecode(t, child, context);
-  case 'component': return componentBytecode(t, child, context);
+  case 'el':      return elBytecode(t, context, child);
+  case 'static':  return staticBytecode(t, context, child);
+  case 'dynamic':  return dynamicBytecode(t, context, child);
+  case 'component': return componentBytecode(t, context, child);
   default: throw 'unknown child type';
   }
 }
 
-function elChildrenBytecode(t, children, context){
+function elChildrenBytecode(t, context, children){
   return (
     children && children.length
       ? [
@@ -112,9 +113,14 @@ function elChildrenBytecode(t, children, context){
   );
 }
 
-function propBytecode(t, props, staticProps, {staticsAcc, dynamicsAcc, updateAcc}){
-  const numProps = props ? props.length : 0;
+function elPropsBytecode(t, context, props, staticProps){
+  const { staticsAcc, dynamicsAcc, updateAcc } = context;
+  const numProps = props.length;
   if(numProps === 0) return [numProps];
+
+  const hasDynamicProps = !!(numProps - staticProps);
+  const contextNodeOffset =
+    hasDynamicProps ? context.contextNodeOffset++ : context.contextNodeOffset;
 
   props.forEach(({isDynamic, name, value})=> {
     const nameOffset = staticsAcc.push(t.stringLiteral(name)) - 1;
@@ -122,7 +128,7 @@ function propBytecode(t, props, staticProps, {staticsAcc, dynamicsAcc, updateAcc
       dynamicsAcc.push(value);
       updateAcc.push(
         t.numericLiteral(RERENDER_BYTECODE_ELPROP),
-        t.numericLiteral(nameOffset << 16)
+        t.numericLiteral((nameOffset << 16) | contextNodeOffset)
       );
     }
     else{
@@ -130,11 +136,15 @@ function propBytecode(t, props, staticProps, {staticsAcc, dynamicsAcc, updateAcc
     }
   }, []);
 
-  return [numProps, staticProps];
+  return [
+    numProps,
+    staticProps,
+    ...((numProps - staticProps) ? [BYTECODE_PUSH_CONTEXTNODE] : [])
+  ];
 }
 
-function componentPropBytecode(t, props, staticProps, {staticsAcc, dynamicsAcc}){
-  const numProps = props ? props.length : 0;
+function componentPropsBytecode(t, props, staticProps, {staticsAcc, dynamicsAcc}){
+  const numProps = props.length;
   if(numProps === 0) return [numProps];
 
   props.forEach(({isDynamic, name, value})=> {
@@ -145,28 +155,22 @@ function componentPropBytecode(t, props, staticProps, {staticsAcc, dynamicsAcc})
   return [numProps, staticProps];
 }
 
-function elBytecode(t, desc, context){
-  const {
-    el, props, staticProps, children, hasDynamicProps, hasDynamicChildren
-  } = desc;
-  const willPushContextNode = hasDynamicProps || hasDynamicChildren;
-
-  if(willPushContextNode) desc.contextNodeOffset = context.contextNodeOffset++
+function elBytecode(t, context, desc){
+  const { el, props, staticProps, children } = desc;
 
   return [
     BYTECODE_EL,
     TAG_TO_REF[el],
-    ...propBytecode(t, props, staticProps, context),
-    ...(willPushContextNode ? [BYTECODE_PUSH_CONTEXTNODE] : []),
-    ...elChildrenBytecode(t, children, context)
+    ...elPropsBytecode(t, context, props, staticProps),
+    ...elChildrenBytecode(t, context, children)
   ];
 }
 
-function componentBytecode(t, {el, props, staticProps}, context){
+function componentBytecode(t, context, {el, props, staticProps}){
   context.staticsAcc.push(t.identifier(el));
   return [
     BYTECODE_COMPONENT,
-    ...componentPropBytecode(t, props, staticProps, context)
+    ...componentPropsBytecode(t, props, staticProps, context)
   ];
 }
 
@@ -180,7 +184,7 @@ function trimPops(t, bytecode){
 function specBytecode(t, root, context){
   return t.arrayExpression(
     trimPops(t,
-      (root.type === 'el' ? elBytecode : componentBytecode)(t, root, context)
+      (root.type === 'el' ? elBytecode : componentBytecode)(t, context, root)
     ).map((code)=> t.numericLiteral(code))
   );
 }
@@ -237,7 +241,7 @@ export default function({types: t}){
           let key;
           let recycle = false;
           let staticProps = 0;
-          const props = attributes.length && attributes.reduce(
+          const props = attributes.reduce(
             (props, attr)=> {
               const propName = attr.name.name;
               const value    = transformProp(t, attr.value);
@@ -269,7 +273,6 @@ export default function({types: t}){
             recycle,
             props,
             staticProps,
-            hasDynamicProps: !!(props - staticProps),
             el: node.name.name
           };
         }
@@ -281,7 +284,6 @@ export default function({types: t}){
           const desc     = node.__xvdom_desc = node.openingElement.__xvdom_desc;
           desc.children  = buildChildren(t, node.children).map((child)=> {
             const isDynamicChild = isDynamic(t, child) && !t.isJSXElement(child);
-            desc.hasDynamicChildren = desc.hasDynamicChildren || isDynamicChild;
             return child.__xvdom_desc || {
               type   : isDynamicChild ? 'dynamic' : 'static',
               node   : child,
