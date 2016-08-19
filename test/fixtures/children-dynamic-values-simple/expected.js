@@ -3,7 +3,7 @@
 var _xvdomSpec = {
   b: [0, 2, 0, 4, 2],
   s: [],
-  u: [1, 0]
+  u: [1, 0, 0]
 };
 var message1 = "hello";
 

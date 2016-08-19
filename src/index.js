@@ -14,7 +14,7 @@ const BYTECODE_PUSH_CONTEXTNODE = 6;
 const RERENDER_BYTECODE_ELPROP  = 0;
 const RERENDER_BYTECODE_CHILD   = 1;
 
-const REF_TO_TAG = [
+export const REF_TO_TAG = [
   'a',
   'b',
   'div',
@@ -83,21 +83,22 @@ function staticBytecode(t, {staticsAcc}, s){
 }
 
 const DYNAMIC_BYTECODES = [BYTECODE_DYNAMIC];
-function dynamicBytecode(t, context, d){
+function dynamicBytecode(t, context, d, onlyChild){
   const {dynamicsAcc, updateAcc} = context;
   dynamicsAcc.push(d.node);
   updateAcc.push(
     t.numericLiteral(RERENDER_BYTECODE_CHILD),
+    t.numericLiteral(onlyChild ? 0 : 1),
     t.numericLiteral(context.contextNodeOffset++)
   );
   return DYNAMIC_BYTECODES;
 }
 
-function elChildBytecode(t, child, context){
+function elChildBytecode(t, child, onlyChild, context){
   switch (child.type){
   case 'el':      return elBytecode(t, context, child);
   case 'static':  return staticBytecode(t, context, child);
-  case 'dynamic':  return dynamicBytecode(t, context, child);
+  case 'dynamic':  return dynamicBytecode(t, context, child, onlyChild);
   case 'component': return componentBytecode(t, context, child);
   default: throw 'unknown child type';
   }
@@ -109,7 +110,7 @@ function elChildrenBytecode(t, context, children){
       ? [
         BYTECODE_CHILD,
         ...children.reduce((acc, child)=> {
-          return acc.concat(elChildBytecode(t, child, context))
+          return acc.concat(elChildBytecode(t, child, (children.length === 1), context))
         }, []),
         BYTECODE_PARENT
       ]
@@ -132,7 +133,8 @@ function elPropsBytecode(t, context, props, staticProps){
       dynamicsAcc.push(value);
       updateAcc.push(
         t.numericLiteral(RERENDER_BYTECODE_ELPROP),
-        t.numericLiteral((nameOffset << 16) | contextNodeOffset)
+        t.numericLiteral(nameOffset),
+        t.numericLiteral(contextNodeOffset)
       );
     }
     else{
