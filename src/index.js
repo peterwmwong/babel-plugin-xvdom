@@ -20,7 +20,11 @@ const REF_TO_TAG = [
   'div',
   'i',
   'input',
-  'span'
+  'span',
+  'table',
+  'tbody',
+  'td',
+  'tr'
 ];
 
 const TAG_TO_REF = REF_TO_TAG.reduce(
