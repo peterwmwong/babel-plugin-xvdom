@@ -1,6 +1,14 @@
 import { buildChildren, toReference } from './helpers';
 import REF_TO_TAG from './ref_to_tag';
 
+const TAG_TO_REF = REF_TO_TAG.reduce(
+  (acc, tag, i)=> (
+    (acc[tag] = i),
+    acc
+  ),
+  {}
+);
+
 const BYTECODE_EL                  = 0;
 const BYTECODE_COMPONENT           = 1;
 const BYTECODE_DYNAMIC             = 2;
@@ -19,14 +27,6 @@ const DYNAMIC_ONLY_CHILD_BYTECODES = [BYTECODE_DYNAMIC_ONLY_CHILD];
 const RERENDER_BYTECODE_ELPROP     = 0;
 const RERENDER_BYTECODE_CHILD      = 1;
 const RERENDER_BYTECODE_ONLY_CHILD = 2;
-
-const TAG_TO_REF = REF_TO_TAG.reduce(
-  (acc, tag, i)=> (
-    (acc[tag] = i),
-    acc
-  ),
-  {}
-);
 
 function isComponentName(name){ return name && /^[A-Z]/.test(name); }
 
@@ -224,64 +224,64 @@ function createSpecObject(t, file, desc){
 
 function createInstanceObject(t, file, desc){
   const {id, dynamics} = createSpecObject(t, file, desc);
-  return obj(t, {
+  const instanceObj = {
     t: id,
     d: dynamics
-  });
+  }
+  if(desc.key) instanceObj.k = desc.key;
+  return obj(t, instanceObj);
+}
+
+function getElementDesc(t, node){
+  let key;
+  let recycle = false;
+  let staticProps = 0;
+  const props = node.attributes.reduce(
+    (props, attr)=> {
+      const propName = attr.name.name;
+      const value    = transformProp(t, attr.value);
+      let _isDynamic  = false;
+
+      if(propName === 'key')          key = value;
+      else if(propName === 'recycle') recycle = true;
+      else if(value != null){
+        if(!(_isDynamic = isDynamic(t, value))) staticProps++;
+        props.push({
+          isDynamic: _isDynamic,
+          name: propName,
+          value: value
+        });
+      }
+
+      return props;
+    },
+    []
+  );
+
+  return {
+    type: (isComponentName(node.name.name) ? 'component' : 'el'),
+    key,
+    recycle,
+    props,
+    staticProps,
+    el: node.name.name
+  };
 }
 
 export default function({types: t}){
   return {
     visitor: {
       JSXOpeningElement: {
-        exit({node, node:{attributes}}/*, parent, scope, file */){
-          let key;
-          let recycle = false;
-          let staticProps = 0;
-          const props = attributes.reduce(
-            (props, attr)=> {
-              const propName = attr.name.name;
-              const value    = transformProp(t, attr.value);
-              let _isDynamic  = false;
-
-              if(propName === 'key'){
-                key = value;
-              }
-              else if(propName === 'recycle'){
-                recycle = true;
-              }
-              else if(value != null){
-                if(!(_isDynamic = isDynamic(t, value))) staticProps++;
-                props.push({
-                  isDynamic: _isDynamic,
-                  name: propName,
-                  value: value
-                });
-              }
-
-              return props;
-            },
-            []
-          );
-
-          node.__xvdom_desc = {
-            type: (isComponentName(node.name.name) ? 'component' : 'el'),
-            key,
-            recycle,
-            props,
-            staticProps,
-            el: node.name.name
-          };
-        }
+        exit({node}){ node.__xvdomDesc = getElementDesc(t, node); }
       },
 
       JSXElement: {
         exit(path, state){
           const node     = path.node;
-          const desc     = node.__xvdom_desc = node.openingElement.__xvdom_desc;
+          const desc     = node.__xvdomDesc = node.openingElement.__xvdomDesc;
           desc.children  = buildChildren(t, node.children).map((child)=> {
             const isDynamicChild = isDynamic(t, child) && !t.isJSXElement(child);
-            return child.__xvdom_desc || {
+            return child.__xvdomDesc || {
               type   : isDynamicChild ? 'dynamic' : 'static',
               node   : child,
               parent : desc

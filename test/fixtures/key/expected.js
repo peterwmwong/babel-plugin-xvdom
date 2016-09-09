@@ -1,44 +1,34 @@
 "use strict";
 
-var _xvdomEl = xvdom.el;
 var _xvdomSpec3 = {
-  c: function c() {
-    var _n = _xvdomEl("div");
-
-    return _n;
-  },
-  u: function u() {},
-  r: xvdom.DEADPOOL
+  b: [0, 2, 0],
+  s: [],
+  u: []
 };
 var _xvdomSpec2 = {
-  c: function c() {
-    var _n = _xvdomEl("div");
-
-    return _n;
-  },
-  u: function u() {},
-  r: xvdom.DEADPOOL
+  b: [0, 2, 0],
+  s: [],
+  u: []
 };
 var _xvdomSpec = {
-  c: function c() {
-    var _n = _xvdomEl("div");
-
-    return _n;
-  },
-  u: function u() {},
-  r: xvdom.DEADPOOL
+  b: [0, 2, 0],
+  s: [],
+  u: []
 };
 var key = "one";
 
 ({
-  $s: _xvdomSpec,
-  key: "1"
+  t: _xvdomSpec,
+  d: [],
+  k: "1"
 });
 ({
-  $s: _xvdomSpec2,
-  key: key
+  t: _xvdomSpec2,
+  d: [],
+  k: key
 });
 ({
-  $s: _xvdomSpec3,
-  key: key.length
+  t: _xvdomSpec3,
+  d: [],
+  k: key.length
 });
