@@ -1,7 +1,7 @@
 "use strict";
 
 var _xvdomSpec3 = {
-  b: [0, 2, 0, 4, 1, 0],
+  b: [0, 2, 0, 6, 1, 0],
   s: [MyComponent],
   u: []
 };

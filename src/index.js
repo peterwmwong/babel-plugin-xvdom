@@ -1,31 +1,24 @@
-import {
-  buildChildren,
-  toReference
-} from './helpers';
+import { buildChildren, toReference } from './helpers';
+import REF_TO_TAG from './ref_to_tag';
 
-const BYTECODE_EL               = 0;
-const BYTECODE_COMPONENT        = 1;
-const BYTECODE_DYNAMIC          = 2;
-const BYTECODE_STATIC           = 3;
-const BYTECODE_CHILD            = 4;
-const BYTECODE_PARENT           = 5;
-const BYTECODE_PUSH_CONTEXTNODE = 6;
+const BYTECODE_EL                  = 0;
+const BYTECODE_COMPONENT           = 1;
+const BYTECODE_DYNAMIC             = 2;
+const BYTECODE_STATIC              = 3;
+const BYTECODE_DYNAMIC_ONLY_CHILD  = 4;
+const BYTECODE_STATIC_ONLY_CHILD   = 5;
+const BYTECODE_CHILD               = 6;
+const BYTECODE_PARENT              = 7;
+const BYTECODE_PUSH_CONTEXTNODE    = 8;
 
-const RERENDER_BYTECODE_ELPROP  = 0;
-const RERENDER_BYTECODE_CHILD   = 1;
+const STATIC_BYTECODES             = [BYTECODE_STATIC];
+const STATIC_ONLY_CHILD_BYTECODES  = [BYTECODE_STATIC_ONLY_CHILD];
+const DYNAMIC_BYTECODES            = [BYTECODE_DYNAMIC];
+const DYNAMIC_ONLY_CHILD_BYTECODES = [BYTECODE_DYNAMIC_ONLY_CHILD];
 
-export const REF_TO_TAG = [
-  'a',
-  'b',
-  'div',
-  'i',
-  'input',
-  'span',
-  'table',
-  'tbody',
-  'td',
-  'tr'
-];
+const RERENDER_BYTECODE_ELPROP     = 0;
+const RERENDER_BYTECODE_CHILD      = 1;
+const RERENDER_BYTECODE_ONLY_CHILD = 2;
 
 const TAG_TO_REF = REF_TO_TAG.reduce(
   (acc, tag, i)=> (
@@ -76,29 +69,27 @@ function transformProp(t, prop){
   );
 }
 
-const STATIC_BYTECODES = [BYTECODE_STATIC];
-function staticBytecode(t, {staticsAcc}, s){
+function staticBytecode(t, {staticsAcc}, s, onlyChild){
   staticsAcc.push(s.node);
-  return STATIC_BYTECODES;
+  return onlyChild ? STATIC_ONLY_CHILD_BYTECODES : STATIC_BYTECODES;
 }
 
-const DYNAMIC_BYTECODES = [BYTECODE_DYNAMIC];
 function dynamicBytecode(t, context, d, onlyChild){
   const {dynamicsAcc, updateAcc} = context;
   dynamicsAcc.push(d.node);
   updateAcc.push(
-    t.numericLiteral(RERENDER_BYTECODE_CHILD),
-    t.numericLiteral(onlyChild ? 0 : 1),
+    t.numericLiteral(onlyChild ? RERENDER_BYTECODE_ONLY_CHILD : RERENDER_BYTECODE_CHILD),
+    t.numericLiteral(0),
     t.numericLiteral(context.contextNodeOffset++)
   );
-  return DYNAMIC_BYTECODES;
+  return onlyChild ? DYNAMIC_ONLY_CHILD_BYTECODES : DYNAMIC_BYTECODES;
 }
 
 function elChildBytecode(t, child, onlyChild, context){
   switch (child.type){
-  case 'el':      return elBytecode(t, context, child);
-  case 'static':  return staticBytecode(t, context, child);
-  case 'dynamic':  return dynamicBytecode(t, context, child, onlyChild);
+  case 'el':        return elBytecode(t, context, child);
+  case 'static':    return staticBytecode(t, context, child, onlyChild);
+  case 'dynamic':   return dynamicBytecode(t, context, child, onlyChild);
   case 'component': return componentBytecode(t, context, child);
   default: throw 'unknown child type';
   }
@@ -180,7 +171,7 @@ function componentBytecode(t, context, {el, props, staticProps}){
   ];
 }
 
-function trimPops(t, bytecode){
+function trimTrailingParentBytecode(t, bytecode){
   let code;
   while(bytecode.length && (code = bytecode.pop()) === BYTECODE_PARENT);
   bytecode.push(code);
@@ -189,7 +180,7 @@ function trimPops(t, bytecode){
 
 function specBytecode(t, root, context){
   return t.arrayExpression(
-    trimPops(t,
+    trimTrailingParentBytecode(t,
       (root.type === 'el' ? elBytecode : componentBytecode)(t, context, root)
     ).map((code)=> t.numericLiteral(code))
   );
