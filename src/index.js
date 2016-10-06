@@ -127,14 +127,18 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
 function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
   props = props || {};
   const componentPropMap = dynamicIds.componentPropMap;
-  const componentObjProps = Object.keys(props).map((prop)=>
-    objProp(t, prop,
-      (isDynamic(t, props[prop]) ? t.memberExpression(instanceParamId, componentPropMap[prop].id) : props[prop])
-    )
-  );
+  let hasDynamicsProps = false;
+  const componentObjProps = Object.keys(props).map((prop)=> {
+    if(isDynamic(t, props[prop])){
+      hasDynamicsProps = true;
+      return objProp(t, prop, t.memberExpression(instanceParamId, componentPropMap[prop].id));
+    }
+
+    return objProp(t, prop, props[prop])
+  });
 
   // >>> _xvdomCreateComponent(MyComponent, MyComponent.state, props, instance, rerenderProp, contextProp, componentInstanceProp)
-  return t.callExpression(
+  const createCode = t.callExpression(
     dynamicIds.createComponentId,
     [
       t.identifier(elCompName),
@@ -146,10 +150,24 @@ function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
         ? t.objectExpression(componentObjProps)
         : t.nullLiteral()
       ),
-      instanceParamId,
-      t.stringLiteral(dynamicIds.rerenderId.name),
-      t.stringLiteral(dynamicIds.componentId.name)
+      instanceParamId  
     ]
+  );
+
+  return (
+    t.memberExpression(
+      (!hasDynamicsProps
+        ? createCode
+        : t.assignmentExpression('=',
+            t.memberExpression(
+              instanceParamId,
+              dynamicIds.componentId
+            ),
+            createCode
+          )
+      ),
+      t.identifier('$n')
+    )
   );
 }
 
@@ -325,10 +343,10 @@ function binarify(t, expressions){
   );
 }
 
-function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstanceParamId){
+function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstanceParamId, genDynamicIdentifiers){
   const componentPropMap = dyn.componentPropMap;
-  const dynamicProps = Object.keys(dyn.componentPropMap)
-                        .filter((prop)=> isDynamic(t, dyn.componentPropMap[prop].value));
+  const componentPropKeys = Object.keys(dyn.componentPropMap)
+  const dynamicProps = componentPropKeys.filter((prop)=> isDynamic(t, dyn.componentPropMap[prop].value));
 
   if(!dynamicProps.length) return;
 
@@ -344,31 +362,28 @@ function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstan
 
     t.blockStatement([
       t.expressionStatement(
-        t.callExpression(
-          t.memberExpression(prevInstanceParamId, dyn.rerenderId),
-          [
-            t.identifier(dyn.componentName),
-            t.objectExpression(
-              Object.keys(dyn.componentPropMap).map((prop)=> {
-                const {id, value} = componentPropMap[prop];
-                return objProp(t, prop,
-                  isDynamic(t, value) ? t.memberExpression(instanceParamId, id) : value
-                );
-              })
-            ),
-            t.memberExpression(prevInstanceParamId, dyn.componentId),
-            prevInstanceParamId,
-            t.stringLiteral(dyn.componentId.name)
-          ]
-        )
-      ),
-
-      // >>> pInst.p0prop = inst.p0prop;
-      ...dynamicProps.map((prop)=>
-        t.expressionStatement(
-          t.assignmentExpression('=',
-            t.memberExpression(prevInstanceParamId, componentPropMap[prop].id),
-            t.memberExpression(instanceParamId,     componentPropMap[prop].id)
+        t.assignmentExpression('=',
+          t.memberExpression(prevInstanceParamId, dyn.componentId),
+          t.callExpression(
+            genDynamicIdentifiers.globalGet('updateComponent'),
+            [
+              t.identifier(dyn.componentName),
+              t.memberExpression(t.identifier(dyn.componentName), t.identifier('state')),
+              t.objectExpression(
+                componentPropKeys.map((prop)=> {
+                  const {id, value} = componentPropMap[prop];
+                  return objProp(t, prop,
+                    isDynamic(t, value) ? (
+                      t.assignmentExpression('=',
+                        t.memberExpression(prevInstanceParamId, id),
+                        t.memberExpression(instanceParamId, id)
+                      )
+                    ) : value
+                  );
+                })
+              ),
+              t.memberExpression(prevInstanceParamId, dyn.componentId)
+            ]
           )
         )
       )
@@ -452,7 +467,7 @@ function createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstance
   ];
 }
 
-function createRerenderFunction(t, dynamics){
+function createRerenderFunction(t, dynamics, genDynamicIdentifiers){
   const instanceParamId     = t.identifier('inst');
   const prevInstanceParamId = t.identifier('pInst');
   const tempVarId           = t.identifier('v');
@@ -463,7 +478,7 @@ function createRerenderFunction(t, dynamics){
     ...dynamics.reduce((acc, dyn)=> [
       ...acc,
       ...(dyn.isComponent
-        ? [createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstanceParamId)]
+        ? [createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstanceParamId, genDynamicIdentifiers)]
         : createRerenderStatementForDynamic(t, dyn, instanceParamId, prevInstanceParamId, tempVarId))
     ], [])
   ]));
@@ -480,7 +495,7 @@ function createSpecObject(t, file, genDynamicIdentifiers, desc){
   const specProperties = objProps(t, {
     c: renderFunc,
     u: dynamics.length
-        ? createRerenderFunction(t, dynamics)
+        ? createRerenderFunction(t, dynamics, genDynamicIdentifiers)
         : t.functionExpression(null, EMPTY_ARRAY, t.blockStatement(EMPTY_ARRAY)),
     r: desc.recycle
         ? t.newExpression(
@@ -566,7 +581,6 @@ function createInstanceObject(t, file, desc){
       },
       componentPropMap:         componentPropMap,
       valueId:                  (!isComponent && t.identifier(genId(lastDynamicUidInt++))),
-      rerenderId:               ((!prop && !noRerenderId) && t.identifier(genId(lastDynamicUidInt++))),
       contextId:                ( contextId   || t.identifier(genId(lastDynamicUidInt++))),
       componentId:              ( isComponent && t.identifier(genId(lastDynamicUidInt++)))
     };

@@ -9,7 +9,7 @@ var _xvdomSpec3 = {
 
     _n2 = _xvdomCreateComponent(MyComponent, MyComponent.state, {
       b: "goodbye"
-    }, inst, "a", "b");
+    }, inst).$n;
 
     _n.appendChild(_n2);
 
@@ -22,7 +22,7 @@ var _xvdomSpec2 = {
   c: function c(inst) {
     var _n = _xvdomCreateComponent(MyComponent, MyComponent.state, {
       a: "hello"
-    }, inst, "a", "b");
+    }, inst).$n;
 
     return _n;
   },
@@ -31,7 +31,7 @@ var _xvdomSpec2 = {
 };
 var _xvdomSpec = {
   c: function c(inst) {
-    var _n = _xvdomCreateComponent(MyComponent, MyComponent.state, null, inst, "a", "b");
+    var _n = _xvdomCreateComponent(MyComponent, MyComponent.state, null, inst).$n;
 
     return _n;
   },
