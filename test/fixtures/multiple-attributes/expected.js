@@ -7,36 +7,33 @@ var _xvdomSpec = {
   c: function c(inst) {
     var _n = _xvdomEl("div");
 
-    inst.b = _n;
-    _n.className = inst.a;
+    inst.a = _n;
+    _n.className = inst.b;
     _n.id = inst.c;
     _n.title = inst.d;
 
-    _n.appendChild(inst.f = _xvdomCreateDynamic(true, _n, inst.e));
+    _n.appendChild(inst.e = _xvdomCreateDynamic(true, _n, inst.f));
 
     return _n;
   },
   u: function u(inst, pInst) {
     var v;
-    v = inst.a;
+    v = inst.b;
 
-    if (v !== pInst.a) {
-      pInst.b.className = v;
-      pInst.a = v;
+    if (v !== pInst.b) {
+      pInst.a.className = pInst.b = v;
     }
 
     v = inst.c;
 
     if (v !== pInst.c) {
-      pInst.b.id = v;
-      pInst.c = v;
+      pInst.a.id = pInst.c = v;
     }
 
     v = inst.d;
 
     if (v !== pInst.d) {
-      pInst.b.title = v;
-      pInst.d = v;
+      pInst.a.title = pInst.d = v;
     }
 
     if (inst.e !== pInst.e) {
@@ -52,8 +49,8 @@ var four = "4";
 
 ({
   $s: _xvdomSpec,
-  a: one,
+  b: one,
   c: two,
   d: three,
-  e: four
+  f: four
 });

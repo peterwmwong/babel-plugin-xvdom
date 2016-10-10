@@ -5,10 +5,8 @@
   },
   "extends": "eslint:recommended",
   "globals": {
-    "Firebase"   : true,
-    "IS_DEV"     : true,
-    "IS_MOCKING" : true,
-    "process"    : true
+    "module":  true,
+    "process": true
   },
   "parser": "babel-eslint",
   "parserOptions": {

@@ -6,7 +6,7 @@ const CHARS = [
 ];
 const FIRST_CHARS = CHARS.slice(10);
 
-export default function(num){
+module.exports = function genId(num){
   let transformNum = num;
   let result = '';
   let charsToUse = FIRST_CHARS;

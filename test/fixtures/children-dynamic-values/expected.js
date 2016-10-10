@@ -6,21 +6,19 @@ var _xvdomCreateDynamic = xvdom.createDynamic,
 var _xvdomSpec = {
   c: function c(inst) {
     var _n = _xvdomEl("div"),
-        _n2;
+        _n2 = _xvdomEl("span");
 
-    _n.appendChild(inst.b = _xvdomCreateDynamic(false, _n, inst.a));
-
-    _n2 = _xvdomEl("span");
-
-    _n2.appendChild(inst.d = _xvdomCreateDynamic(true, _n2, inst.c));
+    _n.appendChild(inst.a = _xvdomCreateDynamic(false, _n, inst.b));
 
     _n.appendChild(_n2);
 
+    _n2.appendChild(inst.c = _xvdomCreateDynamic(true, _n2, inst.d));
+
     _n2 = _xvdomEl("span");
 
-    _n2.appendChild(inst.f = _xvdomCreateDynamic(true, _n2, inst.e));
-
     _n.appendChild(_n2);
+
+    _n2.appendChild(inst.e = _xvdomCreateDynamic(true, _n2, inst.f));
 
     return _n;
   },
@@ -46,7 +44,7 @@ var message2 = "world";
 
 ({
   $s: _xvdomSpec,
-  a: message1,
-  c: message2,
-  e: message2[0]
+  b: message1,
+  d: message2,
+  f: message2[0]
 });

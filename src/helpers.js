@@ -23,7 +23,7 @@ function cleanText(node){
 }
 
 // Helper to transform a JSX identifier into a normal reference.
-export function toReference(t, node, identifier){
+function toReference(t, node, identifier){
   if (t.isIdentifier(node)){
     return node;
   }
@@ -37,7 +37,7 @@ export function toReference(t, node, identifier){
 
 // Filters out empty children, and transform JSX expressions
 // into normal expressions.
-export function buildChildren(t, rawChildren){
+function buildChildren(t, rawChildren){
   return rawChildren.reduce((children, child)=> {
     if (t.isJSXExpressionContainer(child)){
       child = child.expression;
@@ -63,3 +63,5 @@ export function buildChildren(t, rawChildren){
     return children;
   }, []);
 }
+
+module.exports = { toReference, buildChildren };

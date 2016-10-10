@@ -7,7 +7,7 @@ var _xvdomSpec = {
   c: function c(inst) {
     var _n = _xvdomEl("div");
 
-    _n.appendChild(inst.b = _xvdomCreateDynamic(true, _n, inst.a));
+    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
 
     return _n;
   },
@@ -24,5 +24,5 @@ var message1 = "hello";
 
 ({
   $s: _xvdomSpec,
-  a: message1
+  b: message1
 });
