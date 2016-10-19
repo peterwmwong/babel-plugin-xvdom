@@ -11,10 +11,10 @@ const genId = require('./genId.js');
 
 const EMPTY_ARRAY = [];
 
-function hasSideEffects(dyn){
-  return dyn && (
-    (dyn.componentName === 'input' && dyn.prop === 'value') ||
-    (dyn.componentName === 'a'     && dyn.prop === 'href')
+function hasSideEffects(tag, propName){
+  return (
+    (tag === 'input' && propName === 'value') ||
+    (tag === 'a'     && propName === 'href')
   )
 }
 
@@ -71,7 +71,7 @@ const instParamId     = (t)=> t.identifier('inst');
 const prevInstParamId = (t)=> t.identifier('pInst');
 const tmpVarId        = (t, num)=> t.identifier(`_n${num ? ++num : ''}`);
 
-function generateAssignPropsCode({t, instId, statements}, nodeVarId, {props, instanceContextId}){
+function generateAssignPropsCode({t, instId, statements}, nodeVarId, {tag, props, instanceContextId}){
   if(instanceContextId){
     statements.push(
       t.expressionStatement(
@@ -84,14 +84,33 @@ function generateAssignPropsCode({t, instId, statements}, nodeVarId, {props, ins
   }
 
   statements.push(
-    ...props.map((p)=> (
-      t.expressionStatement(
-        t.assignmentExpression('=',
-          t.memberExpression(nodeVarId, p.nameId),
-          p.isDynamic ? t.memberExpression(instId, p.dynamic.instanceValueId) : p.valueNode
+    ...props.map(({isDynamic, dynamic, nameId, valueNode})=> {
+      const valueCode = isDynamic ? t.memberExpression(instId, dynamic.instanceValueId) : valueNode;
+
+      if(dynamic.hasSideEffects){
+        return t.ifStatement(
+          t.binaryExpression(
+            '!=',
+            valueCode,
+            t.nullLiteral()
+          ),
+          t.expressionStatement(
+            t.assignmentExpression('=',
+              t.memberExpression(nodeVarId, nameId),
+              valueCode
+            )
+          )
         )
-      )
-    ))
+      }
+      else {
+        return t.expressionStatement(
+          t.assignmentExpression('=',
+            t.memberExpression(nodeVarId, nameId),
+            valueCode
+          )
+        );
+      }
+    })
   );
 }
 
@@ -112,6 +131,28 @@ function generateSpecElementDynamicChildCode({t, xvdomApi, statements, instId}, 
             ]
           )
         )]
+      )
+    )
+  );
+}
+
+function generateSpecElementStaticChildCode({t, xvdomApi, statements, instId}, parentNodeVarId, { node }){
+  // _n.appendChild(document.createTextNode(("hello" + 5) || ""));
+  statements.push(
+    t.expressionStatement(
+      t.callExpression(
+        t.memberExpression(parentNodeVarId, t.identifier('appendChild')),
+        [
+          t.callExpression(
+            t.memberExpression(t.identifier('document'), t.identifier('createTextNode')),
+            [
+              t.logicalExpression('||',
+                t.sequenceExpression([node]),
+                t.stringLiteral('')
+              )
+            ]
+          )
+        ]
       )
     )
   );
@@ -171,6 +212,9 @@ function generateSpecCreateElementCode(context, el, depth=0){
     case 'dynamicChild':
       return generateSpecElementDynamicChildCode(context, tmpVar, childDesc);
 
+    case 'staticChild':
+      return generateSpecElementStaticChildCode(context, tmpVar, childDesc);
+
     default:
       throw 'NOT IMPLEMENTED';
     }
@@ -201,7 +245,7 @@ function generateSpecCreateCode(t, xvdomApi, {rootElement, dynamics}){
 //TODO: function generateSpecUpdateDynamicChildCode(){}
 
 function generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, tmpVar, dynamic){
-  const {type, instanceContextId, instanceValueId, name, isOnlyChild} = dynamic;
+  const {type, instanceContextId, instanceValueId, name, isOnlyChild, hasSideEffects} = dynamic;
   if(type === 'prop'){
     return [
       t.expressionStatement(
@@ -215,17 +259,34 @@ function generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, tmpVar, dyn
           tmpVar,
           t.memberExpression(pInstId, instanceValueId)
         ),
-        t.blockStatement([
-          t.expressionStatement(
-            t.assignmentExpression('=',
+        hasSideEffects ? t.blockStatement([
+          t.ifStatement(
+            t.binaryExpression('!==',
               t.memberExpression(t.memberExpression(pInstId, instanceContextId), name),
+              tmpVar
+            ),
+            t.expressionStatement(
               t.assignmentExpression('=',
-                t.memberExpression(pInstId, instanceValueId),
+                t.memberExpression(t.memberExpression(pInstId, instanceContextId), name),
                 tmpVar
               )
             )
+          ),
+          t.expressionStatement(
+            t.assignmentExpression('=',
+              t.memberExpression(pInstId, instanceValueId),
+              tmpVar
+            )
           )
-        ])
+        ]) : t.expressionStatement(
+          t.assignmentExpression('=',
+            t.memberExpression(t.memberExpression(pInstId, instanceContextId), name),
+            t.assignmentExpression('=',
+              t.memberExpression(pInstId, instanceValueId),
+              tmpVar
+            )
+          )
+        )
       )
     ]
   }
@@ -233,28 +294,26 @@ function generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, tmpVar, dyn
     return [
       t.ifStatement(
         t.binaryExpression('!==',
-          t.memberExpression(instId, instanceContextId),
-          t.memberExpression(pInstId, instanceContextId)
+          t.memberExpression(instId, instanceValueId),
+          t.memberExpression(pInstId, instanceValueId)
         ),
-        t.blockStatement([
-          t.expressionStatement(
-            t.assignmentExpression('=',
-              t.memberExpression(pInstId, instanceValueId),
-              t.callExpression(
-                xvdomApi.accessFunction('updateDynamic'),
-                [
-                  t.booleanLiteral(isOnlyChild),
-                  t.memberExpression(pInstId, instanceContextId),
-                  t.assignmentExpression('=',
-                    t.memberExpression(pInstId, instanceContextId),
-                    t.memberExpression(instId, instanceContextId)
-                  ),
-                  t.memberExpression(pInstId, instanceValueId)
-                ]
-              )
+        t.expressionStatement(
+          t.assignmentExpression('=',
+            t.memberExpression(pInstId, instanceContextId),
+            t.callExpression(
+              xvdomApi.accessFunction('updateDynamic'),
+              [
+                t.booleanLiteral(isOnlyChild),
+                t.memberExpression(pInstId, instanceValueId),
+                t.assignmentExpression('=',
+                  t.memberExpression(pInstId, instanceValueId),
+                  t.memberExpression(instId, instanceValueId)
+                ),
+                t.memberExpression(pInstId, instanceContextId)
+              ]
             )
           )
-        ])
+        )
       )
     ];
   }
@@ -316,11 +375,12 @@ function parseElementProps({t, file, context}, node, nodeAttributes)/*:ElementPr
     // TODO: rename transformProp to normalizeElementPropValue
     const valueNode  = transformProp(t, attr.value);
     // TODO: try just using attr.name without wrapping t.identifier()
+    const name       = attr.name.name;
     const nameId     = t.identifier(attr.name.name);
     const isDynamic  = isDynamicNode(t, valueNode);
 
     return {
-      dynamic: isDynamic && context.addDynamicProp(node, nameId, valueNode),
+      dynamic: isDynamic && context.addDynamicProp(node, nameId, valueNode, hasSideEffects(node.tag, name)),
       isDynamic,
       nameId,
       valueNode
@@ -337,7 +397,7 @@ type ElementChild {
 function parseElementChild({t, file, context}, el, childNode, isOnlyChild)/*:ElementChild*/{
   const isDynamic = isDynamicNode(t, childNode);
   return {
-    type: 'dynamicChild',
+    type: isDynamic ? 'dynamicChild' : 'staticChild',
     dynamic: isDynamic && context.addDynamicChild(el, childNode, isOnlyChild),
     node: childNode
   };
@@ -382,11 +442,12 @@ class ParsingContext{
     });
   }
 
-  addDynamicProp(el, name, value)/*:{type:String, name:String, value:Node, instanceContextId:Identifier, instanceValueId:Identifier}*/{
+  addDynamicProp(el, name, value, hasSideEffects)/*:{type:String, name:String, value:Node, hasSideEffects:Boolean, instanceContextId:Identifier, instanceValueId:Identifier}*/{
     return this._addDynamic({
       type:             'prop',
       name,
       value,
+      hasSideEffects,
       instanceContextId: this._getInstanceContextIdForNode(el),
       instanceValueId:   this._generateInstanceParamId()
     });

@@ -24,18 +24,9 @@ var _xvdomSpec = {
   },
   u: function u(inst, pInst) {
     var v;
-
-    if (inst.a !== pInst.a) {
-      pInst.b = _xvdomUpdateDynamic(false, pInst.a, pInst.a = inst.a, pInst.b);
-    }
-
-    if (inst.c !== pInst.c) {
-      pInst.d = _xvdomUpdateDynamic(true, pInst.c, pInst.c = inst.c, pInst.d);
-    }
-
-    if (inst.e !== pInst.e) {
-      pInst.f = _xvdomUpdateDynamic(true, pInst.e, pInst.e = inst.e, pInst.f);
-    }
+    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(false, pInst.b, pInst.b = inst.b, pInst.a);
+    if (inst.d !== pInst.d) pInst.c = _xvdomUpdateDynamic(true, pInst.d, pInst.d = inst.d, pInst.c);
+    if (inst.f !== pInst.f) pInst.e = _xvdomUpdateDynamic(true, pInst.f, pInst.f = inst.f, pInst.e);
   },
   r: xvdom.DEADPOOL
 };

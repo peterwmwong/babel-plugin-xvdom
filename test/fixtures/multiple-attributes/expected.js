@@ -19,26 +19,12 @@ var _xvdomSpec = {
   u: function u(inst, pInst) {
     var v;
     v = inst.b;
-
-    if (v !== pInst.b) {
-      pInst.a.className = pInst.b = v;
-    }
-
+    if (v !== pInst.b) pInst.a.className = pInst.b = v;
     v = inst.c;
-
-    if (v !== pInst.c) {
-      pInst.a.id = pInst.c = v;
-    }
-
+    if (v !== pInst.c) pInst.a.id = pInst.c = v;
     v = inst.d;
-
-    if (v !== pInst.d) {
-      pInst.a.title = pInst.d = v;
-    }
-
-    if (inst.e !== pInst.e) {
-      pInst.f = _xvdomUpdateDynamic(true, pInst.e, pInst.e = inst.e, pInst.f);
-    }
+    if (v !== pInst.d) pInst.a.title = pInst.d = v;
+    if (inst.f !== pInst.f) pInst.e = _xvdomUpdateDynamic(true, pInst.f, pInst.f = inst.f, pInst.e);
   },
   r: xvdom.DEADPOOL
 };

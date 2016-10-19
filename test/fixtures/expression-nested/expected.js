@@ -7,25 +7,18 @@ var _xvdomSpec2 = {
   c: function c(inst) {
     var _n = _xvdomEl("div");
 
-    inst.b = _n;
-    _n.id = inst.a;
+    inst.a = _n;
+    _n.id = inst.b;
 
-    _n.appendChild(inst.d = _xvdomCreateDynamic(true, _n, inst.c));
+    _n.appendChild(inst.c = _xvdomCreateDynamic(true, _n, inst.d));
 
     return _n;
   },
   u: function u(inst, pInst) {
     var v;
-    v = inst.a;
-
-    if (v !== pInst.a) {
-      pInst.b.id = v;
-      pInst.a = v;
-    }
-
-    if (inst.c !== pInst.c) {
-      pInst.d = _xvdomUpdateDynamic(true, pInst.c, pInst.c = inst.c, pInst.d);
-    }
+    v = inst.b;
+    if (v !== pInst.b) pInst.a.id = pInst.b = v;
+    if (inst.d !== pInst.d) pInst.c = _xvdomUpdateDynamic(true, pInst.d, pInst.d = inst.d, pInst.c);
   },
   r: xvdom.DEADPOOL
 };
@@ -33,16 +26,13 @@ var _xvdomSpec = {
   c: function c(inst) {
     var _n = _xvdomEl("span");
 
-    _n.appendChild(inst.b = _xvdomCreateDynamic(true, _n, inst.a));
+    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
 
     return _n;
   },
   u: function u(inst, pInst) {
     var v;
-
-    if (inst.a !== pInst.a) {
-      pInst.b = _xvdomUpdateDynamic(true, pInst.a, pInst.a = inst.a, pInst.b);
-    }
+    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
   },
   r: xvdom.DEADPOOL
 };
@@ -51,11 +41,11 @@ var id = "blah";
 
 ({
   $s: _xvdomSpec2,
-  a: id,
-  c: list.map(function (el) {
+  b: id,
+  d: list.map(function (el) {
     return {
       $s: _xvdomSpec,
-      a: el
+      b: el
     };
   })
 });
