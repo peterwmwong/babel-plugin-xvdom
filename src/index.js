@@ -150,7 +150,7 @@ function createComponentCode(t, elCompName, props, instanceParamId, dynamicIds){
         ? t.objectExpression(componentObjProps)
         : t.nullLiteral()
       ),
-      instanceParamId  
+      instanceParamId
     ]
   );
 
@@ -253,7 +253,12 @@ function createElementsCode(t, instanceParamId, genUidIdentifier, genDynamicIden
               t.memberExpression(instanceParamId, valueId)
             ]
           )
-        )
+        );
+
+        acc.statements.push(
+          t.expressionStatement(createEl)
+        );
+        return acc;
       }
       else{
         createEl = t.callExpression(

@@ -8,17 +8,14 @@ var _xvdomSpec = {
     var _n = _xvdomEl("div"),
         _n2;
 
-    _n.appendChild(inst.b = _xvdomCreateDynamic(false, _n, inst.a));
-
+    inst.b = _xvdomCreateDynamic(false, _n, inst.a);
     _n2 = _xvdomEl("span");
-
-    _n2.appendChild(inst.d = _xvdomCreateDynamic(true, _n2, inst.c));
+    inst.d = _xvdomCreateDynamic(true, _n2, inst.c);
 
     _n.appendChild(_n2);
 
     _n2 = _xvdomEl("span");
-
-    _n2.appendChild(inst.f = _xvdomCreateDynamic(true, _n2, inst.e));
+    inst.f = _xvdomCreateDynamic(true, _n2, inst.e);
 
     _n.appendChild(_n2);
 

@@ -11,9 +11,7 @@ var _xvdomSpec = {
     _n.className = inst.a;
     _n.id = inst.c;
     _n.title = inst.d;
-
-    _n.appendChild(inst.f = _xvdomCreateDynamic(true, _n, inst.e));
-
+    inst.f = _xvdomCreateDynamic(true, _n, inst.e);
     return _n;
   },
   u: function u(inst, pInst) {
