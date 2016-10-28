@@ -5,9 +5,7 @@ var _xvdomCreateComponent = xvdom.createComponent,
 var _xvdomSpec3 = {
   c: function c(inst) {
     var _n = _xvdomEl("div"),
-        _n2;
-
-    _n2 = _xvdomCreateComponent(MyComponent, MyComponent.state, {
+        _n2 = _xvdomCreateComponent(MyComponent, MyComponent.state, {
       b: "goodbye"
     }, inst).$n;
 

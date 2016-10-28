@@ -14,14 +14,14 @@ describe("turn jsx into xvdom", () => {
       "multiple-attributes",
       "children-dynamic-values-simple",
       "children-dynamic-values",
-      // "component",
-      // "component-dynamic-props",
       "children",
       "element",
       "expression-nested",
       "expression",
-      // "key",
       "prop-dynamic-values-simple",
+      "component",
+      // "component-dynamic-props",
+      // "key",
       // "recycle"
     ].indexOf(caseName) === -1) return;
 
