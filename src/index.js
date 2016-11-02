@@ -1,7 +1,3 @@
-//TODO(design): conditionally including globals (createDynamic, createDynamic, createComponent)
-//TODO(design): More specific xvdom AST node information (element, component, w/dynamic-props? etc.)
-//                - There is waaayyyy to many arguments being passed between the create*Code functions
-//                - Need an abstraction to group all relevant information necessary for the code generating functions
 const {
   buildChildren,
   toReference
@@ -271,21 +267,19 @@ function generateSpecCreateHTMLElementCode(context, el, _, depth=0){
   ++depth;
 
   el.children.forEach(childDesc => {
-    return CHILD_CODE_GENERATORS[childDesc.type](context, childDesc, tmpVar, depth);
+    switch(childDesc.type){
+    case 'component':    return generateSpecCreateComponentCode(context, childDesc, tmpVar, depth);
+    case 'el':           return generateSpecCreateHTMLElementCode(context, childDesc, tmpVar, depth);
+    case 'dynamicChild': return generateSpecElementDynamicChildCode(context, childDesc, tmpVar, depth);
+    case 'staticChild':  return generateSpecElementStaticChildCode(context, childDesc, tmpVar, depth);
+    }
   });
 }
 
-const CHILD_CODE_GENERATORS = {
-  component:    generateSpecCreateComponentCode,
-  el:           generateSpecCreateHTMLElementCode,
-  dynamicChild: generateSpecElementDynamicChildCode,
-  staticChild:  generateSpecElementStaticChildCode
-};
-
-function generateSpecCreateElementCode(context, el, depth=0){
+function generateSpecCreateElementCode(context, el){
   return el.type === 'el'
-    ? generateSpecCreateHTMLElementCode(context, el, null, depth)
-    : generateSpecCreateComponentCode(context, el, null, depth);
+    ? generateSpecCreateHTMLElementCode(context, el, null, 0)
+    : generateSpecCreateComponentCode(context, el, null, 0);
 }
 
 function generateSpecCreateCode(t, xvdomApi, {rootElement, dynamics, hasComponents}){
@@ -438,13 +432,13 @@ function generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, tm
 }
 
 function generateSpecUpdateCode(t, xvdomApi, {dynamics, componentsWithDyanmicProps}){
-  const instId      = instParamId(t);
-  const pInstId     = prevInstParamId(t);
-  const tmpVar      = t.identifier('v');
-  const hasDynamics = dynamics.length || componentsWithDyanmicProps.size;
+  const instId               = instParamId(t);
+  const pInstId              = prevInstParamId(t);
+  const tmpVar               = t.identifier('v');
+  const hasDynamics          = dynamics.length || componentsWithDyanmicProps.size;
   const nonComponentDynamics = dynamics.filter(d => d.type !== 'componentProp');
-  const params      = hasDynamics ? [instId, pInstId] : EMPTY_ARRAY;
-  const statements  = !hasDynamics ? [] : [
+  const params               = hasDynamics ? [instId, pInstId] : EMPTY_ARRAY;
+  const statements           = !hasDynamics ? [] : [
     t.variableDeclaration('var', [t.variableDeclarator(tmpVar)]),
     // TODO: why can't this be map?
     ...nonComponentDynamics.reduce((acc, dynamic) => {
