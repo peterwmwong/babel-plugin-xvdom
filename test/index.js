@@ -20,8 +20,8 @@ describe("turn jsx into xvdom", () => {
       "expression",
       "prop-dynamic-values-simple",
       "component",
-      "component-dynamic-props"
-      // "key",
+      "component-dynamic-props",
+      "key"
       // "recycle"
     ].indexOf(caseName) === -1) return;
 

@@ -14,7 +14,7 @@
   "scripts": {
     "build": "babel -d lib/ src/",
     "push": "babel-plugin publish",
-    "test": "mocha --compilers js:babel-core/register",
+    "test": "mocha",
     "lint": "eslint src"
   },
   "keywords": [

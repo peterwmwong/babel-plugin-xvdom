@@ -33,91 +33,77 @@ Turn jsx into [xvdom](https://github.com/peterwmwong/xvdom).
 ```javascript
 "use strict";
 
+var _xvdomCreateDynamic = xvdom.createDynamic,
+    _xvdomEl = xvdom.el,
+    _xvdomUpdateDynamic = xvdom.updateDynamic;
 var _xvdomSpec2 = {
-  render: function render(inst) {
-    var _n = document.createElement("div"),
-        _n2,
-        _n3;
+  c: function c(inst) {
+    var _n = _xvdomEl("div"),
+        _n2 = _xvdomEl("h1"),
+        _n3 = _xvdomEl("div");
 
-    _n2 = document.createElement("h1");
+    _n.appendChild(_n2);
 
     _n2.appendChild(document.createTextNode(("Hello World") || ""));
 
-    _n.appendChild(_n2);
-
-    _n2 = document.createElement("div");
-
-    _n2.appendChild(document.createElement("div"));
+    _n2 = _xvdomEl("div");
 
     _n.appendChild(_n2);
-
-    _n2 = document.createElement("div");
-    _n2.className = "my-class";
-    _n3 = document.createElement("div");
-    inst.c0 = _n3;
-    _n3.className = inst.v0;
 
     _n2.appendChild(_n3);
 
+    _n2 = _xvdomEl("div");
+    _n2.className = "my-class";
+
     _n.appendChild(_n2);
 
-    _n2 = document.createElement("input");
+    _n3 = _xvdomEl("div");
+    inst.a = _n3;
+    _n3.className = inst.b;
+
+    _n2.appendChild(_n3);
+
+    _n2 = _xvdomEl("input");
     _n2.type = "text";
     _n2.disabled = true;
 
     _n.appendChild(_n2);
 
-    _n.appendChild(xvdom.createDynamic(inst.v1, inst, "r1", "c1"));
+    _n.appendChild(inst.c = _xvdomCreateDynamic(false, _n, inst.d));
 
-    _n2 = document.createElement("div");
+    _n2 = _xvdomEl("div");
     _n2.className = "myClass";
 
     _n.appendChild(_n2);
 
     return _n;
   },
-  rerender: function rerender(inst, pInst) {
-    if (inst.v0 !== pInst.v0) {
-      pInst.c0.className = inst.v0;
-      pInst.v0 = inst.v0;
-    }
-
-    if (inst.v1 !== pInst.v1) {
-      pInst.v1 = pInst.r1(inst.v1, pInst.v1, pInst.c1, pInst, "r1", "c1");
-    }
-  }
+  u: function u(inst, pInst) {
+    var v;
+    v = inst.b;
+    if (v !== pInst.b) pInst.a.className = pInst.b = v;
+    if (inst.d !== pInst.d) pInst.c = _xvdomUpdateDynamic(false, pInst.d, pInst.d = inst.d, pInst.c);
+  },
+  r: xvdom.DEADPOOL
 };
 var _xvdomSpec = {
-  render: function render() {
-    var _n = document.createElement("div");
+  c: function c() {
+    var _n = _xvdomEl("div");
 
     return _n;
   },
-  rerender: function rerender() {}
+  u: function u() {},
+  r: xvdom.DEADPOOL
 };
 ({
-  spec: _xvdomSpec2,
-  _node: null,
-  component: null,
-  state: null,
-  actions: null,
-  props: null,
-  v0: myClass,
-  r0: null,
-  c0: null,
-  v1: queries.map(function (query) {
+  $s: _xvdomSpec2,
+  b: myClass,
+  d: queries.map(function (query) {
     return {
-      spec: _xvdomSpec,
-      _node: null,
-      component: null,
-      state: null,
-      actions: null,
-      props: null,
+      $s: _xvdomSpec,
       key: query.id
     };
-  }),
-  r1: null,
-  c1: null
+  })
 });
 ```
 

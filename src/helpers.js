@@ -38,7 +38,7 @@ function toReference(t, node, identifier){
 // Filters out empty children, and transform JSX expressions
 // into normal expressions.
 function buildChildren(t, rawChildren){
-  return rawChildren.reduce((children, child)=> {
+  return rawChildren.reduce((children, child) => {
     if (t.isJSXExpressionContainer(child)){
       child = child.expression;
     }
