@@ -23,7 +23,6 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u(inst, pInst) {
-    var v;
     if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(false, pInst.b, pInst.b = inst.b, pInst.a);
     if (inst.d !== pInst.d) pInst.c = _xvdomUpdateDynamic(true, pInst.d, pInst.d = inst.d, pInst.c);
     if (inst.f !== pInst.f) pInst.e = _xvdomUpdateDynamic(true, pInst.f, pInst.f = inst.f, pInst.e);

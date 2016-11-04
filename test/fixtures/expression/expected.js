@@ -3,6 +3,16 @@
 var _xvdomCreateDynamic = xvdom.createDynamic,
     _xvdomEl = xvdom.el,
     _xvdomUpdateDynamic = xvdom.updateDynamic;
+var _xvdomSpec8 = {
+  c: function c() {
+    var _n = _xvdomEl("div");
+
+    _n.textContent = "foo bar";
+    return _n;
+  },
+  u: function u() {},
+  r: xvdom.DEADPOOL
+};
 var _xvdomSpec7 = {
   c: function c(inst) {
     var _n = _xvdomEl("div");
@@ -12,7 +22,6 @@ var _xvdomSpec7 = {
     return _n;
   },
   u: function u(inst, pInst) {
-    var v;
     if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
   },
   r: xvdom.DEADPOOL
@@ -21,8 +30,7 @@ var _xvdomSpec6 = {
   c: function c() {
     var _n = _xvdomEl("div");
 
-    _n.appendChild(document.createTextNode(("hello" + 5) || ""));
-
+    _n.textContent = "hello" + 5;
     return _n;
   },
   u: function u() {},
@@ -37,7 +45,6 @@ var _xvdomSpec5 = {
     return _n;
   },
   u: function u(inst, pInst) {
-    var v;
     if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
   },
   r: xvdom.DEADPOOL
@@ -51,7 +58,6 @@ var _xvdomSpec4 = {
     return _n;
   },
   u: function u(inst, pInst) {
-    var v;
     if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
   },
   r: xvdom.DEADPOOL
@@ -65,7 +71,6 @@ var _xvdomSpec3 = {
     return _n;
   },
   u: function u(inst, pInst) {
-    var v;
     if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
   },
   r: xvdom.DEADPOOL
@@ -135,4 +140,7 @@ function translate(str) {
 ({
   $s: _xvdomSpec7,
   b: msg.length
+});
+({
+  $s: _xvdomSpec8
 });

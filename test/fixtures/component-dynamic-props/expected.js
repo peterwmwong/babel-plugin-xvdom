@@ -18,7 +18,6 @@ var _xvdomSpec2 = {
     return _n;
   },
   u: function u(inst, pInst) {
-    var v;
     if (inst.b !== pInst.b || inst.c !== pInst.c) pInst.a = _xvdomUpdateComponent(MyComponent, MyComponent.state, {
       msg: pInst.b = inst.b,
       msg2: pInst.c = inst.c,
@@ -40,7 +39,6 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u(inst, pInst) {
-    var v;
     if (inst.b !== pInst.b || inst.c !== pInst.c) pInst.a = _xvdomUpdateComponent(MyComponent, MyComponent.state, {
       msg: pInst.b = inst.b,
       msg2: pInst.c = inst.c,

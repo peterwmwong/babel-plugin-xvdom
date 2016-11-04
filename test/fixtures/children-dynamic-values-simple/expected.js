@@ -12,7 +12,6 @@ var _xvdomSpec = {
     return _n;
   },
   u: function u(inst, pInst) {
-    var v;
     if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
   },
   r: xvdom.DEADPOOL

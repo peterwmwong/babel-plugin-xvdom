@@ -10,3 +10,4 @@ function translate(str) {
 <div>{translate(msg)}</div>;
 <div>{"hello" + 5}</div>;
 <div>{msg.length}</div>;
+<div>foo bar</div>;

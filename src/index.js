@@ -1,3 +1,4 @@
+// TODO: Document why this didn't work (jsperf): crazy idea, chunks of completely static JSX are... innerHTML-ed in create.  :boom:
 const {
   buildChildren,
   toReference
@@ -111,45 +112,51 @@ function generateAssignPropsCode({t, instId, statements}, nodeVarId, {props, ins
 }
 
 function generateSpecElementDynamicChildCode({t, xvdomApi, statements, instId}, childDesc, parentNodeVarId){
-  const { dynamic: { instanceContextId, instanceValueId, isOnlyChild } } = childDesc;
-  statements.push(
-    t.expressionStatement(
-      t.callExpression(
-        t.memberExpression(parentNodeVarId, t.identifier('appendChild')),
-        [t.assignmentExpression('=',
-          t.memberExpression(instId, instanceContextId),
-          t.callExpression(
-            xvdomApi.accessFunction('createDynamic'),
-            [
-              t.booleanLiteral(isOnlyChild),
-              parentNodeVarId,
-              t.memberExpression(instId, instanceValueId)
-            ]
-          )
-        )]
-      )
-    )
-  );
-}
-
-function generateSpecElementStaticChildCode({t, xvdomApi, statements, instId}, { node }, parentNodeVarId){
-  // _n.appendChild(document.createTextNode(("hello" + 5) || ""));
+  const { dynamic: { instanceContextId, instanceValueId }, isOnlyChild } = childDesc;
   statements.push(
     t.expressionStatement(
       t.callExpression(
         t.memberExpression(parentNodeVarId, t.identifier('appendChild')),
         [
-          t.callExpression(
-            t.memberExpression(t.identifier('document'), t.identifier('createTextNode')),
-            [
-              t.logicalExpression('||',
-                t.sequenceExpression([node]),
-                t.stringLiteral('')
-              )
-            ]
+          t.assignmentExpression('=',
+            t.memberExpression(instId, instanceContextId),
+            t.callExpression(
+              xvdomApi.accessFunction('createDynamic'),
+              [
+                t.booleanLiteral(isOnlyChild),
+                parentNodeVarId,
+                t.memberExpression(instId, instanceValueId)
+              ]
+            )
           )
         ]
       )
+    )
+  );
+}
+
+function generateSpecElementStaticChildCode({t, xvdomApi, statements, instId}, { node, isOnlyChild }, parentNodeVarId){
+  statements.push(
+    t.expressionStatement(
+      // Optimization: https://jsperf.com/textcontent-vs-createtextnode-vs-innertext
+      isOnlyChild
+        ? (// _n.textContent = "hello" + 5;
+            t.assignmentExpression('=',
+              t.memberExpression(parentNodeVarId, t.identifier('textContent')),
+              node
+            )
+          )
+        : (// _n.appendChild(document.createTextNode(("hello" + 5) || ""));
+            t.callExpression(
+              t.memberExpression(parentNodeVarId, t.identifier('appendChild')),
+              [
+                t.callExpression(
+                  t.memberExpression(t.identifier('document'), t.identifier('createTextNode')),
+                  [node]
+                )
+              ]
+            )
+          )
     )
   );
 }
@@ -161,10 +168,13 @@ function generateSpecCreateComponentCode(context, el, depth){
     ? t.nullLiteral()
     : obj(
         t,
-        (el.props.reduce(((acc, {nameId, valueNode, dynamic}) => (
-          acc[nameId.name] = dynamic ? t.memberExpression(instId, dynamic.instanceValueId) : valueNode,
-          acc
-        )), {}))
+        el.props.reduce(
+          ((acc, {nameId, valueNode, dynamic}) => (
+            acc[nameId.name] = dynamic ? t.memberExpression(instId, dynamic.instanceValueId) : valueNode,
+            acc
+          )),
+          {}
+        )
       );
 
   // Create element
@@ -307,9 +317,10 @@ function generateSpecCreateCode(t, xvdomApi, {rootElement, dynamics, hasComponen
 //TODO: function generateSpecUpdateDynamicPropCode(){}
 //TODO: function generateSpecUpdateDynamicChildCode(){}
 
-function generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, tmpVar, dynamic){
+function generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, getTmpVar, dynamic){
   const {type, instanceContextId, instanceValueId, name, isOnlyChild, hasSideEffects} = dynamic;
   if(type === 'prop'){
+    const tmpVar = getTmpVar();
     return [
       t.expressionStatement(
         t.assignmentExpression('=',
@@ -382,7 +393,7 @@ function generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, tmpVar, dyn
   }
 }
 
-function generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, tmpVar, component){
+function generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, component){
   const dynamicProps = component.props.filter(p => p.dynamic);
   const condition = (
     dynamicProps.map(p => (
@@ -438,25 +449,33 @@ function generateSpecUpdateCode(t, xvdomApi, {dynamics, componentsWithDyanmicPro
 
   const instId  = instParamId(t);
   const pInstId = prevInstParamId(t);
-  const tmpVar  = t.identifier('v');
+  let tmpVar;
+  const getTmpVar = () => tmpVar || (tmpVar = t.identifier('v'));
+
+  const updateDynamicPropCode = (
+    dynamics
+      .filter(nonComponentPropDynamic)
+      .reduce((acc, dynamic) => {
+        acc.push(...generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, getTmpVar, dynamic));
+        return acc;
+      }, [])
+  );
+
+  const updateDynamicComponents = (
+    componentsWithDyanmicProps
+      .map(component =>
+        generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, component)
+      )
+  );
+
   return (
     t.functionExpression(
       null,
       [instId, pInstId],
       t.blockStatement([
-        t.variableDeclaration('var', [t.variableDeclarator(tmpVar)]),
-
-        ...dynamics
-          .filter(nonComponentPropDynamic)
-          .reduce((acc, dynamic) => {
-            acc.push(...generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, tmpVar, dynamic));
-            return acc;
-          }, []),
-
-        ...componentsWithDyanmicProps
-          .map(component =>
-            generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, tmpVar, component)
-          )
+        ...(!tmpVar ? [] : [t.variableDeclaration('var', [t.variableDeclarator(tmpVar)])]),
+        ...updateDynamicPropCode,
+        ...updateDynamicComponents
       ])
     )
   );
@@ -474,7 +493,10 @@ function generateInstanceCode(t, xvdomApi, {dynamics, id, key}){
   )
 }
 
-function generateRenderingCode(t, xvdomApi, template){
+function generateRenderingCode(t, file, template){
+  const xvdomApi = {
+    accessFunction: apiFunc => globals.get(file, apiFunc)
+  };
   return {
     specCode: obj(t, {
       c: generateSpecCreateCode(t, xvdomApi, template),
@@ -530,7 +552,8 @@ function parseElementChild({t, file, context}, el, childNode, isOnlyChild)/*:Ele
   return {
     type:    isDynamic ? 'dynamicChild' : 'staticChild',
     dynamic: isDynamic && context.addDynamicChild(el, childNode, isOnlyChild),
-    node:    childNode
+    node:    childNode,
+    isOnlyChild
   };
 }
 
@@ -646,8 +669,7 @@ module.exports = function Plugin({types: t}){
           if(t.isJSX(parent)) return;
 
           const template = parseTemplate(t, file, node);
-          const xvdomApi = {accessFunction: apiFunc => globals.get(file, apiFunc)};
-          const {specCode, instanceCode} = generateRenderingCode(t, xvdomApi, template);
+          const {specCode, instanceCode} = generateRenderingCode(t, file, template);
 
           path.replaceWith(instanceCode);
           declareGlobal(t, file, template.id, specCode);
