@@ -6,11 +6,19 @@ const {
 
 const genId = require('./genId.js');
 
-const EMPTY_ARRAY = [];
+const NODE_EL        = 'el';
+const NODE_COMPONENT = 'component';
+const NODE_STATIC    = 'staticChild';
+const NODE_DYNAMIC   = 'dynamicChild';
+
+const PROP_COMPONENT = 'componentProp';
+const PROP_EL        = 'elProp';
+
+const EMPTY_ARRAY    = [];
 
 const isKeyAttribute          = attr => attr.name.name === 'key';
 const isComponentName         = name => name && /^[A-Z]/.test(name);
-const nonComponentPropDynamic = dyn  => dyn.type !== 'componentProp';
+const nonComponentPropDynamic = dyn  => dyn.type !== PROP_COMPONENT;
 
 const hasSideEffects = (tag, propName) => (
   (tag === 'input' && propName === 'value') ||
@@ -68,7 +76,7 @@ const instParamId     = t => t.identifier('inst');
 const prevInstParamId = t => t.identifier('pInst');
 const tmpVarId        = (t, num) => t.identifier(`_n${num ? ++num : ''}`);
 
-function generateAssignPropsCode({t, instId, statements}, nodeVarId, {props, instanceContextId}){
+function generateAssignPropsCode({ t, instId, statements }, nodeVarId, { props, instanceContextId }){
   if(instanceContextId){
     statements.push(
       t.expressionStatement(
@@ -81,7 +89,7 @@ function generateAssignPropsCode({t, instId, statements}, nodeVarId, {props, ins
   }
 
   statements.push(
-    ...props.map(({isDynamic, dynamic, nameId, valueNode}) => {
+    ...props.map(({ isDynamic, dynamic, nameId, valueNode }) => {
       const valueCode = isDynamic ? t.memberExpression(instId, dynamic.instanceValueId) : valueNode;
 
       if(dynamic.hasSideEffects){
@@ -111,7 +119,7 @@ function generateAssignPropsCode({t, instId, statements}, nodeVarId, {props, ins
   );
 }
 
-function generateSpecElementDynamicChildCode({t, xvdomApi, statements, instId}, childDesc, parentNodeVarId){
+function generateSpecElementDynamicChildCode({ t, xvdomApi, statements, instId }, childDesc, parentNodeVarId){
   const { dynamic: { instanceContextId, instanceValueId }, isOnlyChild } = childDesc;
   statements.push(
     t.expressionStatement(
@@ -135,7 +143,7 @@ function generateSpecElementDynamicChildCode({t, xvdomApi, statements, instId}, 
   );
 }
 
-function generateSpecElementStaticChildCode({t, xvdomApi, statements, instId}, { node, isOnlyChild }, parentNodeVarId){
+function generateSpecElementStaticChildCode({ t, xvdomApi, statements, instId }, { node, isOnlyChild }, parentNodeVarId){
   statements.push(
     t.expressionStatement(
       // Optimization: https://jsperf.com/textcontent-vs-createtextnode-vs-innertext
@@ -162,14 +170,14 @@ function generateSpecElementStaticChildCode({t, xvdomApi, statements, instId}, {
 }
 
 function generateSpecCreateComponentCode(context, el, depth){
-  const {t, instId, xvdomApi, tmpVars, statements} = context;
+  const { t, instId, xvdomApi, tmpVars, statements } = context;
   const componentId = t.identifier(el.tag);
   const propsArg = !el.props.length
     ? t.nullLiteral()
     : obj(
         t,
         el.props.reduce(
-          ((acc, {nameId, valueNode, dynamic}) => (
+          ((acc, { nameId, valueNode, dynamic }) => (
             acc[nameId.name] = dynamic ? t.memberExpression(instId, dynamic.instanceValueId) : valueNode,
             acc
           )),
@@ -232,7 +240,7 @@ function generateSpecCreateComponentCode(context, el, depth){
 }
 
 function generateSpecCreateHTMLElementCode(context, el, depth){
-  const {t, xvdomApi, tmpVars, statements} = context;
+  const { t, xvdomApi, tmpVars, statements } = context;
 
   // Create element
   // ex. _xvdomEl('div');
@@ -280,10 +288,10 @@ function generateSpecCreateHTMLElementCode(context, el, depth){
 
   el.children.forEach(childDesc => {
     switch(childDesc.type){
-    case 'component':    return generateSpecCreateComponentCode(context, childDesc, depth);
-    case 'el':           return generateSpecCreateHTMLElementCode(context, childDesc, depth);
-    case 'dynamicChild': return generateSpecElementDynamicChildCode(context, childDesc, tmpVar);
-    case 'staticChild':  return generateSpecElementStaticChildCode(context, childDesc, tmpVar);
+    case NODE_COMPONENT: return generateSpecCreateComponentCode(context, childDesc, depth);
+    case NODE_EL:        return generateSpecCreateHTMLElementCode(context, childDesc, depth);
+    case NODE_DYNAMIC:   return generateSpecElementDynamicChildCode(context, childDesc, tmpVar);
+    case NODE_STATIC:    return generateSpecElementStaticChildCode(context, childDesc, tmpVar);
     }
   });
 }
@@ -294,7 +302,7 @@ function generateSpecCreateElementCode(context, el){
     : generateSpecCreateComponentCode(context, el, 0);
 }
 
-function generateSpecCreateCode(t, xvdomApi, {rootElement, dynamics, hasComponents}){
+function generateSpecCreateCode(t, xvdomApi, { rootElement, dynamics, hasComponents }){
   const context = {
     t,
     xvdomApi,
@@ -318,8 +326,8 @@ function generateSpecCreateCode(t, xvdomApi, {rootElement, dynamics, hasComponen
 //TODO: function generateSpecUpdateDynamicChildCode(){}
 
 function generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, getTmpVar, dynamic){
-  const {type, instanceContextId, instanceValueId, name, isOnlyChild, hasSideEffects} = dynamic;
-  if(type === 'prop'){
+  const { type, instanceContextId, instanceValueId, name, isOnlyChild, hasSideEffects } = dynamic;
+  if(type === PROP_EL){
     const tmpVar = getTmpVar();
     return [
       t.expressionStatement(
@@ -444,7 +452,7 @@ function generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, co
   );
 }
 
-function generateSpecUpdateCode(t, xvdomApi, {dynamics, componentsWithDyanmicProps}){
+function generateSpecUpdateCode(t, xvdomApi, { dynamics, componentsWithDyanmicProps }){
   if(!dynamics.length) return t.functionExpression(null, EMPTY_ARRAY, t.blockStatement(EMPTY_ARRAY));
 
   const instId  = instParamId(t);
@@ -481,14 +489,14 @@ function generateSpecUpdateCode(t, xvdomApi, {dynamics, componentsWithDyanmicPro
   );
 }
 
-function generateInstanceCode(t, xvdomApi, {dynamics, id, key}){
+function generateInstanceCode(t, xvdomApi, { dynamics, id, key }){
   return obj(t,
     dynamics.reduce(
-      (acc, {instanceValueId, value}) => {
+      (acc, { instanceValueId, value }) => {
         acc[instanceValueId.name] = value;
         return acc;
       },
-      Object.assign({$s: id}, key && { key })
+      Object.assign({ $s: id }, key && { key })
     )
   )
 }
@@ -522,7 +530,7 @@ type ElementProp {
   valueNode: Node
 }
 */
-function parseElementProps({t, file, context}, node, nodeAttributes)/*:ElementProp[]*/{
+function parseElementProps({ t, file, context }, node, nodeAttributes)/*:ElementProp[]*/{
   return nodeAttributes.reduce((props, attr) => {
     if(!isKeyAttribute(attr)){
       const valueNode  = normalizeElementPropValue(t, attr.value);
@@ -547,10 +555,10 @@ type ElementChild {
   node: Node
 }
 */
-function parseElementChild({t, file, context}, el, childNode, isOnlyChild)/*:ElementChild*/{
+function parseElementChild({ t, file, context }, el, childNode, isOnlyChild)/*:ElementChild*/{
   const isDynamic = isDynamicNode(t, childNode);
   return {
-    type:    isDynamic ? 'dynamicChild' : 'staticChild',
+    type:    isDynamic ? NODE_DYNAMIC : NODE_STATIC,
     dynamic: isDynamic && context.addDynamicChild(el, childNode, isOnlyChild),
     node:    childNode,
     isOnlyChild
@@ -563,12 +571,12 @@ type Element {
   children: (Element|ElementChild)[]
 }
 */
-function parseElement({t, file, context}, { openingElement: { name, attributes }, children })/*:Element*/{
+function parseElement({ t, file, context }, { openingElement: { name, attributes }, children })/*:Element*/{
   const isComponent      = isComponentName(name.name);
   const filteredChildren = buildChildren(t, children);
   const hasOnlyOneChild  = filteredChildren.length === 1;
   const el = {
-    type: isComponent ? 'component' : 'el',
+    type: isComponent ? NODE_COMPONENT : NODE_EL,
     tag:  name.name
   };
   el.props    = parseElementProps(context, el, attributes);
@@ -607,9 +615,9 @@ class ParsingContext{
   }
 
   addDynamicProp(el, name, value, hasSideEffects)/*:{type:String, name:String, value:Node, hasSideEffects:Boolean, instanceContextId:Identifier, instanceValueId:Identifier}*/{
-    const isElementProp = el.type === 'el';
+    const isElementProp = el.type === NODE_EL;
     const dynamic = {
-      type: (isElementProp ? 'prop' : 'componentProp'),
+      type: (isElementProp ? PROP_EL : PROP_COMPONENT),
       name,
       value,
       hasSideEffects,
@@ -660,38 +668,35 @@ function parseTemplate(t, file, node)/*:{id:Identifier, root:Element}*/{
   };
 }
 
-module.exports = function Plugin({types: t}){
-  return {
-    visitor: {
-      JSXElement: {
-        exit(path, {file}){
-          const {node, parent} = path;
-          if(t.isJSX(parent)) return;
+module.exports = ({ types: t }) => ({
+  visitor: {
+    JSXElement: {
+      exit(path, { file }){
+        if(t.isJSX(path.parent)) return;
 
-          const template = parseTemplate(t, file, node);
-          const {specCode, instanceCode} = generateRenderingCode(t, file, template);
+        const template = parseTemplate(t, file, path.node);
+        const { specCode, instanceCode } = generateRenderingCode(t, file, template);
 
-          path.replaceWith(instanceCode);
-          declareGlobal(t, file, template.id, specCode);
-        }
-      },
-      Program: {
-        exit(path, {file}){
-          const fileGlobals = globals.forFile(file);
-          if(fileGlobals && Object.keys(fileGlobals).length){
-            file.path.unshiftContainer('body',
-              t.variableDeclaration('var',
-                Object.keys(fileGlobals).sort().map(key =>
-                  t.variableDeclarator(
-                    fileGlobals[key],
-                    t.memberExpression(t.identifier('xvdom'), t.identifier(key))
-                  )
+        path.replaceWith(instanceCode);
+        declareGlobal(t, file, template.id, specCode);
+      }
+    },
+    Program: {
+      exit(path, { file }){
+        const fileGlobals = globals.forFile(file);
+        if(fileGlobals && Object.keys(fileGlobals).length){
+          file.path.unshiftContainer('body',
+            t.variableDeclaration('var',
+              Object.keys(fileGlobals).sort().map(key =>
+                t.variableDeclarator(
+                  fileGlobals[key],
+                  t.memberExpression(t.identifier('xvdom'), t.identifier(key))
                 )
               )
-            );
-          }
+            )
+          );
         }
       }
     }
-  };
-}
+  }
+});
