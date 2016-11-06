@@ -1,7 +1,5 @@
 <div>
-  <span>
-    <a></a>
-  </span>
+  hello world
 </div>;
 
 <div>
@@ -16,3 +14,7 @@
     <a className="two"></a>
   </span>
 </div>;
+
+<div>{"hello"}</div>;
+<div>{"hello" + 5}</div>;
+<div>{!"hello"}</div>;

@@ -10,19 +10,17 @@ describe("turn jsx into xvdom", () => {
 
   fs.readdirSync(fixturesDir).map(caseName => {
     if([
-      "attributes",
-      "multiple-attributes",
-      "children-dynamic-values-simple",
-      "children-dynamic-values",
-      "children",
-      "element",
-      "expression-nested",
-      "expression",
-      "prop-dynamic-values-simple",
+      "el",
+      "el-comment-children",
+      "el-dynamic-children",
+      "el-dynamic-props",
+      "el-key-prop",
+      "el-static-children",
+      "el-static-props",
       "component",
       "component-dynamic-props",
-      "key"
-      // "recycle"
+      "component-static-props"/*,
+      "recycle"*/
     ].indexOf(caseName) === -1) return;
 
     it(`should ${caseName.split("-").join(" ")}`, () => {

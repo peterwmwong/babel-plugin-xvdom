@@ -3,39 +3,6 @@
 var _xvdomCreateDynamic = xvdom.createDynamic,
     _xvdomEl = xvdom.el,
     _xvdomUpdateDynamic = xvdom.updateDynamic;
-var _xvdomSpec8 = {
-  c: function c() {
-    var _n = _xvdomEl("div");
-
-    _n.textContent = "foo bar";
-    return _n;
-  },
-  u: function u() {},
-  r: xvdom.DEADPOOL
-};
-var _xvdomSpec7 = {
-  c: function c(inst) {
-    var _n = _xvdomEl("div");
-
-    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
-
-    return _n;
-  },
-  u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
-  },
-  r: xvdom.DEADPOOL
-};
-var _xvdomSpec6 = {
-  c: function c() {
-    var _n = _xvdomEl("div");
-
-    _n.textContent = "hello" + 5;
-    return _n;
-  },
-  u: function u() {},
-  r: xvdom.DEADPOOL
-};
 var _xvdomSpec5 = {
   c: function c(inst) {
     var _n = _xvdomEl("div");
@@ -79,68 +46,59 @@ var _xvdomSpec2 = {
   c: function c(inst) {
     var _n = _xvdomEl("div");
 
-    inst.a = _n;
-    _n.className = inst.b;
-    _n.title = inst.c;
+    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
+
     return _n;
   },
   u: function u(inst, pInst) {
-    var v;
-    v = inst.b;
-    if (v !== pInst.b) pInst.a.className = pInst.b = v;
-    v = inst.c;
-    if (v !== pInst.c) pInst.a.title = pInst.c = v;
+    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
   },
   r: xvdom.DEADPOOL
 };
 var _xvdomSpec = {
   c: function c(inst) {
-    var _n = _xvdomEl("div");
+    var _n = _xvdomEl("div"),
+        _n2 = _xvdomEl("span");
 
-    inst.a = _n;
-    _n.className = inst.b;
+    _n.appendChild(inst.a = _xvdomCreateDynamic(false, _n, inst.b));
+
+    _n.appendChild(_n2);
+
+    _n2.appendChild(inst.c = _xvdomCreateDynamic(true, _n2, inst.d));
+
     return _n;
   },
   u: function u(inst, pInst) {
-    var v;
-    v = inst.b;
-    if (v !== pInst.b) pInst.a.className = pInst.b = v;
+    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(false, pInst.b, pInst.b = inst.b, pInst.a);
+    if (inst.d !== pInst.d) pInst.c = _xvdomUpdateDynamic(true, pInst.d, pInst.d = inst.d, pInst.c);
   },
   r: xvdom.DEADPOOL
 };
-var msg = "hello";
+var message1 = "hello";
+var message2 = "world";
 function translate(str) {
   return str;
 }
 
 ({
   $s: _xvdomSpec,
-  b: msg
+  b: message1,
+  d: message2
 });
+
 ({
   $s: _xvdomSpec2,
-  b: msg + "hello",
-  c: translate(msg)
+  b: message2[0]
 });
 ({
   $s: _xvdomSpec3,
-  b: msg
+  b: message2 + "hello"
 });
 ({
   $s: _xvdomSpec4,
-  b: msg + "hello"
+  b: translate(message2)
 });
 ({
   $s: _xvdomSpec5,
-  b: translate(msg)
-});
-({
-  $s: _xvdomSpec6
-});
-({
-  $s: _xvdomSpec7,
-  b: msg.length
-});
-({
-  $s: _xvdomSpec8
+  b: message2.length
 });

@@ -55,9 +55,14 @@ function isDynamicNode(t, astNode){
 
 function obj(t, keyValues){
   return t.objectExpression(
-    Object.keys(keyValues).map(key =>
-      t.objectProperty(t.identifier(key), keyValues[key])
-    )
+    Object.keys(keyValues).map(key => {
+      const value = keyValues[key];
+      return (
+        t.isFunctionExpression(value)
+          ? t.objectMethod('method', t.identifier(key), value.params, value.body)
+          : t.objectProperty(t.identifier(key), value)
+      )
+    })
   );
 }
 
