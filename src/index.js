@@ -397,6 +397,7 @@ function pathToExpression(t, path){
 
 function generateSpecCreateCloneableDynamicCode(context, rootElId, dynamics){
   const { t } = context;
+  // TODO(perf): minimize path access. Reuse paths accessed by previous dynamics 
   sortDynamicsByDepthThenDistanceFromEnds(dynamics).forEach(d => {
     switch(d.type){
     case PROP_EL:
@@ -408,6 +409,7 @@ function generateSpecCreateCloneableDynamicCode(context, rootElId, dynamics){
       );
       break;
     }
+    // TODO: Handle dynamic children
   });
 }
 
