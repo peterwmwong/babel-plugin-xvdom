@@ -1,7 +1,7 @@
 "use strict";
 
-var _xvdomEl = xvdom.el;
-var _xvdomSpec3 = {
+var _xvdomEl = xvdom.el,
+    _xvdomSpec = {
   c: function c() {
     var _n = _xvdomEl("div");
 
@@ -9,8 +9,8 @@ var _xvdomSpec3 = {
   },
   u: function u() {},
   r: xvdom.DEADPOOL
-};
-var _xvdomSpec2 = {
+},
+    _xvdomSpec2 = {
   c: function c() {
     var _n = _xvdomEl("div");
 
@@ -18,8 +18,8 @@ var _xvdomSpec2 = {
   },
   u: function u() {},
   r: xvdom.DEADPOOL
-};
-var _xvdomSpec = {
+},
+    _xvdomSpec3 = {
   c: function c() {
     var _n = _xvdomEl("div");
 

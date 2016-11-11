@@ -1,7 +1,7 @@
 "use strict";
 
-var _xvdomCreateComponent = xvdom.createComponent;
-var _xvdomSpec = {
+var _xvdomCreateComponent = xvdom.createComponent,
+    _xvdomSpec = {
   c: function c(inst) {
     var _n = _xvdomCreateComponent(MyComponent, MyComponent.state, null, inst).$n;
 

@@ -1,4 +1,3 @@
-// TODO: Document why this didn't work (jsperf): crazy idea, chunks of completely static JSX are... innerHTML-ed in create.  :boom:
 const {
   buildChildren,
   toReference
@@ -15,25 +14,34 @@ const PROP_COMPONENT = 'componentProp';
 const PROP_EL        = 'elProp';
 
 const EMPTY_ARRAY    = [];
+const EMPTY_OBJECT   = {};
 
+const isCloneableAttribute    = attr => attr.name.name === 'cloneable';
 const isKeyAttribute          = attr => attr.name.name === 'key';
+const isXvdomAttribute        = attr => isCloneableAttribute(attr) || isKeyAttribute(attr);
 const isComponentName         = name => name && /^[A-Z]/.test(name);
 const nonComponentPropDynamic = dyn  => dyn.type !== PROP_COMPONENT;
+const xvdomApiFuncName        = name => `xvdom${name[0].toUpperCase()}${name.slice(1)}`;
 
 const hasSideEffects = (tag, propName) => (
   (tag === 'input' && propName === 'value') ||
   (tag === 'a'     && propName === 'href')
 );
 
-const _globalsForFile = new Map();
+const _globalsForFile = new WeakMap();
 const globals = {
-  get: (file, name) => {
-    const prefixedName = `xvdom${name[0].toUpperCase()}${name.slice(1)}`;
-    const fileGlobals = _globalsForFile.get(file)
-                          || _globalsForFile.set(file, {}).get(file);
-    return fileGlobals[name]
-            || (fileGlobals[name] = file.scope.generateUidIdentifier(prefixedName));
+  define: (file, name, value) => {
+    let fileGlobals = _globalsForFile.get(file);
+    if (!fileGlobals) _globalsForFile.set(file, fileGlobals = {});
+
+    return (fileGlobals[name] = {
+      uniqueNameId: file.scope.generateUidIdentifier(name),
+      value
+    });
   },
+  get: (file, name) => (
+    (_globalsForFile.get(file) || EMPTY_OBJECT)[name]
+  ),
   forFile: file => _globalsForFile.get(file)
 };
 
@@ -81,24 +89,32 @@ const instParamId     = t => t.identifier('inst');
 const prevInstParamId = t => t.identifier('pInst');
 const tmpVarId        = (t, num) => t.identifier(`_n${num ? ++num : ''}`);
 
-function generateAssignPropsCode({ t, instId, statements }, nodeVarId, { props, instanceContextId }){
-  if(instanceContextId){
+function generateAssignDynamicProp(
+  { t, instId, statements },
+  varExpression,
+  { isDynamic, dynamic, valueNode, nameId },
+  shouldAssignInstanceContext
+){
+  if(isDynamic && shouldAssignInstanceContext){
     statements.push(
       t.expressionStatement(
         t.assignmentExpression('=',
-          t.memberExpression(instId, instanceContextId),
-          nodeVarId
+          t.memberExpression(instId, dynamic.instanceContextId),
+          varExpression
         )
       )
     )
   }
 
-  statements.push(
-    ...props.map(({ isDynamic, dynamic, nameId, valueNode }) => {
-      const valueCode = isDynamic ? t.memberExpression(instId, dynamic.instanceValueId) : valueNode;
+  const valueCode = (
+    isDynamic
+      ? t.memberExpression(instId, dynamic.instanceValueId)
+      : valueNode
+  );
 
-      if(dynamic.hasSideEffects){
-        return t.ifStatement(
+  statements.push(
+    dynamic.hasSideEffects
+      ? t.ifStatement(
           t.binaryExpression(
             '!=',
             valueCode,
@@ -106,21 +122,17 @@ function generateAssignPropsCode({ t, instId, statements }, nodeVarId, { props, 
           ),
           t.expressionStatement(
             t.assignmentExpression('=',
-              t.memberExpression(nodeVarId, nameId),
+              t.memberExpression(varExpression, nameId),
               valueCode
             )
           )
         )
-      }
-      else {
-        return t.expressionStatement(
+      : t.expressionStatement(
           t.assignmentExpression('=',
-            t.memberExpression(nodeVarId, nameId),
+            t.memberExpression(varExpression, nameId),
             valueCode
           )
-        );
-      }
-    })
+        )
   );
 }
 
@@ -245,7 +257,7 @@ function generateSpecCreateComponentCode(context, el, depth){
 }
 
 function generateSpecCreateHTMLElementCode(context, el, depth){
-  const { t, xvdomApi, tmpVars, statements } = context;
+  const { t, xvdomApi, tmpVars, statements, shouldGeneratePropsCode } = context;
 
   // Create element
   // ex. _xvdomEl('div');
@@ -274,7 +286,13 @@ function generateSpecCreateHTMLElementCode(context, el, depth){
   }
 
   // Assign props
-  generateAssignPropsCode(context, tmpVars[depth].id, el);
+  // if (shouldGeneratePropsCode) generateAssignPropsCode(context, tmpVars[depth].id, el);
+  if (shouldGeneratePropsCode){
+    const nodeVarId = tmpVars[depth].id
+    el.props.forEach((prop, i) => {
+      generateAssignDynamicProp(context, nodeVarId, prop, i === 0);
+    });
+  }
 
   // Add this node to parent, if there is a parent (not root).
   // ex. _n.appendChild(_n2);
@@ -301,22 +319,160 @@ function generateSpecCreateHTMLElementCode(context, el, depth){
   });
 }
 
-function generateSpecCreateElementCode(context, el){
-  return el.type === 'el'
-    ? generateSpecCreateHTMLElementCode(context, el, 0)
-    : generateSpecCreateComponentCode(context, el, 0);
+function getClosestSibling(index, siblings){
+  if(siblings.length){
+    return siblings.reduce((min, s) => (
+      (Math.abs(index - min.index) < Math.abs(index - s.index))
+        ? min
+        : s
+    ));
+  }
 }
 
-function generateSpecCreateCode(t, xvdomApi, { rootElement, dynamics, hasComponents }){
+const getCachedPath = (el, fn) => el._pathToRoot || (el._pathToRoot = fn());
+
+const repeat = (num, value) => [...new Array(num)].map(() => value);
+
+function getPath(el, prevSiblings=EMPTY_ARRAY){
+  if(!el.parent) return EMPTY_ARRAY;
+  return getCachedPath(el, () => {
+    const { index, parent } = el;
+    const children = parent ? parent.children : EMPTY_ARRAY;
+
+    if(index === 0){
+      return getPath(parent).concat('firstChild');
+    }
+    else if(index === children.length - 1){
+      return getPath(parent).concat('lastChild');
+    }
+
+    const firstSibling   = children[0];
+    const lastSibling    = children[children.length - 1];
+    const distToLast     = lastSibling.index - index;
+    const closestSibling = getClosestSibling(el.index, prevSiblings) || firstSibling;
+    const distToClosest  = closestSibling ? Math.abs(closestSibling.index - index) : Number.MAX_SAFE_INTEGER;
+    const targetSibling  = (
+        distToClosest < index && distToClosest < distToLast ? closestSibling
+      : index < distToLast ? firstSibling
+      : lastSibling
+    );
+    return getPath(targetSibling).concat(
+      repeat(
+        Math.abs(targetSibling.index - index),
+        targetSibling.index < index ? 'nextSibling' : 'previousSibling'
+      )
+    );
+  });
+}
+
+function distanceFromEnds(el){
+  const { index, parent: { children: { length } } } = el;
+  return Math.min(index, length - index);
+}
+
+function sortDynamicsByDepthThenDistanceFromEnds(dynamics){
+  const depths = [];
+  dynamics.forEach(d => {
+    const group = depths[d.el.depth] || (depths[d.el.depth] = []);
+    group.push(d);
+  });
+  depths.forEach(group => {
+    group.sort((a, b) => distanceFromEnds(a.el) - distanceFromEnds(b.el));
+  });
+  return depths.reduce(((acc, group) => acc.concat(group)), []);
+}
+
+function pathToExpression(t, path){
+  return (
+    path
+      .map(part => t.isIdentifier(part) ? part : t.identifier(part))
+      .reduce((prevExpression, part) => {
+        return t.memberExpression(
+          prevExpression,
+          part
+        );
+      })
+  );
+}
+
+function generateSpecCreateCloneableDynamicCode(context, rootElId, dynamics){
+  const { t } = context;
+  sortDynamicsByDepthThenDistanceFromEnds(dynamics).forEach(d => {
+    switch(d.type){
+    case PROP_EL:
+      generateAssignDynamicProp(
+        context,
+        pathToExpression(t, [rootElId, ...getPath(d.el)]),
+        d.prop,
+        true
+      );
+      break;
+    }
+  });
+}
+
+function generateSpecCreateCloneableElementCode(context, el, cloneable/* cloneable */, dynamics){
+  const { t, tmpVars, xvdomApi } = context;
+  const rootElId = tmpVarId(t, 0);
+  const specNodeId = xvdomApi.definePrefixed('xvdomSpecNode', t.nullLiteral()).uniqueNameId;
+  const createSpecContext =
+    Object.assign({}, context, {
+      statements:[], tmpVars:[], shouldGeneratePropsCode: false
+    });
+  generateSpecCreateElementCode(createSpecContext, el, 0);
+
+  const createSpecNodeId = xvdomApi.definePrefixed(
+    'xvdomSpecNodeCreate',
+    t.functionExpression(null, EMPTY_ARRAY, t.blockStatement([
+      t.variableDeclaration('var', createSpecContext.tmpVars),
+      ...createSpecContext.statements,
+      t.returnStatement(createSpecContext.tmpVars[0].id)
+    ]))
+  ).uniqueNameId;
+
+  // var _n = (_xvdomSpecNode || (_xvdomSpecNode = _xvdomSpecNodeCreate())).cloneNode(true);
+  tmpVars.push(
+    t.variableDeclarator(
+      rootElId,
+      t.callExpression(
+        t.memberExpression(
+          t.logicalExpression('||',
+            specNodeId,
+            t.assignmentExpression('=',
+              specNodeId,
+              t.callExpression(createSpecNodeId, EMPTY_ARRAY)
+            )
+          ),
+          t.identifier('cloneNode')
+        ),
+        [t.booleanLiteral(true)]
+      )
+    )
+  );
+
+  // function _xvdomSpecNodeCreate(){
+  //   ...
+  // }
+  generateSpecCreateCloneableDynamicCode(context, rootElId, dynamics);
+}
+
+function generateSpecCreateElementCode(context, el){
+  if(el.type === 'el') generateSpecCreateHTMLElementCode(context, el, 0);
+  else generateSpecCreateComponentCode(context, el, 0);
+}
+
+function generateSpecCreateCode(t, xvdomApi, { rootElement, dynamics, hasComponents, cloneable }){
   const context = {
     t,
     xvdomApi,
+    shouldGeneratePropsCode: true,
     instId: instParamId(t),
     tmpVars: [],
     statements: []
   };
 
-  generateSpecCreateElementCode(context, rootElement);
+  if(cloneable) generateSpecCreateCloneableElementCode(context, rootElement, cloneable, dynamics);
+  else generateSpecCreateElementCode(context, rootElement);
 
   const params = (hasComponents || dynamics.length) ? [instParamId(t)] : EMPTY_ARRAY;
 
@@ -475,18 +631,19 @@ function generateSpecUpdateCode(t, xvdomApi, { dynamics, componentsWithDyanmicPr
   );
 
   const updateDynamicComponents = (
-    componentsWithDyanmicProps
-      .map(component =>
-        generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, component)
-      )
+    componentsWithDyanmicProps.map(component =>
+      generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, component)
+    )
   );
+
+  const tmpVarDecl = tmpVar ? [t.variableDeclaration('var', [t.variableDeclarator(tmpVar)])] : EMPTY_ARRAY;
 
   return (
     t.functionExpression(
       null,
       [instId, pInstId],
       t.blockStatement([
-        ...(!tmpVar ? [] : [t.variableDeclaration('var', [t.variableDeclarator(tmpVar)])]),
+        ...tmpVarDecl,
         ...updateDynamicPropCode,
         ...updateDynamicComponents
       ])
@@ -494,7 +651,7 @@ function generateSpecUpdateCode(t, xvdomApi, { dynamics, componentsWithDyanmicPr
   );
 }
 
-function generateInstanceCode(t, xvdomApi, { dynamics, id, key }){
+function generateInstanceCode(t, xvdomApi, { dynamics, key }, id){
   return obj(t,
     dynamics.reduce(
       (acc, { instanceValueId, value }) => {
@@ -506,26 +663,59 @@ function generateInstanceCode(t, xvdomApi, { dynamics, id, key }){
   )
 }
 
-function generateRenderingCode(t, file, template){
-  const xvdomApi = {
-    accessFunction: apiFunc => globals.get(file, apiFunc)
-  };
-  return {
-    specCode: obj(t, {
-      c: generateSpecCreateCode(t, xvdomApi, template),
-      u: generateSpecUpdateCode(t, xvdomApi, template),
-      r: t.memberExpression(t.identifier('xvdom'), t.identifier('DEADPOOL'))
-    }),
-    instanceCode: generateInstanceCode(t, xvdomApi, template)
+const _definedPrefixCountsForFile = new Map();
+
+// TODO: Should this be class?  We seem to be doing `new FileGlobals` more than we should
+//       Maybe we should just build all this functionality in to `globals`?
+class FileGlobals{
+  constructor(t, file){
+    this._t = t;
+    this._file = file;
+    this._definedPrefixCounts = (
+      _definedPrefixCountsForFile
+        .set(file, _definedPrefixCountsForFile.get(file) || new Map())
+        .get(file)
+    );
+  }
+
+  definePrefixed(name, value){
+    const { _definedPrefixCounts } = this;
+    const count = (
+      _definedPrefixCounts
+        .set(name, (_definedPrefixCounts.get(name)|0) + 1)
+        .get(name)
+    );
+    const globalId = count === 1 ? name : name + count;
+    return globals.define(this._file, globalId, value);
+  }
+
+  accessFunction(apiFuncName){
+    const { _t:t } = this;
+    const globalId = globals.get(this._file, xvdomApiFuncName(apiFuncName));
+    return (
+      globalId || globals.define(
+        this._file,
+        xvdomApiFuncName(apiFuncName),
+        t.memberExpression(t.identifier('xvdom'), t.identifier(apiFuncName))
+      )
+    ).uniqueNameId;
   }
 }
 
-function declareGlobal(t, file, id, value){
-  file.path.unshiftContainer('body',
-    t.variableDeclaration('var', [
-      t.variableDeclarator(id, value)
-    ])
+function generateRenderingCode(t, file, template){
+  const xvdomApi = new FileGlobals(t, file);
+  const { uniqueNameId, value } = xvdomApi.definePrefixed(
+    'xvdomSpec',
+    obj(t, {
+      c: generateSpecCreateCode(t, xvdomApi, template),
+      u: generateSpecUpdateCode(t, xvdomApi, template),
+      r: t.memberExpression(t.identifier('xvdom'), t.identifier('DEADPOOL'))
+    })
   );
+  return {
+    specCode: value,
+    instanceCode: generateInstanceCode(t, xvdomApi, template, uniqueNameId)
+  }
 }
 
 /*
@@ -537,19 +727,20 @@ type ElementProp {
 */
 function parseElementProps({ t, file, context }, node, nodeAttributes)/*:ElementProp[]*/{
   return nodeAttributes.reduce((props, attr) => {
-    if(!isKeyAttribute(attr)){
-      const valueNode  = normalizeElementPropValue(t, attr.value);
-      const name       = attr.name.name;
-      const nameId     = t.identifier(name);
-      const isDynamic  = isDynamicNode(t, valueNode);
+    if(isXvdomAttribute(attr)) return props;
 
-      props.push({
-        dynamic: isDynamic && context.addDynamicProp(node, nameId, valueNode, hasSideEffects(node.tag, name)),
-        isDynamic,
-        nameId,
-        valueNode
-      });
-    }
+    const valueNode = normalizeElementPropValue(t, attr.value);
+    const name      = attr.name.name;
+    const nameId    = t.identifier(name);
+    const isDynamic = isDynamicNode(t, valueNode);
+    const prop      = {
+      isDynamic,
+      nameId,
+      valueNode
+    };
+
+    prop.dynamic = isDynamic && context.addDynamicProp(node, prop, nameId, valueNode, hasSideEffects(node.tag, name))
+    props.push(prop);
     return props;
   }, []);
 }
@@ -560,11 +751,14 @@ type ElementChild {
   node: Node
 }
 */
-function parseElementChild({ t, file, context }, el, childNode, isOnlyChild)/*:ElementChild*/{
+function parseElementChild({ t, file, context }, childNode, parent, depth, isOnlyChild, index)/*:ElementChild*/{
   const isDynamic = isDynamicNode(t, childNode);
   return {
+    parent,
+    index,
+    depth,
     type:    isDynamic ? NODE_DYNAMIC : NODE_STATIC,
-    dynamic: isDynamic && context.addDynamicChild(el, childNode, isOnlyChild),
+    dynamic: isDynamic && context.addDynamicChild(parent, childNode, isOnlyChild),
     node:    childNode,
     isOnlyChild
   };
@@ -576,21 +770,25 @@ type Element {
   children: (Element|ElementChild)[]
 }
 */
-function parseElement({ t, file, context }, { openingElement: { name, attributes }, children })/*:Element*/{
+function parseElement({ t, file, context }, { openingElement: { name, attributes }, children }, parent, depth, index)/*:Element*/{
   const isComponent      = isComponentName(name.name);
   const filteredChildren = buildChildren(t, children);
   const hasOnlyOneChild  = filteredChildren.length === 1;
   const el = {
+    parent,
+    index,
+    depth,
     type: isComponent ? NODE_COMPONENT : NODE_EL,
     tag:  name.name
   };
   el.props    = parseElementProps(context, el, attributes);
+  const childDepth = depth + 1;
   el.children = isComponent
     ? EMPTY_ARRAY
-    : filteredChildren.map(child =>
+    : filteredChildren.map((child, childIndex) =>
         t.isJSXElement(child)
-          ? parseElement(context, child)
-          : parseElementChild(context, el, child, hasOnlyOneChild)
+          ? parseElement(context, child, el, childDepth, childIndex)
+          : parseElementChild(context, child, el, childDepth, hasOnlyOneChild, childIndex)
       );
   el.hasDynamicProps = el.props.some(p => p.dynamic);
 
@@ -609,9 +807,10 @@ class ParsingContext{
     this.hasComponents = false;
   }
 
-  addDynamicChild(parentEl, childNode, isOnlyChild)/*:{type:String, value:Node, instanceContextId:Identifier, instanceValueId:Identifier}*/{
+  addDynamicChild(parent, childNode, isOnlyChild)/*:{type:String, value:Node, instanceContextId:Identifier, instanceValueId:Identifier}*/{
     return this._addDynamic({
-      type:             'child',
+      parent,
+      type:              'child',
       value:             childNode,
       instanceContextId: this._generateInstanceParamId(),
       instanceValueId:   this._generateInstanceParamId(),
@@ -619,10 +818,12 @@ class ParsingContext{
     });
   }
 
-  addDynamicProp(el, name, value, hasSideEffects)/*:{type:String, name:String, value:Node, hasSideEffects:Boolean, instanceContextId:Identifier, instanceValueId:Identifier}*/{
+  addDynamicProp(el, prop, name, value, hasSideEffects)/*:{type:String, name:String, value:Node, hasSideEffects:Boolean, instanceContextId:Identifier, instanceValueId:Identifier}*/{
     const isElementProp = el.type === NODE_EL;
     const dynamic = {
       type: (isElementProp ? PROP_EL : PROP_COMPONENT),
+      el,
+      prop,
       name,
       value,
       hasSideEffects,
@@ -656,20 +857,22 @@ class ParsingContext{
   }
 }
 
-function parseElementKeyProp(t, { attributes }){
+function parseKeyProp(t, { attributes }){
   const keyAttr = attributes.find(isKeyAttribute);
   if(keyAttr) return normalizeElementPropValue(t, keyAttr.value);
 }
 
 function parseTemplate(t, file, node)/*:{id:Identifier, root:Element}*/{
   const context = new ParsingContext(t, file);
+  const { openingElement } = node;
+  const isCloneable = openingElement.attributes.some(isCloneableAttribute);
   return {
-    id:                         file.scope.generateUidIdentifier('xvdomSpec'),
-    key:                        parseElementKeyProp(t, node.openingElement),
-    rootElement:                parseElement(context, node),
-    dynamics:                   context.dynamics,
+    key: parseKeyProp(t, openingElement),
+    rootElement: parseElement(context, node, null, 0, 0),
+    dynamics: context.dynamics,
     componentsWithDyanmicProps: Array.from(context.componentsWithDyanmicProps.keys()),
-    hasComponents:              context.hasComponents
+    hasComponents: context.hasComponents,
+    cloneable: isCloneable
   };
 }
 
@@ -680,27 +883,24 @@ module.exports = ({ types: t }) => ({
         if(t.isJSX(path.parent)) return;
 
         const template = parseTemplate(t, file, path.node);
-        const { specCode, instanceCode } = generateRenderingCode(t, file, template);
-
+        const { instanceCode } = generateRenderingCode(t, file, template);
         path.replaceWith(instanceCode);
-        declareGlobal(t, file, template.id, specCode);
       }
     },
     Program: {
       exit(path, { file }){
         const fileGlobals = globals.forFile(file);
-        if(fileGlobals && Object.keys(fileGlobals).length){
-          file.path.unshiftContainer('body',
-            t.variableDeclaration('var',
-              Object.keys(fileGlobals).sort().map(key =>
-                t.variableDeclarator(
-                  fileGlobals[key],
-                  t.memberExpression(t.identifier('xvdom'), t.identifier(key))
-                )
-              )
-            )
-          );
-        }
+        const globalKeys = fileGlobals ? Object.keys(fileGlobals) : EMPTY_ARRAY;
+        if(!globalKeys.length) return;
+
+        file.path.unshiftContainer('body',
+          t.variableDeclaration('var',
+            globalKeys.sort().map(key => {
+              const { uniqueNameId, value } = fileGlobals[key];
+              return t.variableDeclarator(uniqueNameId, value);
+            })
+          )
+        );
       }
     }
   }

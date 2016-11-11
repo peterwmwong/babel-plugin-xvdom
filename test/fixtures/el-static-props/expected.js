@@ -1,37 +1,17 @@
 "use strict";
 
-var _xvdomEl = xvdom.el;
-var _xvdomSpec5 = {
+var _xvdomEl = xvdom.el,
+    _xvdomSpec = {
   c: function c() {
-    var _n = _xvdomEl("input");
+    var _n = _xvdomEl("div");
 
-    _n.disabled = false || true;
+    _n.className = "my-class";
     return _n;
   },
   u: function u() {},
   r: xvdom.DEADPOOL
-};
-var _xvdomSpec4 = {
-  c: function c() {
-    var _n = _xvdomEl("input");
-
-    _n.disabled = !false;
-    return _n;
-  },
-  u: function u() {},
-  r: xvdom.DEADPOOL
-};
-var _xvdomSpec3 = {
-  c: function c() {
-    var _n = _xvdomEl("input");
-
-    _n.disabled = false;
-    return _n;
-  },
-  u: function u() {},
-  r: xvdom.DEADPOOL
-};
-var _xvdomSpec2 = {
+},
+    _xvdomSpec2 = {
   c: function c() {
     var _n = _xvdomEl("input");
 
@@ -40,12 +20,32 @@ var _xvdomSpec2 = {
   },
   u: function u() {},
   r: xvdom.DEADPOOL
-};
-var _xvdomSpec = {
+},
+    _xvdomSpec3 = {
   c: function c() {
-    var _n = _xvdomEl("div");
+    var _n = _xvdomEl("input");
 
-    _n.className = "my-class";
+    _n.disabled = false;
+    return _n;
+  },
+  u: function u() {},
+  r: xvdom.DEADPOOL
+},
+    _xvdomSpec4 = {
+  c: function c() {
+    var _n = _xvdomEl("input");
+
+    _n.disabled = !false;
+    return _n;
+  },
+  u: function u() {},
+  r: xvdom.DEADPOOL
+},
+    _xvdomSpec5 = {
+  c: function c() {
+    var _n = _xvdomEl("input");
+
+    _n.disabled = false || true;
     return _n;
   },
   u: function u() {},

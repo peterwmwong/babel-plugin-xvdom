@@ -1,8 +1,19 @@
 "use strict";
 
 var _xvdomCreateComponent = xvdom.createComponent,
-    _xvdomEl = xvdom.el;
-var _xvdomSpec2 = {
+    _xvdomEl = xvdom.el,
+    _xvdomSpec = {
+  c: function c(inst) {
+    var _n = _xvdomCreateComponent(MyComponent, MyComponent.state, {
+      a: "hello"
+    }, inst).$n;
+
+    return _n;
+  },
+  u: function u() {},
+  r: xvdom.DEADPOOL
+},
+    _xvdomSpec2 = {
   c: function c(inst) {
     var _n = _xvdomEl("div"),
         _n2 = _xvdomCreateComponent(MyComponent, MyComponent.state, {
@@ -10,17 +21,6 @@ var _xvdomSpec2 = {
     }, inst).$n;
 
     _n.appendChild(_n2);
-
-    return _n;
-  },
-  u: function u() {},
-  r: xvdom.DEADPOOL
-};
-var _xvdomSpec = {
-  c: function c(inst) {
-    var _n = _xvdomCreateComponent(MyComponent, MyComponent.state, {
-      a: "hello"
-    }, inst).$n;
 
     return _n;
   },

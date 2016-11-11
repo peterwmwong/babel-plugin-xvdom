@@ -1,7 +1,7 @@
 "use strict";
 
-var _xvdomEl = xvdom.el;
-var _xvdomSpec = {
+var _xvdomEl = xvdom.el,
+    _xvdomSpec = {
   c: function c() {
     var _n = _xvdomEl("div");
 

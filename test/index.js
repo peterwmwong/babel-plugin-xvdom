@@ -16,8 +16,9 @@ const filterFixtures = fixture => [
   "el-static-props",
   "component",
   "component-dynamic-props",
-  "component-static-props"/*,
-  "recycle"*/
+  "component-static-props",
+  "cloneable"
+  // "recycle"
 ].indexOf(fixture) !== -1;
 
 const specName     = fixture   => fixture.split("-").join(" ")
@@ -32,8 +33,8 @@ describe("transforms jsx", () => {
     .forEach(dir => {
       it(specName(dir), () => {
         assert.equal(
-          fs.readFileSync(expectedPath(fixturesDir, dir)).toString().trim(),
-          transform(actualPath(fixturesDir, dir))
+          transform(actualPath(fixturesDir, dir)),
+          fs.readFileSync(expectedPath(fixturesDir, dir)).toString().trim()
         )
       });
     });

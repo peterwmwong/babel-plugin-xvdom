@@ -2,60 +2,7 @@
 
 var _xvdomCreateDynamic = xvdom.createDynamic,
     _xvdomEl = xvdom.el,
-    _xvdomUpdateDynamic = xvdom.updateDynamic;
-var _xvdomSpec5 = {
-  c: function c(inst) {
-    var _n = _xvdomEl("div");
-
-    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
-
-    return _n;
-  },
-  u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
-  },
-  r: xvdom.DEADPOOL
-};
-var _xvdomSpec4 = {
-  c: function c(inst) {
-    var _n = _xvdomEl("div");
-
-    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
-
-    return _n;
-  },
-  u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
-  },
-  r: xvdom.DEADPOOL
-};
-var _xvdomSpec3 = {
-  c: function c(inst) {
-    var _n = _xvdomEl("div");
-
-    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
-
-    return _n;
-  },
-  u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
-  },
-  r: xvdom.DEADPOOL
-};
-var _xvdomSpec2 = {
-  c: function c(inst) {
-    var _n = _xvdomEl("div");
-
-    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
-
-    return _n;
-  },
-  u: function u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
-  },
-  r: xvdom.DEADPOOL
-};
-var _xvdomSpec = {
+    _xvdomSpec = {
   c: function c(inst) {
     var _n = _xvdomEl("div"),
         _n2 = _xvdomEl("span");
@@ -73,7 +20,60 @@ var _xvdomSpec = {
     if (inst.d !== pInst.d) pInst.c = _xvdomUpdateDynamic(true, pInst.d, pInst.d = inst.d, pInst.c);
   },
   r: xvdom.DEADPOOL
-};
+},
+    _xvdomSpec2 = {
+  c: function c(inst) {
+    var _n = _xvdomEl("div");
+
+    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
+
+    return _n;
+  },
+  u: function u(inst, pInst) {
+    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
+  },
+  r: xvdom.DEADPOOL
+},
+    _xvdomSpec3 = {
+  c: function c(inst) {
+    var _n = _xvdomEl("div");
+
+    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
+
+    return _n;
+  },
+  u: function u(inst, pInst) {
+    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
+  },
+  r: xvdom.DEADPOOL
+},
+    _xvdomSpec4 = {
+  c: function c(inst) {
+    var _n = _xvdomEl("div");
+
+    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
+
+    return _n;
+  },
+  u: function u(inst, pInst) {
+    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
+  },
+  r: xvdom.DEADPOOL
+},
+    _xvdomSpec5 = {
+  c: function c(inst) {
+    var _n = _xvdomEl("div");
+
+    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
+
+    return _n;
+  },
+  u: function u(inst, pInst) {
+    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
+  },
+  r: xvdom.DEADPOOL
+},
+    _xvdomUpdateDynamic = xvdom.updateDynamic;
 var message1 = "hello";
 var message2 = "world";
 function translate(str) {
