@@ -14,36 +14,68 @@ const PROP_COMPONENT = 'componentProp';
 const PROP_EL        = 'elProp';
 
 const EMPTY_ARRAY    = [];
-const EMPTY_OBJECT   = {};
 
 const isCloneableAttribute    = attr => attr.name.name === 'cloneable';
 const isKeyAttribute          = attr => attr.name.name === 'key';
 const isXvdomAttribute        = attr => isCloneableAttribute(attr) || isKeyAttribute(attr);
-const isComponentName         = name => name && /^[A-Z]/.test(name);
-const nonComponentPropDynamic = dyn  => dyn.type !== PROP_COMPONENT;
-const xvdomApiFuncName        = name => `xvdom${name[0].toUpperCase()}${name.slice(1)}`;
+const isComponentName         = name => /^[A-Z]/.test(name);
+
+const nonComponentPropDynamic = ({ type }) => type !== PROP_COMPONENT;
+const instParamId             = t          => t.identifier('inst');
+const prevInstParamId         = t          => t.identifier('pInst');
+const tmpVarId                = (t, num)   => t.identifier(`_n${num ? ++num : ''}`);
+const xvdomApiFuncName        = name       => `xvdom${name[0].toUpperCase()}${name.slice(1)}`;
 
 const hasSideEffects = (tag, propName) => (
   (tag === 'input' && propName === 'value') ||
   (tag === 'a'     && propName === 'href')
 );
 
-const _globalsForFile = new WeakMap();
-const globals = {
-  define: (file, name, value) => {
-    let fileGlobals = _globalsForFile.get(file);
-    if (!fileGlobals) _globalsForFile.set(file, fileGlobals = {});
+const _fileGlobalForFile = new WeakMap();
+class FileGlobals{
+  static forFile(t, file){
+    return (
+      _fileGlobalForFile.get(file) ||
+        _fileGlobalForFile
+          .set(file, new FileGlobals(t, file))
+          .get(file)
+    );
+  }
 
-    return (fileGlobals[name] = {
-      uniqueNameId: file.scope.generateUidIdentifier(name),
+  constructor(t, file){
+    this._t = t;
+    this._file = file;
+    this._definedPrefixCounts = new Map();
+    this._globals = {};
+  }
+
+  definePrefixed(name, value){
+    const { _definedPrefixCounts } = this;
+    const count = 1 + (_definedPrefixCounts.get(name) | 0);
+    const globalId = count === 1 ? name : name + count;
+
+    _definedPrefixCounts.set(name, count);
+    return this._globals[globalId] = {
+      uniqueNameId: this._file.scope.generateUidIdentifier(name),
       value
-    });
-  },
-  get: (file, name) => (
-    (_globalsForFile.get(file) || EMPTY_OBJECT)[name]
-  ),
-  forFile: file => _globalsForFile.get(file)
-};
+    };
+  }
+
+  accessFunction(apiFuncName){
+    const { _t } = this;
+    const globalId = xvdomApiFuncName(apiFuncName);
+    const global = this._globals[globalId];
+    return (
+      global ||
+        (this._globals[globalId] = {
+          uniqueNameId: this._file.scope.generateUidIdentifier(globalId),
+          value: _t.memberExpression(_t.identifier('xvdom'), _t.identifier(apiFuncName))
+        })
+    ).uniqueNameId;
+  }
+
+  get allGlobals(){ return this._globals; }
+}
 
 function isDynamicNode(t, astNode){
   if(t.isLiteral(astNode)){
@@ -84,10 +116,6 @@ function normalizeElementPropValue(t, prop){
     : prop
   );
 }
-
-const instParamId     = t => t.identifier('inst');
-const prevInstParamId = t => t.identifier('pInst');
-const tmpVarId        = (t, num) => t.identifier(`_n${num ? ++num : ''}`);
 
 function generateAssignDynamicProp(
   { t, instId, statements },
@@ -665,47 +693,8 @@ function generateInstanceCode(t, xvdomApi, { dynamics, key }, id){
   )
 }
 
-const _definedPrefixCountsForFile = new Map();
-
-// TODO: Should this be class?  We seem to be doing `new FileGlobals` more than we should
-//       Maybe we should just build all this functionality in to `globals`?
-class FileGlobals{
-  constructor(t, file){
-    this._t = t;
-    this._file = file;
-    this._definedPrefixCounts = (
-      _definedPrefixCountsForFile
-        .set(file, _definedPrefixCountsForFile.get(file) || new Map())
-        .get(file)
-    );
-  }
-
-  definePrefixed(name, value){
-    const { _definedPrefixCounts } = this;
-    const count = (
-      _definedPrefixCounts
-        .set(name, (_definedPrefixCounts.get(name)|0) + 1)
-        .get(name)
-    );
-    const globalId = count === 1 ? name : name + count;
-    return globals.define(this._file, globalId, value);
-  }
-
-  accessFunction(apiFuncName){
-    const { _t:t } = this;
-    const globalId = globals.get(this._file, xvdomApiFuncName(apiFuncName));
-    return (
-      globalId || globals.define(
-        this._file,
-        xvdomApiFuncName(apiFuncName),
-        t.memberExpression(t.identifier('xvdom'), t.identifier(apiFuncName))
-      )
-    ).uniqueNameId;
-  }
-}
-
 function generateRenderingCode(t, file, template){
-  const xvdomApi = new FileGlobals(t, file);
+  const xvdomApi = FileGlobals.forFile(t, file);
   const { uniqueNameId, value } = xvdomApi.definePrefixed(
     'xvdomSpec',
     obj(t, {
@@ -891,7 +880,7 @@ module.exports = ({ types: t }) => ({
     },
     Program: {
       exit(path, { file }){
-        const fileGlobals = globals.forFile(file);
+        const fileGlobals = FileGlobals.forFile(t, file).allGlobals;
         const globalKeys = fileGlobals ? Object.keys(fileGlobals) : EMPTY_ARRAY;
         if(!globalKeys.length) return;
 
