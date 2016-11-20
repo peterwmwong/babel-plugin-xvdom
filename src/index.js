@@ -120,71 +120,29 @@ function normalizeElementPropValue(t, prop){
 function generateAssignDynamicProp(
   { t, instId, statements },
   domNodeExpression,
-  { isDynamic, dynamic, valueNode, nameId },
-  shouldAssignInstanceContext
+  { isDynamic, dynamic, valueNode, nameId }
 ){
-  const replaceDomNodeExpressions = [];
-  const addReplaceableExpr = (expr, replace) => (
-    replaceDomNodeExpressions.push({ expr, replace }),
-    expr
-  );
-
-  if(isDynamic && shouldAssignInstanceContext){
-    statements.push(
-      t.expressionStatement(
-        addReplaceableExpr(
-          t.assignmentExpression('=',
-            t.memberExpression(instId, dynamic.instanceContextId),
-            domNodeExpression
-          ),
-          (expr, newDomExpr) => { expr.right = newDomExpr; }
-        )
-      )
-    );
-  }
-
   const valueCode = (
     isDynamic
       ? t.memberExpression(instId, dynamic.instanceValueId)
       : valueNode
   );
 
-  const expr = addReplaceableExpr(
+  const exprStmt = t.expressionStatement(
     t.assignmentExpression('=',
       t.memberExpression(domNodeExpression, nameId),
       valueCode
-    ),
-    (expr, newDomExpr) => { expr.left = t.memberExpression(newDomExpr, nameId); }
-  )
+    )
+  );
 
   statements.push(
     !dynamic.hasSideEffects
-      ? t.expressionStatement(expr)
+      ? exprStmt
       : t.ifStatement(
-          t.binaryExpression(
-            '!=',
-            valueCode,
-            t.nullLiteral()
-          ),
-          t.expressionStatement(expr)
+          t.binaryExpression('!=', valueCode, t.nullLiteral()),
+          exprStmt
         )
   );
-
-  return newDomExpr => {
-    // Replace the first expression with an assignment of this expression
-    // to the `newDomExpr`.
-    // ex. a.firstChild.nextSibling => tmp = a.firstChild.nextSibling
-    const first = replaceDomNodeExpressions.shift();
-    first.replace(
-      first.expr,
-      t.assignmentExpression('=', newDomExpr, first.expr.right)
-    );
-
-    // Any subsequent expressions are replaced with `newDomExpr`
-    replaceDomNodeExpressions.forEach(replaceObj => {
-      replaceObj.replace(replaceObj.expr, newDomExpr);
-    });
-  };
 }
 
 function generateSpecElementDynamicChildCode({ t, xvdomApi, statements, instId }, childDesc, parentNodeVarId){
@@ -341,7 +299,18 @@ function generateSpecCreateHTMLElementCode(context, el, depth){
   if (shouldGeneratePropsCode){
     const nodeVarId = tmpVars[depth].id
     el.props.forEach((prop, i) => {
-      generateAssignDynamicProp(context, nodeVarId, prop, i === 0);
+      // Optimization: Only assign the instanceContextId once
+      if(i === 0 && prop.isDynamic){
+        statements.push(
+          t.expressionStatement(
+            t.assignmentExpression('=',
+              t.memberExpression(context.instId, prop.dynamic.instanceContextId),
+              nodeVarId
+            )
+          )
+        );
+      }
+      generateAssignDynamicProp(context, nodeVarId, prop);
     });
   }
 
@@ -370,70 +339,22 @@ function generateSpecCreateHTMLElementCode(context, el, depth){
   });
 }
 
-function getClosestSibling(index, siblings){
-  if(siblings.length){
-    return siblings.reduce((min, s) => (
-      (Math.abs(index - min.index) < Math.abs(index - s.index))
-        ? min
-        : s
-    ));
-  }
-}
-
-const getCachedPath = (el, fn) => el._pathToRoot || (el._pathToRoot = fn());
-
-const repeat = (num, value) => [...new Array(num)].map(() => value);
-
-function getPath(el, prevSiblings=EMPTY_ARRAY){
-  const { parent } = el;
-  if(!parent) return EMPTY_ARRAY;
-  
-  return getCachedPath(el, () => {
-    const { index } = el;
-    const children = parent ? parent.children : EMPTY_ARRAY;
-
-    const firstSibling   = children[0];
-    const closestSibling = getClosestSibling(el.index, prevSiblings);
-    if(!closestSibling){
-      if(index === 0){
-        return getPath(parent).concat('firstChild');
-      }
-      else if(index === children.length - 1){
-        return getPath(parent).concat('lastChild');
-      }
-    }
-
-    const lastSibling    = children[children.length - 1];
-    const distToLast     = lastSibling.index - index;
-    const distToClosest  = closestSibling ? Math.abs(closestSibling.index - index) : Number.MAX_SAFE_INTEGER;
-    const targetSibling  = (
-        distToClosest < index && distToClosest < distToLast ? closestSibling
-      : index < distToLast ? firstSibling
-      : lastSibling
-    );
-    return getPath(targetSibling).concat(
-      repeat(
-        Math.abs(targetSibling.index - index),
-        targetSibling.index < index ? 'nextSibling' : 'previousSibling'
-      )
-    );
-  });
-}
-
-const distanceFromEnds = el => el.index < el.distFromEnd ? el.index : el.distFromEnd;
+const distanceFromEnds = ({ index, distFromEnd }) => Math.min(index, distFromEnd);
 const sortDistanceFromEnds = (a, b) => distanceFromEnds(a.el) - distanceFromEnds(b.el); 
 
 function sortDynamicsByDepthThenDistanceFromEnds(dynamics){
-  return dynamics
-    .reduce((acc, d) => {
-      const depth = d.el.depth;
-      (acc[depth] || (acc[depth] = [])).push(d);
-      return acc;
-    }, [])
-    .reduce((acc, group) => (
-      acc.push(...group.sort(sortDistanceFromEnds)),
-      acc
-    ));
+  return (
+    dynamics
+      .reduce((depthGroups, d) => {
+        const depth = d.el.depth;
+        (depthGroups[depth] || (depthGroups[depth] = [])).push(d);
+        return depthGroups;
+      }, [])
+      .reduce((result, group) => {
+        result.push(...group.sort(sortDistanceFromEnds));
+        return result;
+      }, [])
+  );
 }
 
 function pathToExpression(t, path){
@@ -446,43 +367,89 @@ function pathToExpression(t, path){
   );
 }
 
-function getSiblings(sibling, allEls){
-  const parent = sibling.parent;
-  return allEls.filter(el => el.parent === parent);
+// Determines whether traveling left is the shortest path to...   
+//   a) a previously visited sibling
+//   b) a first child
+//   c) a last child
+//
+// Assumption: `el` has not been visited
+// Assumption: `el` is NOT first child OR last child
+function shouldTravelLeft(index, siblings){
+  const lastSiblingIndex = siblings.length - 1;
+  const elIndex = index;
+  let distance = 1;
+
+  // Traversing the list of siblings starting from the el and then moving
+  // symmetrically outwards.
+  // 
+  // Example
+  //
+  // Children: A  B  C  el  D  E  F  G
+  // 
+  //      A  B  C  el  D  E  F  G
+  //    ---------------------------
+  // #1 |       ^      ^
+  // #2 |    ^            ^
+  // #3 | ^                  ^
+  //      |--- Stop and Return `true`, meaning a path to the left is the
+  //           best bet for the shortest path to the root, because A is the first child.
+  while(true){
+    let leftIndex  = elIndex - distance;
+    let rightIndex = elIndex + distance;
+    let left  = siblings[leftIndex]; 
+    let right = siblings[rightIndex];
+
+    if(left._pathToRoot) return true;
+    else if(right._pathToRoot) return false;
+    else if(leftIndex === 0) return true;
+    else if(rightIndex === lastSiblingIndex) return false;
+
+    ++distance;
+  }
 }
 
-function generateSpecCreateCloneableDynamicCode(context, rootElId, dynamics){
+const getPath = el => el._pathToRoot || (el._pathToRoot = calculatePath(el));
+
+function calculatePath(el){
+  const parent = el.parent;
+  if(!parent) return [];
+
+  const index = el.index;
+  if(index === 0) return getPath(parent).concat('firstChild');
+
+  const siblings = parent.children;
+  if (index === siblings.length - 1){
+    return getPath(parent).concat('lastChild');
+  }
+
+  const isLeft      = shouldTravelLeft(index, siblings);
+  const nextSibling = siblings[index + (isLeft ? -1 : 1)]; 
+  return getPath(nextSibling).concat(isLeft ? 'nextSibling' : 'previousSibling');
+}
+
+
+function generateSpecCreateCloneableDynamicCode(context, rootEl, rootElId, dynamics){
   const { t } = context;
-  const pathToPrevRef = new Map();
-  const alreadyInstanceContextIds = new Set();
-  const alreadyVisitedEls = new Set();
 
   sortDynamicsByDepthThenDistanceFromEnds(dynamics).forEach(d => {
     // TODO: Handle dynamic children
     if(d.type !== PROP_EL) return;
 
-    const path = getPath(d.el, getSiblings(d.el, [...alreadyVisitedEls]));
-    const pathString = path.join('.');
-    const refOrReplacer = pathToPrevRef.get(pathString);
-
-    alreadyVisitedEls.add(d.el);
-    if(typeof refOrReplacer === 'function'){
-      const tmpVar = tmpVarId(t, context.tmpVars.length);
-      refOrReplacer(tmpVar);
-      context.tmpVars.push(
-        t.variableDeclarator(tmpVar)
-      );
-      pathToPrevRef.set(pathString, tmpVar);
-    }
-
-    const replacer = generateAssignDynamicProp(
-      context,
-      (pathToPrevRef.get(pathString) || pathToExpression(t, [rootElId, ...path])),
-      d.prop,
-      !alreadyInstanceContextIds.has(d.instanceContextId.name)
+    context.statements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(context.instId, d.instanceContextId),
+          pathToExpression(t, [rootElId, ...getPath(d.el)])
+        )
+      )
     );
-    alreadyInstanceContextIds.add(d.instanceContextId.name);
-    pathToPrevRef.set(pathString, replacer);
+
+    generateAssignDynamicProp(
+      context,
+      pathToExpression(t, [rootElId, ...getPath(d.el)]),
+      d.prop
+    );
   });
 }
 
@@ -494,6 +461,10 @@ function generateSpecCreateCloneableElementCode(context, el, cloneable/* cloneab
     Object.assign({}, context, {
       statements:[], tmpVars:[], shouldGeneratePropsCode: false
     });
+
+  // function _xvdomSpecNodeCreate(){
+  //   ...
+  // }
   generateSpecCreateElementCode(createSpecContext, el, 0);
 
   const createSpecNodeId = xvdomApi.definePrefixed(
@@ -525,10 +496,7 @@ function generateSpecCreateCloneableElementCode(context, el, cloneable/* cloneab
     )
   );
 
-  // function _xvdomSpecNodeCreate(){
-  //   ...
-  // }
-  generateSpecCreateCloneableDynamicCode(context, rootElId, dynamics);
+  generateSpecCreateCloneableDynamicCode(context, el, rootElId, dynamics);
 }
 
 function generateSpecCreateElementCode(context, el){
@@ -792,7 +760,7 @@ function parseElementChild({ t, file, context }, childNode, parent, depth, isOnl
     index,
     depth,
     isOnlyChild,
-    distFromEnd: (parent.children && (parent.children.length - index)),
+    distFromEnd: (parent.children && (parent.children.length - index - 1)),
     type:        isDynamic ? NODE_DYNAMIC : NODE_STATIC,
     dynamic:     isDynamic && context.addDynamicChild(parent, childNode, isOnlyChild),
     node:        childNode
@@ -805,14 +773,16 @@ type Element {
   children: (Element|ElementChild)[]
 }
 */
-function parseElement({ t, file, context }, { openingElement: { name, attributes }, children }, parent, depth, index)/*:Element*/{
+function parseElement({ t, file, context }, { openingElement: { name, attributes }, children }, parent, depth, index, distFromEnd)/*:Element*/{
   const isComponent      = isComponentName(name.name);
   const filteredChildren = buildChildren(t, children);
-  const hasOnlyOneChild  = filteredChildren.length === 1;
+  const numChildren      = filteredChildren.length;
+  const hasOnlyOneChild  = numChildren === 1;
   const el = {
     parent,
     index,
     depth,
+    distFromEnd,
     type: isComponent ? NODE_COMPONENT : NODE_EL,
     tag:  name.name
   };
@@ -822,8 +792,8 @@ function parseElement({ t, file, context }, { openingElement: { name, attributes
     ? EMPTY_ARRAY
     : filteredChildren.map((child, childIndex) =>
         t.isJSXElement(child)
-          ? parseElement(context, child, el, childDepth, childIndex)
-          : parseElementChild(context, child, el, childDepth, hasOnlyOneChild, childIndex)
+          ? parseElement(context, child, el, childDepth, childIndex, numChildren - childIndex - 1)
+          : parseElementChild(context, child, el, childDepth, hasOnlyOneChild, childIndex, numChildren - childIndex - 1)
       );
   el.hasDynamicProps = el.props.some(p => p.dynamic);
 
@@ -903,7 +873,7 @@ function parseTemplate(t, file, node)/*:{id:Identifier, root:Element}*/{
   const isCloneable = openingElement.attributes.some(isCloneableAttribute);
   return {
     key: parseKeyProp(t, openingElement),
-    rootElement: parseElement(context, node, null, 0, 0),
+    rootElement: parseElement(context, node, null, 0, 0, 0),
     dynamics: context.dynamics,
     componentsWithDyanmicProps: Array.from(context.componentsWithDyanmicProps.keys()),
     hasComponents: context.hasComponents,

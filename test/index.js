@@ -18,7 +18,7 @@ const filterFixtures = fixture => [
   "component-dynamic-props",
   "component-static-props",
   "cloneable",
-  "cloneable-nested-dynamics"
+  // "cloneable-nested-dynamics"
   // "recycle"
 ].indexOf(fixture) !== -1;
 
@@ -33,6 +33,7 @@ describe("transforms jsx", () => {
     .filter(filterFixtures)
     .forEach(dir => {
       it(specName(dir), () => {
+        // transform(actualPath(fixturesDir, dir));
         assert.equal(
           transform(actualPath(fixturesDir, dir)),
           fs.readFileSync(expectedPath(fixturesDir, dir)).toString().trim()

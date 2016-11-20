@@ -35,8 +35,8 @@ var _xvdomEl = xvdom.el,
   c: function c(inst) {
     var _n = (_xvdomSpecNode3 || (_xvdomSpecNode3 = _xvdomSpecNodeCreate3())).cloneNode(true);
 
-    inst.a = _n.lastChild.previousSibling;
-    _n.lastChild.previousSibling.className = inst.b;
+    inst.a = _n.firstChild.nextSibling;
+    _n.firstChild.nextSibling.className = inst.b;
     return _n;
   },
   u: function u(inst, pInst) {
@@ -65,10 +65,10 @@ var _xvdomEl = xvdom.el,
   c: function c(inst) {
     var _n = (_xvdomSpecNode5 || (_xvdomSpecNode5 = _xvdomSpecNodeCreate5())).cloneNode(true);
 
-    inst.a = _n.lastChild.previousSibling;
-    _n.lastChild.previousSibling.className = inst.b;
     inst.c = _n.lastChild;
     _n.lastChild.className = inst.d;
+    inst.a = _n.lastChild.previousSibling;
+    _n.lastChild.previousSibling.className = inst.b;
     return _n;
   },
   u: function u(inst, pInst) {
