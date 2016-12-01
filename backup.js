@@ -1,4 +1,3 @@
-
 var var1 = 1;
 var var2 = 2;
 
@@ -6,14 +5,8 @@ var var2 = 2;
   <b />
   <d>
     <e>
-      <i>
-        <j>
-          <l id={var1} />
-        </j>
-        <k>
-          <m id={var1} />
-        </k>
-      </i>
+      <i id={var1} />
+      <j id={var1} />
     </e>
     <f id={var1} />
     <g>

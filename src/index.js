@@ -3,6 +3,12 @@ const {
   toReference
 } = require('./helpers.js');
 
+const {
+  LOGGING,
+  log,
+  logFunc
+} = require('./logger.js');
+
 const genId = require('./genId.js');
 
 const NODE_EL        = 'el';
@@ -367,90 +373,253 @@ function pathToExpression(t, path){
   );
 }
 
-// Determines whether traveling left is the shortest path to...   
-//   a) a previously visited sibling
-//   b) a first child
-//   c) a last child
-//
-// Assumption: `el` has not been visited
-// Assumption: `el` is NOT first child OR last child
-function shouldTravelLeft(index, siblings){
-  const lastSiblingIndex = siblings.length - 1;
-  const elIndex = index;
-  let distance = 1;
+let LAST_PATH_ID = 0;
+class Path{
+  static min(a, b){
+    log('path', `min: ${a.id}(${a.length}) < ${b.id}(${b.length})`);
+    return a.length < b.length ? a : b;
+  }
 
-  // Traversing the list of siblings starting from the el and then moving
-  // symmetrically outwards.
-  // 
-  // Example
-  //
-  // Children: A  B  C  el  D  E  F  G
-  // 
-  //      A  B  C  el  D  E  F  G
-  //    ---------------------------
-  // #1 |       ^      ^
-  // #2 |    ^            ^
-  // #3 | ^                  ^
-  //      |--- Stop and Return `true`, meaning a path to the left is the
-  //           best bet for the shortest path to the root, because A is the first child.
-  while(true){
-    let leftIndex  = elIndex - distance;
-    let rightIndex = elIndex + distance;
-    let left  = siblings[leftIndex]; 
-    let right = siblings[rightIndex];
+  static compare(a, b){
+    log('path',
+      'compare:',
+      `length: ${a.id}(${a.length}) < ${b.id}(${b.length})`,
+      `elNumDynamicDescendants: ${a.el.numDynamicDescendants} < ${b.el.numDynamicDescendants}`,
+      `hasDynamicProps: ${a.el.hasDynamicProps} < ${b.el.hasDynamicProps}`
+    );
+    return (
+      Math.sign(a.length - b.length)
+        || Math.sign(b.el.numDynamicDescendants - a.el.numDynamicDescendants)
+        || Math.sign((a.el.hasDynamicProps ? 1 : 0) - (b.el.hasDynamicProps ? 1 : 0))
+    );
+  }
 
-    if(left._pathToRoot) return true;
-    else if(right._pathToRoot) return false;
-    else if(leftIndex === 0) return true;
-    else if(rightIndex === lastSiblingIndex) return false;
+  constructor(el, hardRef = false){
+    this.pathId = ++LAST_PATH_ID;
+    this.el = el;
+    this.parent = null;
+    this.isHardReferenced = hardRef;
+    this.numReferencingPaths = 0;
+  }
 
-    ++distance;
+  // TODO: consider renaming this to something more explicit...
+  //        - lengthToRootOrSaved
+  get length(){
+    return (
+        this.isHardReferenced ? 0
+      : this.parent           ? (this.parent.length + 1)
+      : Number.MAX_SAFE_INTEGER
+    );
+  }
+
+  get tag(){ return this.el.tag; }
+
+  get shouldBeSaved(){
+    const { el: { rootPath }, isHardReferenced, numReferencingPaths } = this;
+    return isHardReferenced || numReferencingPaths > 1 || (rootPath && rootPath !== this && rootPath.shouldBeSaved);
+  }
+
+  get id(){
+    const referenceIndicator = (
+        this.isHardReferenced ? '*'
+      : this.shouldBeSaved ? '^'
+      : ''
+    );
+    return `${referenceIndicator}${this.el.tag}(${this.pathId})`
+  }
+
+  toString(){
+    const result = [];
+    let path = this;
+    while(path){
+      result.push(path.id);
+      path = path.parent;
+    }
+    return result.join(', ');
+  }
+
+  setParent(path){
+    this.parent = path;
+    return this;
+  }
+
+  finalize(pathHead){
+    return logFunc('path',
+      `finalize ${this.id}`,
+      () => {
+        this.addReference();
+        this.el.rootPath = this;
+
+        const { parent } = this; 
+        if((!pathHead || !this.shouldBeSaved) && parent && !parent.isHardReferenced){
+          parent.finalize(this);
+        }
+        return this;
+      }
+    );
+  }
+
+  removeReference(){
+    logFunc('path',
+      `removeReference ${this.id} numReferencingPaths = ${this.numReferencingPaths}`,
+      () => {
+        const { el: { rootPath } } = this;
+        if(rootPath && rootPath !== this){
+          log('path', `adding reference to previous rootPath ${rootPath.id}`);
+          rootPath.removeReference();
+        }
+
+        --this.numReferencingPaths;
+      },
+      () => `-> ${this.numReferencingPaths}`
+    );
+  }
+
+  addReference(){
+    logFunc('path',
+      `addReference ${this.id} numReferencingPaths = ${this.numReferencingPaths}`,
+      () => {
+        const { el: { rootPath } } = this;
+        if(rootPath && rootPath !== this){
+          log('path', `adding reference to previous rootPath ${rootPath.id}`);
+          rootPath.addReference();
+        }
+
+        const { shouldBeSaved } = this;
+        ++this.numReferencingPaths;
+
+        /*
+        Make sure a parent is not saved when it isn't necessary to.
+        Example:
+
+        <a cloneable>
+          <b />
+          <d>
+            <e>
+              <i>
+                <j>
+                  <l id={var1} />
+                </j>
+                <k>
+                  <m id={var1} />
+                </k>
+              </i>
+            </e>
+            <f id={var1} />
+            <g>
+              <h id={var1} />
+            </g>
+          </d>
+          <c id={var1} />
+        </a>
+
+        ...without this <e> would be saved.
+        */
+        if(!shouldBeSaved && this.shouldBeSaved && this.parent){
+          this.parent.removeReference();
+        }
+      },
+      () => `-> ${this.numReferencingPaths}`
+    );
   }
 }
 
-const getPath = el => el._pathToRoot || (el._pathToRoot = calculatePath(el));
-
-function calculatePath(el){
-  const parent = el.parent;
-  if(!parent) return [];
-
-  const index = el.index;
-  if(index === 0) return getPath(parent).concat('firstChild');
-
-  const siblings = parent.children;
-  if (index === siblings.length - 1){
-    return getPath(parent).concat('lastChild');
-  }
-
-  const isLeft      = shouldTravelLeft(index, siblings);
-  const nextSibling = siblings[index + (isLeft ? -1 : 1)]; 
-  return getPath(nextSibling).concat(isLeft ? 'nextSibling' : 'previousSibling');
+function getPath(el, ignoreEl, isHardReferenced){
+  return logFunc('path',
+    `getPath ${el.tag}`,
+    () => {
+      if (el.rootPath) return el.rootPath;
+      return !el.parent ? new Path(el, true) : calcPath(el, ignoreEl, isHardReferenced);
+    },
+    result => `[ ${result.toString()} ]`
+  );
 }
 
+function calcPath(el, ignoreEl, isHardReferenced){
+  const { parent } = el;
+  const path = new Path(el, isHardReferenced);
+
+  if(ignoreEl) log('path', 'ignoreEl', ignoreEl.tag);
+
+  const { distFromEnd, index, previousSibling, nextSibling } = el;
+  if(index === 0){
+    log('path', 'firstChild');
+    return path.setParent(
+      ignoreEl === nextSibling
+        ? getPath(parent)
+        : Path.min(getPath(parent), getPath(nextSibling, el))
+    );
+  }
+
+  if (distFromEnd === 0){
+    log('path', 'lastChild');
+    return path.setParent(
+      ignoreEl === previousSibling
+        ? getPath(parent)
+        : Path.min(getPath(parent), getPath(previousSibling, el))
+    );
+  }
+
+  // TODO: cache sibling paths
+  const compare = (
+      ignoreEl === previousSibling ? 1
+    : ignoreEl === nextSibling     ? -1
+    : Path.compare(getPath(previousSibling, el), getPath(nextSibling, el))
+  );
+
+  switch(compare){
+  case -1:
+    log('path', 'goLeft', previousSibling.id);
+    return path.setParent(getPath(previousSibling, el));
+
+  case 1:
+    log('path', 'goRight');
+    return path.setParent(getPath(nextSibling, el));
+
+  default:
+    log('path', 'dunno');
+    return path.setParent(
+      previousSibling.numDynamicDescendants > nextSibling.numDynamicDescendants
+        ? getPath(previousSibling, el)
+        : getPath(nextSibling, el)
+    );
+  }
+}
 
 function generateSpecCreateCloneableDynamicCode(context, rootEl, rootElId, dynamics){
-  const { t } = context;
+  // const { t } = context;
 
-  sortDynamicsByDepthThenDistanceFromEnds(dynamics).forEach(d => {
-    // TODO: Handle dynamic children
-    if(d.type !== PROP_EL) return;
+  const sortedDynamics = sortDynamicsByDepthThenDistanceFromEnds(dynamics);
 
-    context.statements.push(
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(context.instId, d.instanceContextId),
-          pathToExpression(t, [rootElId, ...getPath(d.el)])
-        )
-      )
-    );
-
-    generateAssignDynamicProp(
-      context,
-      pathToExpression(t, [rootElId, ...getPath(d.el)]),
-      d.prop
-    );
+  sortedDynamics.forEach(d => {
+    getPath(d.el, undefined, true).finalize();
   });
+
+  if(LOGGING.dynamicsPath){
+    sortedDynamics.forEach(d => log('dynamicsPath', d.el.rootPath.toString()));
+  }
+
+  // Assign closest paths to root
+  // sortedDynamics.forEach(d => {
+  //   // TODO: Handle dynamic children
+  //   if(d.type !== PROP_EL) return;
+
+  //   context.statements.push(
+  //     t.expressionStatement(
+  //       t.assignmentExpression(
+  //         '=',
+  //         t.memberExpression(context.instId, d.instanceContextId),
+  //         pathToExpression(t, [rootElId, ...getPath(d.el)])
+  //       )
+  //     )
+  //   );
+
+  //   generateAssignDynamicProp(
+  //     context,
+  //     pathToExpression(t, [rootElId, ...getPath(d.el)]),
+  //     d.prop
+  //   );
+  // });
 }
 
 function generateSpecCreateCloneableElementCode(context, el, cloneable/* cloneable */, dynamics){
@@ -783,23 +952,38 @@ function parseElement({ t, file, context }, { openingElement: { name, attributes
     index,
     depth,
     distFromEnd,
+    get nextSibling(){ return parent.children[index + 1] },
+    get previousSibling(){ return parent.children[index - 1] },
     type: isComponent ? NODE_COMPONENT : NODE_EL,
     tag:  name.name
   };
-  el.props    = parseElementProps(context, el, attributes);
+  el.props = parseElementProps(context, el, attributes);
+
   const childDepth = depth + 1;
+  let numDynamicDescendants = 0;
+  
   el.children = isComponent
     ? EMPTY_ARRAY
-    : filteredChildren.map((child, childIndex) =>
-        t.isJSXElement(child)
-          ? parseElement(context, child, el, childDepth, childIndex, numChildren - childIndex - 1)
-          : parseElementChild(context, child, el, childDepth, hasOnlyOneChild, childIndex, numChildren - childIndex - 1)
-      );
+    : filteredChildren.map((child, childIndex) => {
+      let parsedChild;
+      if(t.isJSXElement(child)){
+        parsedChild = parseElement(context, child, el, childDepth, childIndex, numChildren - childIndex - 1);
+        if(parsedChild.hasDynamicProps) ++numDynamicDescendants;
+        numDynamicDescendants += parsedChild.numDynamicDescendants;
+      }
+      else{
+        parsedChild = parseElementChild(context, child, el, childDepth, hasOnlyOneChild, childIndex, numChildren - childIndex - 1);
+        if(parsedChild.dynamic) ++numDynamicDescendants;
+      }
+      return parsedChild;
+    });
   el.hasDynamicProps = el.props.some(p => p.dynamic);
+  el.numDynamicDescendants = numDynamicDescendants;
 
   if(isComponent) context.hasComponents = true;
   return el;
 }
+
 
 class ParsingContext{
   constructor(t, file){
