@@ -363,35 +363,11 @@ function sortDynamicsByDepthThenDistanceFromEnds(dynamics){
   );
 }
 
-function pathToExpression(t, path){
-  return (
-    path
-      .map(part => t.isIdentifier(part) ? part : t.identifier(part))
-      .reduce((prevExpression, part) =>
-        t.memberExpression(prevExpression, part)
-      )
-  );
-}
-
 let LAST_PATH_ID = 0;
 class Path{
   static min(a, b){
     log('path', `min: ${a.id}(${a.length}) < ${b.id}(${b.length})`);
     return a.length < b.length ? a : b;
-  }
-
-  static compare(a, b){
-    log('path',
-      'compare:',
-      `length: ${a.id}(${a.length}) < ${b.id}(${b.length})`,
-      `elNumDynamicDescendants: ${a.el.numDynamicDescendants} < ${b.el.numDynamicDescendants}`,
-      `hasDynamicProps: ${a.el.hasDynamicProps} < ${b.el.hasDynamicProps}`
-    );
-    return (
-      Math.sign(a.length - b.length)
-        || Math.sign(b.el.numDynamicDescendants - a.el.numDynamicDescendants)
-        || Math.sign((a.el.hasDynamicProps ? 1 : 0) - (b.el.hasDynamicProps ? 1 : 0))
-    );
   }
 
   constructor(el, hardRef = false){
@@ -426,6 +402,24 @@ class Path{
       : ''
     );
     return `${referenceIndicator}${this.el.tag}(${this.pathId})`
+  }
+
+  isShorterOrEqualThan(b){
+    const a = this;
+    const aEl = a.el;
+    const bEl = b.el;
+    log('path',
+      'isShorterOrEqualThan:',
+      `length: ${a.id}(${a.length}) < ${b.id}(${b.length})`,
+      `elNumDynamicDescendants: ${aEl.numDynamicDescendants} < ${bEl.numDynamicDescendants}`,
+      `hasDynamicProps: ${aEl.hasDynamicProps} < ${bEl.hasDynamicProps}`
+    );
+    return 0 >= (
+      Math.sign(a.length - b.length)
+        || Math.sign(bEl.numDynamicDescendants - aEl.numDynamicDescendants)
+        // TODO: consider changing hasDynamicProps to numDynamicProps 
+        || Math.sign((aEl.hasDynamicProps ? 1 : 0) - (bEl.hasDynamicProps ? 1 : 0))
+    );
   }
 
   toString(){
@@ -527,17 +521,18 @@ class Path{
 function getPath(el, ignoreEl, isHardReferenced){
   return logFunc('path',
     `getPath ${el.tag}`,
-    () => {
-      if (el.rootPath) return el.rootPath;
-      return !el.parent ? new Path(el, true) : calcPath(el, ignoreEl, isHardReferenced);
-    },
+    () => (
+      el.rootPath ? el.rootPath : calcPath(el, ignoreEl, isHardReferenced)
+    ),
     result => `[ ${result.toString()} ]`
   );
 }
 
 function calcPath(el, ignoreEl, isHardReferenced){
   const { parent } = el;
-  const path = new Path(el, isHardReferenced);
+  const path = new Path(el, !parent || isHardReferenced);
+
+  if(!parent) return path;
 
   if(ignoreEl) log('path', 'ignoreEl', ignoreEl.tag);
 
@@ -560,34 +555,52 @@ function calcPath(el, ignoreEl, isHardReferenced){
     );
   }
 
-  // TODO: cache sibling paths
-  const compare = (
-      ignoreEl === previousSibling ? 1
-    : ignoreEl === nextSibling     ? -1
-    : Path.compare(getPath(previousSibling, el), getPath(nextSibling, el))
+
+  const preferNextSibling = (
+      ignoreEl === previousSibling ? true
+    : ignoreEl === nextSibling     ? false
+    : getPath(nextSibling, el).isShorterOrEqualThan(getPath(previousSibling, el))
   );
+  
+  return path.setParent(
+    preferNextSibling ? getPath(nextSibling, el) : getPath(previousSibling, el)
+  ); 
+}
 
-  switch(compare){
-  case -1:
-    log('path', 'goLeft', previousSibling.id);
-    return path.setParent(getPath(previousSibling, el));
-
-  case 1:
-    log('path', 'goRight');
-    return path.setParent(getPath(nextSibling, el));
-
-  default:
-    log('path', 'dunno');
-    return path.setParent(
-      previousSibling.numDynamicDescendants > nextSibling.numDynamicDescendants
-        ? getPath(previousSibling, el)
-        : getPath(nextSibling, el)
+function pathToExpression(t, path, savedNodesToTmpVarId){
+  const members = [];
+  let el, parentEl;
+  while(path.parent && !savedNodesToTmpVarId.has(path.el)){
+    el = path.el;
+    parentEl = path.parent.el;
+    // Determine member from path's relation to parent (parent, next sibling, previous sibling)
+    members.unshift(
+        el === parentEl.firstChild      ? 'firstChild'
+      : el === parentEl.lastChild       ? 'lastChild'
+      : el === parentEl.nextSibling     ? 'nextSibling'
+      : el === parentEl.previousSibling ? 'previousSibling'
+      : 'UNKNOWN'
     );
+
+    if(!savedNodesToTmpVarId.has(el) && path.shouldBeSaved){
+      savedNodesToTmpVarId.set(path.el, tmpVarId(t, savedNodesToTmpVarId.size));
+    }
+
+    path = path.parent;
   }
+
+  // path is now the root or a saved node
+  let rootTmpVar = savedNodesToTmpVarId.get(path.el);
+  if(!rootTmpVar){
+    rootTmpVar = tmpVarId(t, savedNodesToTmpVarId.size);
+    savedNodesToTmpVarId.set(path.el, rootTmpVar);
+  }
+
+  log('dynamicsPath', `from ${path.el.tag}`, [rootTmpVar.name].concat(members).join('.'));
 }
 
 function generateSpecCreateCloneableDynamicCode(context, rootEl, rootElId, dynamics){
-  // const { t } = context;
+  const { t } = context;
 
   const sortedDynamics = sortDynamicsByDepthThenDistanceFromEnds(dynamics);
 
@@ -595,9 +608,22 @@ function generateSpecCreateCloneableDynamicCode(context, rootEl, rootElId, dynam
     getPath(d.el, undefined, true).finalize();
   });
 
-  if(LOGGING.dynamicsPath){
-    sortedDynamics.forEach(d => log('dynamicsPath', d.el.rootPath.toString()));
-  }
+  // if(LOGGING.dynamicsPath){
+  //   sortedDynamics.forEach(d => log('dynamicsPath', d.el.rootPath.toString()));
+  // }
+
+  const savedNodesToTmpVarId = new Map();
+
+  sortedDynamics.forEach(d => {
+    // TODO: Handle dynamic children
+    if(d.type !== PROP_EL) return;
+
+    // Generate member expression for path
+    // pathToExpression(t, d.el.rootPath);
+    log('dynamicsPath', '');
+    log('dynamicsPath', d.el.rootPath.toString());
+    pathToExpression(t, d.el.rootPath, savedNodesToTmpVarId);
+  });
 
   // Assign closest paths to root
   // sortedDynamics.forEach(d => {
@@ -979,6 +1005,8 @@ function parseElement({ t, file, context }, { openingElement: { name, attributes
     });
   el.hasDynamicProps = el.props.some(p => p.dynamic);
   el.numDynamicDescendants = numDynamicDescendants;
+  el.firstChild = el.children[0];
+  el.lastChild = el.children[el.children.length - 1];
 
   if(isComponent) context.hasComponents = true;
   return el;
