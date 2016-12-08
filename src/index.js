@@ -126,13 +126,22 @@ function normalizeElementPropValue(t, prop){
 function generateAssignDynamicProp(
   { t, instId, statements },
   domNodeExpression,
-  { isDynamic, dynamic, valueNode, nameId }
+  { isDynamic, dynamic, valueNode, nameId },
+  expressionToAssignDomNode
 ){
   const valueCode = (
     isDynamic
       ? t.memberExpression(instId, dynamic.instanceValueId)
       : valueNode
   );
+
+  // Optimization: combine assigning to contextual node `inst.a` to the instance.
+  if(expressionToAssignDomNode){
+    domNodeExpression = t.assignmentExpression('=',
+      expressionToAssignDomNode,
+      domNodeExpression
+    );
+  }
 
   const exprStmt = t.expressionStatement(
     t.assignmentExpression('=',
@@ -306,17 +315,12 @@ function generateSpecCreateHTMLElementCode(context, el, depth){
     const nodeVarId = tmpVars[depth].id
     el.props.forEach((prop, i) => {
       // Optimization: Only assign the instanceContextId once
-      if(i === 0 && prop.isDynamic){
-        statements.push(
-          t.expressionStatement(
-            t.assignmentExpression('=',
-              t.memberExpression(context.instId, prop.dynamic.instanceContextId),
-              nodeVarId
-            )
-          )
-        );
-      }
-      generateAssignDynamicProp(context, nodeVarId, prop);
+      generateAssignDynamicProp(
+        context,
+        nodeVarId,
+        prop,
+        (i === 0 && prop.isDynamic && t.memberExpression(context.instId, prop.dynamic.instanceContextId))
+      );
     });
   }
 
@@ -604,7 +608,9 @@ function getTmpVarForNode(t, savedNodesToTmpVarId, el){
   return tmpVar;
 }
 
-function generateSpecCreateCloneableDynamicPropCode(t, statements, path, savedNodesToTmpVarId){
+function generateSpecCreateCloneableDynamicPropCode(context, dynamic, savedNodesToTmpVarId){
+  const { t } = context;
+  let path = dynamic.el.rootPath;
   let el, parentEl;
   let rootAssignExpr, curAssignExpr, pathMembers;
   const originalSavedNodes = new Set(savedNodesToTmpVarId.keys());
@@ -638,66 +644,45 @@ function generateSpecCreateCloneableDynamicPropCode(t, statements, path, savedNo
 
   // log('dynamicsPath', JSON.stringify(rootAssignExpr, null, 2));
   // log('dynamicsPath', generateMemberExpression(t, rootAssignExpr));
-  statements.push(
-    t.expressionStatement(
-      generateMemberExpression(t, rootAssignExpr)
+  generateAssignDynamicProp(
+    context,
+    generateMemberExpression(t, rootAssignExpr),
+    dynamic.prop,
+    (
+      !originalSavedNodes.has(dynamic.el) &&
+      dynamic.prop.isDynamic &&
+      t.memberExpression(context.instId, dynamic.instanceContextId)
     )
-  )
+  );
 }
 
 function generateSpecCreateCloneableDynamicCode(context, rootEl, rootElId, dynamics){
-  const { statements, t, tmpVars } = context;
+  const { t, tmpVars } = context;
   const savedNodesToTmpVarId = new Map();
   const sortedDynamics = sortDynamicsByDepthThenDistanceFromEnds(dynamics);
+  let d;
 
+  // Get and register temp variable for root node 
   getTmpVarForNode(t, savedNodesToTmpVarId, rootEl);
 
   // Calculate shortest paths
-  sortedDynamics.forEach(d => {
+  for(d of sortedDynamics){
     getPath(d.el, undefined, true).finalize();
-  });
-  sortedDynamics.forEach(d => {
+  }
+
+  for(d of sortedDynamics){
     // TODO: Handle dynamic children
     if(d.type !== PROP_EL) return;
 
-    // Generate member expression for path
-    // pathToExpression(t, d.el.rootPath);
-    log('dynamicsPath', '');
     log('dynamicsPath', d.el.rootPath.toString());
 
-    // pathToExpression(t, d.el.rootPath, savedNodesToTmpVarId);
-    generateSpecCreateCloneableDynamicPropCode(t, statements, d.el.rootPath, savedNodesToTmpVarId);
-  });
-
-  for(let [, tmpVarId] of savedNodesToTmpVarId.entries()){
-    tmpVars.push(
-      t.variableDeclarator(
-        tmpVarId
-      )
-    );
+    // Generate member expression for path
+    generateSpecCreateCloneableDynamicPropCode(context, d, savedNodesToTmpVarId);
   }
 
-  // Assign closest paths to root
-  // sortedDynamics.forEach(d => {
-  //   // TODO: Handle dynamic children
-  //   if(d.type !== PROP_EL) return;
-
-  //   context.statements.push(
-  //     t.expressionStatement(
-  //       t.assignmentExpression(
-  //         '=',
-  //         t.memberExpression(context.instId, d.instanceContextId),
-  //         pathToExpression(t, [rootElId, ...getPath(d.el)])
-  //       )
-  //     )
-  //   );
-
-  //   generateAssignDynamicProp(
-  //     context,
-  //     pathToExpression(t, [rootElId, ...getPath(d.el)]),
-  //     d.prop
-  //   );
-  // });
+  for(let [el, tmpVarId] of savedNodesToTmpVarId.entries()){
+    if(el !== rootEl) tmpVars.push(t.variableDeclarator(tmpVarId));
+  }
 }
 
 function generateSpecCreateCloneableElementCode(context, el, cloneable/* cloneable */, dynamics){

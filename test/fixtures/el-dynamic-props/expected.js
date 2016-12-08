@@ -5,8 +5,7 @@ var _xvdomEl = xvdom.el,
   c: function c(inst) {
     var _n = _xvdomEl("div");
 
-    inst.a = _n;
-    _n.className = inst.b;
+    (inst.a = _n).className = inst.b;
     return _n;
   },
   u: function u(inst, pInst) {
@@ -20,8 +19,7 @@ var _xvdomEl = xvdom.el,
   c: function c(inst) {
     var _n = _xvdomEl("div");
 
-    inst.a = _n;
-    _n.className = inst.b;
+    (inst.a = _n).className = inst.b;
     _n.title = inst.c;
     return _n;
   },

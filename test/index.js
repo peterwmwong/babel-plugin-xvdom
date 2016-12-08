@@ -7,16 +7,16 @@ const plugin = require("../src/index");
 const BABEL_CONFIG = { plugins: ["syntax-jsx", plugin] };
 
 const filterFixtures = fixture => [
-  // "el",
-  // "el-comment-children",
-  // "el-dynamic-children",
-  // "el-dynamic-props",
-  // "el-key-prop",
-  // "el-static-children",
-  // "el-static-props",
-  // "component",
-  // "component-dynamic-props",
-  // "component-static-props",
+  "el",
+  "el-comment-children",
+  "el-dynamic-children",
+  "el-dynamic-props",
+  "el-key-prop",
+  "el-static-children",
+  "el-static-props",
+  "component",
+  "component-dynamic-props",
+  "component-static-props",
   "cloneable",
   // "cloneable-nested-dynamics"
   // "recycle"
@@ -33,13 +33,13 @@ describe("transforms jsx", () => {
     .filter(filterFixtures)
     .forEach(dir => {
       it(specName(dir), () => {
-        console.log(
-          transform(actualPath(fixturesDir, dir))
-        );
-        // assert.equal(
-        //   transform(actualPath(fixturesDir, dir)),
-        //   fs.readFileSync(expectedPath(fixturesDir, dir)).toString().trim()
-        // )
+        // console.log(
+        //   transform(actualPath(fixturesDir, dir))
+        // );
+        assert.equal(
+          transform(actualPath(fixturesDir, dir)),
+          fs.readFileSync(expectedPath(fixturesDir, dir)).toString().trim()
+        )
       });
     });
 });

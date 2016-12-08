@@ -24,8 +24,8 @@ function add(a, b){
 
 // Determines which categories are logged 
 const LOGGING = {
-  path: true,
-  dynamicsPath: true
+  // path: true,
+  // dynamicsPath: true
 }
 
 // Determines the indentation for logging by the stack trace
