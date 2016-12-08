@@ -33,7 +33,9 @@ describe("transforms jsx", () => {
     .filter(filterFixtures)
     .forEach(dir => {
       it(specName(dir), () => {
-        transform(actualPath(fixturesDir, dir));
+        console.log(
+          transform(actualPath(fixturesDir, dir))
+        );
         // assert.equal(
         //   transform(actualPath(fixturesDir, dir)),
         //   fs.readFileSync(expectedPath(fixturesDir, dir)).toString().trim()

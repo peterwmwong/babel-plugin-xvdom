@@ -392,13 +392,17 @@ class Path{
 
   get shouldBeSaved(){
     const { el: { rootPath }, isHardReferenced, numReferencingPaths } = this;
-    return isHardReferenced || numReferencingPaths > 1 || (rootPath && rootPath !== this && rootPath.shouldBeSaved);
+    return (
+      isHardReferenced ||
+      numReferencingPaths > 1 ||
+      (rootPath && rootPath !== this && rootPath.shouldBeSaved)
+    );
   }
 
   get id(){
     const referenceIndicator = (
         this.isHardReferenced ? '*'
-      : this.shouldBeSaved ? '^'
+      : this.shouldBeSaved    ? '^'
       : ''
     );
     return `${referenceIndicator}${this.el.tag}(${this.pathId})`
@@ -415,10 +419,10 @@ class Path{
       `hasDynamicProps: ${aEl.hasDynamicProps} < ${bEl.hasDynamicProps}`
     );
     return 0 >= (
-      Math.sign(a.length - b.length)
-        || Math.sign(bEl.numDynamicDescendants - aEl.numDynamicDescendants)
-        // TODO: consider changing hasDynamicProps to numDynamicProps 
-        || Math.sign((aEl.hasDynamicProps ? 1 : 0) - (bEl.hasDynamicProps ? 1 : 0))
+      Math.sign(a.length - b.length) ||
+      Math.sign(bEl.numDynamicDescendants - aEl.numDynamicDescendants) ||
+      // TODO: consider changing hasDynamicProps to numDynamicProps 
+      Math.sign(+aEl.hasDynamicProps - +bEl.hasDynamicProps)
     );
   }
 
@@ -430,11 +434,6 @@ class Path{
       path = path.parent;
     }
     return result.join(', ');
-  }
-
-  setParent(path){
-    this.parent = path;
-    return this;
   }
 
   finalize(pathHead){
@@ -521,99 +520,142 @@ class Path{
 function getPath(el, ignoreEl, isHardReferenced){
   return logFunc('path',
     `getPath ${el.tag}`,
-    () => (
-      el.rootPath ? el.rootPath : calcPath(el, ignoreEl, isHardReferenced)
-    ),
+    () => el.rootPath ? el.rootPath : calcPath(el, ignoreEl, isHardReferenced),
     result => `[ ${result.toString()} ]`
   );
 }
 
 function calcPath(el, ignoreEl, isHardReferenced){
   const { parent } = el;
-  const path = new Path(el, !parent || isHardReferenced);
-
-  if(!parent) return path;
-
+  if(!parent) return new Path(el, true);
   if(ignoreEl) log('path', 'ignoreEl', ignoreEl.tag);
 
+  const path = new Path(el, isHardReferenced);
   const { distFromEnd, index, previousSibling, nextSibling } = el;
+  let parentPath;
+
   if(index === 0){
-    log('path', 'firstChild');
-    return path.setParent(
+    parentPath = (
       ignoreEl === nextSibling
         ? getPath(parent)
         : Path.min(getPath(parent), getPath(nextSibling, el))
     );
   }
-
-  if (distFromEnd === 0){
-    log('path', 'lastChild');
-    return path.setParent(
+  else if(distFromEnd === 0){
+    parentPath = (
       ignoreEl === previousSibling
         ? getPath(parent)
         : Path.min(getPath(parent), getPath(previousSibling, el))
     );
   }
+  else if(
+    ignoreEl === previousSibling || (
+      ignoreEl !== nextSibling &&
+      getPath(nextSibling, el).isShorterOrEqualThan(getPath(previousSibling, el))
+    )
+  ){
+    parentPath = getPath(nextSibling, el);
+  }
+  else {
+    parentPath = getPath(previousSibling, el);
+  }
 
-
-  const preferNextSibling = (
-      ignoreEl === previousSibling ? true
-    : ignoreEl === nextSibling     ? false
-    : getPath(nextSibling, el).isShorterOrEqualThan(getPath(previousSibling, el))
-  );
-  
-  return path.setParent(
-    preferNextSibling ? getPath(nextSibling, el) : getPath(previousSibling, el)
-  ); 
+  path.parent = parentPath;
+  return path;
 }
 
-function pathToExpression(t, path, savedNodesToTmpVarId){
-  const members = [];
-  let el, parentEl;
-  while(path.parent && !savedNodesToTmpVarId.has(path.el)){
-    el = path.el;
-    parentEl = path.parent.el;
-    // Determine member from path's relation to parent (parent, next sibling, previous sibling)
-    members.unshift(
-        el === parentEl.firstChild      ? 'firstChild'
-      : el === parentEl.lastChild       ? 'lastChild'
-      : el === parentEl.nextSibling     ? 'nextSibling'
-      : el === parentEl.previousSibling ? 'previousSibling'
-      : 'UNKNOWN'
-    );
+// Determine the relationship from one element to another (ex. parent, next sibling, previous sibling)
+function getElementRelationshipTo(el, otherEl){
+  return (
+      el === otherEl.firstChild      ? 'firstChild'
+    : el === otherEl.lastChild       ? 'lastChild'
+    : el === otherEl.nextSibling     ? 'nextSibling'
+    : el === otherEl.previousSibling ? 'previousSibling'
+    : 'UNKNOWN'
+  );
+}
 
-    if(!savedNodesToTmpVarId.has(el) && path.shouldBeSaved){
-      savedNodesToTmpVarId.set(path.el, tmpVarId(t, savedNodesToTmpVarId.size));
+function expressionForRelationOrAssign(t, relationOrAssign){
+  return (
+    typeof relationOrAssign === 'string'
+      ? t.identifier(relationOrAssign)
+      :  generateMemberExpression(t, relationOrAssign)
+  );
+}
+
+function generateMemberExpression(t, { tmpVar, path }){
+  return t.assignmentExpression('=',
+    t.identifier(tmpVar.name),
+    path.slice(1).reduce(
+      (acc, relationOrAssign) => (
+        t.memberExpression(acc, expressionForRelationOrAssign(t, relationOrAssign))
+      ),
+      expressionForRelationOrAssign(t, path[0])
+    )
+  );
+}
+
+function getTmpVarForNode(t, savedNodesToTmpVarId, el){
+  let tmpVar = savedNodesToTmpVarId.get(el);
+  if(tmpVar) return tmpVar;
+
+  tmpVar = tmpVarId(t, savedNodesToTmpVarId.size);
+  savedNodesToTmpVarId.set(el, tmpVar);
+  return tmpVar;
+}
+
+function generateSpecCreateCloneableDynamicPropCode(t, statements, path, savedNodesToTmpVarId){
+  let el, parentEl;
+  let rootAssignExpr, curAssignExpr, pathMembers;
+  const originalSavedNodes = new Set(savedNodesToTmpVarId.keys());
+
+  while(path.parent && !originalSavedNodes.has(el = path.el)){
+    parentEl = path.parent.el;
+    pathMembers = [
+      ...(savedNodesToTmpVarId.has(parentEl) ? [ savedNodesToTmpVarId.get(parentEl).name ] : EMPTY_ARRAY),
+      getElementRelationshipTo(el, parentEl)
+    ]
+
+    // Optimization: Inline the assignment of the saved nodes in the member expression
+    //               to the dynamic node
+    if(!originalSavedNodes.has(el) && path.shouldBeSaved){
+      const newCur = {
+        tmpVar: getTmpVarForNode(t, savedNodesToTmpVarId, el),
+        path: pathMembers
+      };
+
+      if(curAssignExpr) curAssignExpr.path.unshift(newCur);
+      rootAssignExpr = rootAssignExpr || newCur;
+
+      curAssignExpr = newCur;
+    }
+    else{
+      curAssignExpr.path.unshift(...pathMembers);
     }
 
     path = path.parent;
   }
 
-  // path is now the root or a saved node
-  let rootTmpVar = savedNodesToTmpVarId.get(path.el);
-  if(!rootTmpVar){
-    rootTmpVar = tmpVarId(t, savedNodesToTmpVarId.size);
-    savedNodesToTmpVarId.set(path.el, rootTmpVar);
-  }
-
-  log('dynamicsPath', `from ${path.el.tag}`, [rootTmpVar.name].concat(members).join('.'));
+  // log('dynamicsPath', JSON.stringify(rootAssignExpr, null, 2));
+  // log('dynamicsPath', generateMemberExpression(t, rootAssignExpr));
+  statements.push(
+    t.expressionStatement(
+      generateMemberExpression(t, rootAssignExpr)
+    )
+  )
 }
 
 function generateSpecCreateCloneableDynamicCode(context, rootEl, rootElId, dynamics){
-  const { t } = context;
-
+  const { statements, t, tmpVars } = context;
+  const savedNodesToTmpVarId = new Map();
   const sortedDynamics = sortDynamicsByDepthThenDistanceFromEnds(dynamics);
 
+  getTmpVarForNode(t, savedNodesToTmpVarId, rootEl);
+
+  // Calculate shortest paths
   sortedDynamics.forEach(d => {
     getPath(d.el, undefined, true).finalize();
   });
-
-  // if(LOGGING.dynamicsPath){
-  //   sortedDynamics.forEach(d => log('dynamicsPath', d.el.rootPath.toString()));
-  // }
-
-  const savedNodesToTmpVarId = new Map();
-
   sortedDynamics.forEach(d => {
     // TODO: Handle dynamic children
     if(d.type !== PROP_EL) return;
@@ -622,8 +664,18 @@ function generateSpecCreateCloneableDynamicCode(context, rootEl, rootElId, dynam
     // pathToExpression(t, d.el.rootPath);
     log('dynamicsPath', '');
     log('dynamicsPath', d.el.rootPath.toString());
-    pathToExpression(t, d.el.rootPath, savedNodesToTmpVarId);
+
+    // pathToExpression(t, d.el.rootPath, savedNodesToTmpVarId);
+    generateSpecCreateCloneableDynamicPropCode(t, statements, d.el.rootPath, savedNodesToTmpVarId);
   });
+
+  for(let [, tmpVarId] of savedNodesToTmpVarId.entries()){
+    tmpVars.push(
+      t.variableDeclarator(
+        tmpVarId
+      )
+    );
+  }
 
   // Assign closest paths to root
   // sortedDynamics.forEach(d => {
