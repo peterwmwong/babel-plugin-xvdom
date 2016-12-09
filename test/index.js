@@ -18,7 +18,9 @@ const filterFixtures = fixture => [
   "component-dynamic-props",
   "component-static-props",
   "cloneable",
-  "cloneable-static-props",
+  "cloneable-root-props",
+  "cloneable-static-props"
+  // "cloneable-saved-path-nodes"
   // "cloneable-nested-dynamics"
   // "recycle"
 ].indexOf(fixture) !== -1;

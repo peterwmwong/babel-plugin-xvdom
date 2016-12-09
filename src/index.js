@@ -591,6 +591,7 @@ function expressionForRelationOrAssign(t, relationOrAssign){
 }
 
 function generateMemberExpression(t, { tmpVar, path }){
+  if(!path) return tmpVar;
   return t.assignmentExpression('=',
     t.identifier(tmpVar.name),
     path.slice(1).reduce(
@@ -618,34 +619,46 @@ function generateSpecCreateCloneableDynamicPropCode(context, dynamic, savedNodes
   let rootAssignExpr, curAssignExpr, pathMembers;
   const originalSavedNodes = new Set(savedNodesToTmpVarId.keys());
 
-  while(path.parent && !originalSavedNodes.has(el = path.el)){
-    parentEl = path.parent.el;
-    pathMembers = [
-      ...(savedNodesToTmpVarId.has(parentEl) ? [ savedNodesToTmpVarId.get(parentEl).name ] : EMPTY_ARRAY),
-      getElementRelationshipTo(el, parentEl)
-    ]
-
-    // Optimization: Inline the assignment of the saved nodes in the member expression
-    //               to the dynamic node
-    if(!originalSavedNodes.has(el) && path.shouldBeSaved){
-      const newCur = {
-        tmpVar: getTmpVarForNode(t, savedNodesToTmpVarId, el),
-        path: pathMembers
-      };
-
-      if(curAssignExpr) curAssignExpr.path.unshift(newCur);
-      rootAssignExpr = rootAssignExpr || newCur;
-
-      curAssignExpr = newCur;
+  if(!path.parent){
+    rootAssignExpr = {
+      tmpVar: getTmpVarForNode(t, savedNodesToTmpVarId, path.el)
     }
-    else{
-      curAssignExpr.path.unshift(...pathMembers);
-    }
+  }
+  else{
+    while(path.parent && !originalSavedNodes.has(el = path.el)){
+      parentEl = path.parent.el;
+      pathMembers = [
+        ...(
+            savedNodesToTmpVarId.has(parentEl) ? [ savedNodesToTmpVarId.get(parentEl).name ]
+          : path.parent.parent                 ? EMPTY_ARRAY
+          : [ getTmpVarForNode(t, savedNodesToTmpVarId, parentEl).name ]
+        )
+        ,
+        getElementRelationshipTo(el, parentEl)
+      ]
 
-    path = path.parent;
+      // Optimization: Inline the assignment of the saved nodes in the member expression
+      //               to the dynamic node
+      if(!originalSavedNodes.has(el) && path.shouldBeSaved){
+        const newCur = {
+          tmpVar: getTmpVarForNode(t, savedNodesToTmpVarId, el),
+          path: pathMembers
+        };
+
+        if(curAssignExpr) curAssignExpr.path.unshift(newCur);
+        rootAssignExpr = rootAssignExpr || newCur;
+
+        curAssignExpr = newCur;
+      }
+      else{
+        curAssignExpr.path.unshift(...pathMembers);
+      }
+
+      path = path.parent;
+    }
   }
 
-  // log('dynamicsPath', JSON.stringify(rootAssignExpr, null, 2));
+  log('dynamicsPath', JSON.stringify(rootAssignExpr, null, 2));
   // log('dynamicsPath', generateMemberExpression(t, rootAssignExpr));
   generateAssignDynamicProp(
     context,
@@ -664,9 +677,6 @@ function generateSpecCreateCloneableDynamicCode(context, rootEl, rootElId, dynam
   const savedNodesToTmpVarId = new Map();
   const sortedDynamics = sortDynamicsByDepthThenDistanceFromEnds(dynamics);
   let d;
-
-  // Get and register temp variable for root node 
-  getTmpVarForNode(t, savedNodesToTmpVarId, rootEl);
 
   // Calculate shortest paths
   for(d of sortedDynamics){
