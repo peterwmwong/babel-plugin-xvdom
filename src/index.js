@@ -281,7 +281,7 @@ function generateSpecCreateComponentCode(context, el, depth){
 }
 
 function generateSpecCreateHTMLElementCode(context, el, depth){
-  const { t, xvdomApi, tmpVars, statements, shouldGeneratePropsCode } = context;
+  const { t, xvdomApi, tmpVars, statements, shouldGenerateDynamicPropCode } = context;
 
   // Create element
   // ex. _xvdomEl('div');
@@ -310,19 +310,22 @@ function generateSpecCreateHTMLElementCode(context, el, depth){
   }
 
   // Assign props
-  // if (shouldGeneratePropsCode) generateAssignPropsCode(context, tmpVars[depth].id, el);
-  if (shouldGeneratePropsCode){
-    const nodeVarId = tmpVars[depth].id
-    el.props.forEach((prop, i) => {
+  const nodeVarId = tmpVars[depth].id
+  el.props.forEach((prop, i) => {
+    if(shouldGenerateDynamicPropCode || !prop.isDynamic){
       // Optimization: Only assign the instanceContextId once
       generateAssignDynamicProp(
         context,
         nodeVarId,
         prop,
-        (i === 0 && prop.isDynamic && t.memberExpression(context.instId, prop.dynamic.instanceContextId))
+        (
+          i === 0 && 
+          prop.isDynamic &&
+          t.memberExpression(context.instId, prop.dynamic.instanceContextId)
+        )
       );
-    });
-  }
+    }
+  });
 
   // Add this node to parent, if there is a parent (not root).
   // ex. _n.appendChild(_n2);
@@ -691,13 +694,13 @@ function generateSpecCreateCloneableElementCode(context, el, cloneable/* cloneab
   const specNodeId = xvdomApi.definePrefixed('xvdomSpecNode', t.nullLiteral()).uniqueNameId;
   const createSpecContext =
     Object.assign({}, context, {
-      statements:[], tmpVars:[], shouldGeneratePropsCode: false
+      statements:[], tmpVars:[], shouldGenerateDynamicPropCode: false
     });
 
   // function _xvdomSpecNodeCreate(){
   //   ...
   // }
-  generateSpecCreateElementCode(createSpecContext, el, 0);
+  generateSpecCreateElementCode(createSpecContext, el);
 
   const createSpecNodeId = xvdomApi.definePrefixed(
     'xvdomSpecNodeCreate',
@@ -740,7 +743,7 @@ function generateSpecCreateCode(t, xvdomApi, { rootElement, dynamics, hasCompone
   const context = {
     t,
     xvdomApi,
-    shouldGeneratePropsCode: true,
+    shouldGenerateDynamicPropCode: true,
     instId: instParamId(t),
     tmpVars: [],
     statements: []
