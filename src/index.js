@@ -164,21 +164,16 @@ function generateSpecElementDynamicChildCode({ t, xvdomApi, statements, instId }
   const { dynamic: { instanceContextId, instanceValueId }, isOnlyChild } = childDesc;
   statements.push(
     t.expressionStatement(
-      t.callExpression(
-        t.memberExpression(parentNodeVarId, t.identifier('appendChild')),
-        [
-          t.assignmentExpression('=',
-            t.memberExpression(instId, instanceContextId),
-            t.callExpression(
-              xvdomApi.accessFunction('createDynamic'),
-              [
-                t.booleanLiteral(isOnlyChild),
-                parentNodeVarId,
-                t.memberExpression(instId, instanceValueId)
-              ]
-            )
-          )
-        ]
+      t.assignmentExpression('=',
+        t.memberExpression(instId, instanceContextId),
+        t.callExpression(
+          xvdomApi.accessFunction('createDynamic'),
+          [
+            t.booleanLiteral(isOnlyChild),
+            parentNodeVarId,
+            t.memberExpression(instId, instanceValueId)
+          ]
+        )
       )
     )
   );

@@ -7,12 +7,11 @@ var _xvdomCreateDynamic = xvdom.createDynamic,
     var _n = _xvdomEl("div"),
         _n2 = _xvdomEl("span");
 
-    _n.appendChild(inst.a = _xvdomCreateDynamic(false, _n, inst.b));
+    inst.a = _xvdomCreateDynamic(false, _n, inst.b);
 
     _n.appendChild(_n2);
 
-    _n2.appendChild(inst.c = _xvdomCreateDynamic(true, _n2, inst.d));
-
+    inst.c = _xvdomCreateDynamic(true, _n2, inst.d);
     return _n;
   },
   u: function u(inst, pInst) {
@@ -25,8 +24,7 @@ var _xvdomCreateDynamic = xvdom.createDynamic,
   c: function c(inst) {
     var _n = _xvdomEl("div");
 
-    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
-
+    inst.a = _xvdomCreateDynamic(true, _n, inst.b);
     return _n;
   },
   u: function u(inst, pInst) {
@@ -38,8 +36,7 @@ var _xvdomCreateDynamic = xvdom.createDynamic,
   c: function c(inst) {
     var _n = _xvdomEl("div");
 
-    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
-
+    inst.a = _xvdomCreateDynamic(true, _n, inst.b);
     return _n;
   },
   u: function u(inst, pInst) {
@@ -51,8 +48,7 @@ var _xvdomCreateDynamic = xvdom.createDynamic,
   c: function c(inst) {
     var _n = _xvdomEl("div");
 
-    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
-
+    inst.a = _xvdomCreateDynamic(true, _n, inst.b);
     return _n;
   },
   u: function u(inst, pInst) {
@@ -64,8 +60,7 @@ var _xvdomCreateDynamic = xvdom.createDynamic,
   c: function c(inst) {
     var _n = _xvdomEl("div");
 
-    _n.appendChild(inst.a = _xvdomCreateDynamic(true, _n, inst.b));
-
+    inst.a = _xvdomCreateDynamic(true, _n, inst.b);
     return _n;
   },
   u: function u(inst, pInst) {
