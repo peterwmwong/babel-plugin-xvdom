@@ -54,17 +54,28 @@ const hasSideEffects = (tag, propName) => (
 
 
 class JSXElementChild {
-  constructor(fragment, astNode, parent, depth, isOnlyChild, index) {
-    const { t } = fragment;
-    const isDynamic = isDynamicNode(t, astNode);
-    this.index = index;
-    this.depth = depth;
+  constructor(parent) {
+    this.parent = parent;
+  }
+
+  get depth()           { return !this.parent ? 0 : this.parent.depth + 1; }
+  get index()           { return !this.parent ? 0 : this.parent.children.indexOf(this); }
+  get distFromEnd()     { return !this.parent ? 0 : this.parent.children.length - this.index - 1; }
+  get firstChild()      { return this.children[0]; }
+  get lastChild()       { return this.children[this.children.length - 1]; }
+  get nextSibling()     { return this.parent.children[this.index + 1]; }
+  get previousSibling() { return this.parent.children[this.index - 1]; }
+}
+
+
+class JSXElementValueChild extends JSXElementChild {
+  constructor(fragment, astNode, parent, isOnlyChild) {
+    super(parent);
+
+    this.numContainedDynamics = 1;
     this.isOnlyChild = isOnlyChild;
-    this.distFromEnd = (parent.children && (parent.children.length - index - 1));
-    // TODO: Remove and update user to use instanceof
-    this.type = isDynamic ? NODE_DYNAMIC : NODE_STATIC,
-    this.dynamic = isDynamic && fragment.addDynamicChild(parent, astNode, isOnlyChild),
-    this.node = astNode;
+    this.dynamic = isDynamicNode(fragment.t, astNode) && fragment.addDynamicChild(parent, astNode, isOnlyChild);
+    this.valueNode = astNode;
   }
 }
 
@@ -75,12 +86,11 @@ class JSXElementProp {
 
     this.nameId    = t.identifier(name);
     this.valueNode = normalizeElementPropValue(t, attr.value);
-    this.isDynamic = isDynamicNode(t, this.valueNode);
 
     // TODO: Consider removing addDynamicProp
     //       JSXFragment could determine this after the fact (recursive descent) 
     this.dynamic = (
-      this.isDynamic &&
+      isDynamicNode(t, this.valueNode) &&
       context.addDynamicProp(
         el,
         this,
@@ -93,8 +103,10 @@ class JSXElementProp {
 
 }
 
-class JSXElement {
-  constructor(fragment, astNode, parent, depth, index, distFromEnd) /*:Element*/ {
+class JSXElement extends JSXElementChild {
+  constructor(fragment, astNode, parent) {
+    super(parent);
+    
     const { t } = fragment;
     const { openingElement: { name, attributes }, children } = astNode;
     const isComponent      = isComponentName(name.name);
@@ -102,71 +114,36 @@ class JSXElement {
     const numChildren      = filteredChildren.length;
     const hasOnlyOneChild  = numChildren === 1;
 
-    this.parent = parent;
-
-    // TODO: make a getter
-    this.index = index;
-
-    // TODO: 1) Is this needed? How are we using this? 2) make a getter
-    this.depth = depth;
-
-    // TODO: make a getter
-    this.distFromEnd = distFromEnd;
-
-    // TODO: Remove and change users to do instanceof
-    this.type = isComponent ? NODE_COMPONENT : NODE_EL;
-
+    this.isComponent = isComponent;
     this.tag = name.name;
+
     this.props = (
       attributes
         .filter(isNotXvdomAttribute)
         .map(attr => new JSXElementProp(fragment, astNode, attr, this))
     );
 
-    const childDepth = depth + 1;
-    let numDynamicDescendants = 0;
-    
     this.children = (
       isComponent
         ? EMPTY_ARRAY
-        : filteredChildren.map((child, childIndex) => {
-          let parsedChild;
-
-          if(t.isJSXElement(child)) {
-            parsedChild = new JSXElement(fragment, child, this, childDepth, childIndex, numChildren - childIndex - 1);
-            if(parsedChild.hasDynamicProps) ++numDynamicDescendants;
-            numDynamicDescendants += parsedChild.numDynamicDescendants;
-          }
-          else{
-            parsedChild = new JSXElementChild(fragment, child, this, childDepth, hasOnlyOneChild, childIndex, numChildren - childIndex - 1);
-            if(parsedChild.dynamic) ++numDynamicDescendants;
-          }
-          return parsedChild;
-        })
+        : filteredChildren.map(child =>
+            t.isJSXElement(child)
+              ? new JSXElement(fragment, child, this)
+              : new JSXElementValueChild(fragment, child, this, hasOnlyOneChild)
+          )
     );
-
-    // TODO: make a getter
-    this.hasDynamicProps = this.props.some(p => p.dynamic);
-
-    // TODO: make a getter. I believe this is only used for cloneables.
-    //       Let's not tax non-cloneables (probably a majority case)
-    this.numDynamicDescendants = numDynamicDescendants;
-
-    // TODO: make a getter
-    this.firstChild = this.children[0];
-
-    // TODO: make a getter
-    this.lastChild = this.children[this.children.length - 1];
 
     if(isComponent) fragment.hasComponents = true;
   }
 
-  get nextSibling() {
-    return this.parent.children[this.index + 1];
+  get numDynamicProps() {
+    return this.props.reduce((total, prop) => +!!prop.dynamic + total, 0);
   }
 
-  get previousSibling() {
-    return this.parent.children[this.index - 1];
+  get hasDynamicProps() { return !!this.numDynamicProps; }
+
+  get numContainedDynamics() {
+    return +this.numDynamicProps + this.children.reduce((total, child) => child.numContainedDynamics + total, 0);
   }
 }
 
@@ -180,7 +157,7 @@ class JSXFragment {
     const { openingElement } = astNode;
 
     this.dynamics = [];
-    this.componentsWithDyanmicPropsSet = new Set();
+    this.componentsWithDyanmicProps = new Set();
     this._instanceParamIndex = 0;
     this.context = this;
     this.hasComponents = false;
@@ -189,13 +166,8 @@ class JSXFragment {
     this.key = parseKeyAttr(t, openingElement);
     // TODO: rename to isCloneable
     this.cloneable = openingElement.attributes.some(isCloneableAttribute);
-    this.rootElement = new JSXElement(this, astNode, null, 0, 0, 0);
+    this.rootElement = new JSXElement(this, astNode);
   }
-
-  get componentsWithDyanmicProps() {
-    return Array.from(this.componentsWithDyanmicPropsSet.keys()); 
-  }
-
 
   addDynamicChild(parent, childNode, isOnlyChild) /*:{type:String, value:Node, instanceContextId:Identifier, instanceValueId:Identifier}*/ {
     return this._addDynamic({
@@ -209,7 +181,7 @@ class JSXFragment {
   }
 
   addDynamicProp(el, prop, name, value, hasSideEffects) /*:{type:String, name:String, value:Node, hasSideEffects:Boolean, instanceContextId:Identifier, instanceValueId:Identifier}*/ {
-    const isElementProp = el.type === NODE_EL;
+    const isElementProp = !el.isComponent;
     const dynamic = {
       type: (isElementProp ? PROP_EL : PROP_COMPONENT),
       el,
@@ -233,7 +205,7 @@ class JSXFragment {
   }
 
   _addDynamicPropForComponent(component, dynamic) {
-    this.componentsWithDyanmicPropsSet.add(component);
+    this.componentsWithDyanmicProps.add(component);
     return this._addDynamic(dynamic);
   }
 
@@ -251,5 +223,6 @@ module.exports = {
   JSXFragment,
   JSXElement,
   JSXElementProp,
-  JSXElementChild
+  JSXElementChild,
+  JSXElementValueChild
 }
