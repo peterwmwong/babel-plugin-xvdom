@@ -20,6 +20,7 @@ const filterFixtures = fixture => [
   "cloneable",
   "cloneable-root-props",
   "cloneable-static-props"
+
   // "cloneable-saved-path-nodes"
   // "cloneable-nested-dynamics"
   // "recycle"
