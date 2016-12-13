@@ -1,7 +1,8 @@
 const {
   DynamicChild,
   DynamicProp,
-  JSXElement,
+  JSXComponent,
+  JSXHTMLComponent,
   JSXElementValueChild,
   JSXFragment
 } = require('./parsing/JSXFragment.js'); 
@@ -13,7 +14,7 @@ const {
 
 const EMPTY_ARRAY    = [];
 
-const nonComponentPropDynamic = ({ el }) => !el || !el.isComponent;
+const nonComponentPropDynamic = d          => !(d instanceof DynamicProp) || (d.el instanceof JSXHTMLComponent);
 const instParamId             = t          => t.identifier('inst');
 const prevInstParamId         = t          => t.identifier('pInst');
 const tmpVarId                = (t, num)   => t.identifier(`_n${num ? ++num : ''}`);
@@ -189,7 +190,7 @@ function generateSpecCreateComponentCode(context, el, depth) {
       ]
     )
   );
-  if(el.hasDynamicProps) {
+  if(el.numDynamicProps) {
     createComponentCode = t.assignmentExpression('=',
       t.memberExpression(instId, el.instanceContextId),
       createComponentCode
@@ -293,20 +294,19 @@ function generateSpecCreateHTMLElementCode(context, el, depth) {
   ++depth;
 
   el.children.forEach(childDesc => {
-    if (childDesc instanceof JSXElement) {
-      return (
-        childDesc.isComponent
-          ? generateSpecCreateComponentCode(context, childDesc, depth)
-          : generateSpecCreateHTMLElementCode(context, childDesc, depth)
-      );
+    if (childDesc instanceof JSXHTMLComponent) {
+      generateSpecCreateHTMLElementCode(context, childDesc, depth);
     }
-    
-    if (childDesc instanceof JSXElementValueChild) {
-      return (
-        childDesc.dynamic
-          ? generateSpecElementDynamicChildCode(context, childDesc, tmpVar)
-          : generateSpecElementStaticChildCode(context, childDesc, tmpVar)
-      );
+    else if (childDesc instanceof JSXComponent) {
+      generateSpecCreateComponentCode(context, childDesc, depth)
+    }
+    else if (childDesc instanceof JSXElementValueChild) {
+      if (childDesc.dynamic) {
+        generateSpecElementDynamicChildCode(context, childDesc, tmpVar);
+      }
+      else {
+        generateSpecElementStaticChildCode(context, childDesc, tmpVar);
+      }
     }
   });
 }
@@ -382,13 +382,12 @@ class Path {
       'isShorterOrEqualThan:',
       `length: ${a.id}(${a.length}) < ${b.id}(${b.length})`,
       `elNumDynamicDescendants: ${aEl.numContainedDynamics} < ${bEl.numContainedDynamics}`,
-      `hasDynamicProps: ${aEl.hasDynamicProps} < ${bEl.hasDynamicProps}`
+      `numDynamicProps: ${aEl.numDynamicProps} < ${bEl.numDynamicProps}`
     );
     return 0 >= (
       Math.sign(a.length - b.length) ||
       Math.sign(bEl.numContainedDynamics - aEl.numContainedDynamics) ||
-      // TODO: consider changing hasDynamicProps to numDynamicProps 
-      Math.sign(+aEl.hasDynamicProps - +bEl.hasDynamicProps)
+      Math.sign(aEl.numDynamicProps - +bEl.numDynamicProps)
     );
   }
 
@@ -704,7 +703,7 @@ function generateSpecCreateCloneableElementCode(context, el, cloneable/* cloneab
 }
 
 function generateSpecCreateElementCode(context, el) {
-  if(!el.isComponent) generateSpecCreateHTMLElementCode(context, el, 0);
+  if(el instanceof JSXHTMLComponent) generateSpecCreateHTMLElementCode(context, el, 0);
   else generateSpecCreateComponentCode(context, el, 0);
 }
 
