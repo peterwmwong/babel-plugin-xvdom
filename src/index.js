@@ -1,20 +1,23 @@
 const {
   DynamicChild,
   DynamicProp,
-  JSXComponent,
-  JSXHTMLComponent,
-  JSXElementValueChild,
+  JSXElement,
+  JSXHTMLElement,
+  JSXValueElement,
   JSXFragment
 } = require('./parsing/JSXFragment.js'); 
 
 const {
+  getPath
+} = require('./pathing/index.js');
+
+const {
   log,
-  logFunc
 } = require('./logger.js');
 
 const EMPTY_ARRAY    = [];
 
-const nonComponentPropDynamic = d          => !(d instanceof DynamicProp) || (d.el instanceof JSXHTMLComponent);
+const nonComponentPropDynamic = d          => !(d instanceof DynamicProp) || (d.el instanceof JSXHTMLElement);
 const instParamId             = t          => t.identifier('inst');
 const prevInstParamId         = t          => t.identifier('pInst');
 const tmpVarId                = (t, num)   => t.identifier(`_n${num ? ++num : ''}`);
@@ -294,13 +297,13 @@ function generateSpecCreateHTMLElementCode(context, el, depth) {
   ++depth;
 
   el.children.forEach(childDesc => {
-    if (childDesc instanceof JSXHTMLComponent) {
+    if (childDesc instanceof JSXHTMLElement) {
       generateSpecCreateHTMLElementCode(context, childDesc, depth);
     }
-    else if (childDesc instanceof JSXComponent) {
+    else if (childDesc instanceof JSXElement) {
       generateSpecCreateComponentCode(context, childDesc, depth)
     }
-    else if (childDesc instanceof JSXElementValueChild) {
+    else if (childDesc instanceof JSXValueElement) {
       if (childDesc.dynamic) {
         generateSpecElementDynamicChildCode(context, childDesc, tmpVar);
       }
@@ -322,221 +325,9 @@ function sortDynamicsByDepthThenDistanceFromEnds(dynamics) {
         (depthGroups[depth] || (depthGroups[depth] = [])).push(d);
         return depthGroups;
       }, [])
-      .reduce((result, group) => {
-        result.push(...group.sort(sortDistanceFromEnds));
-        return result;
-      }, [])
-  );
-}
-
-let LAST_PATH_ID = 0;
-class Path {
-  static min(a, b) {
-    log('path', `min: ${a.id}(${a.length}) < ${b.id}(${b.length})`);
-    return a.length < b.length ? a : b;
-  }
-
-  constructor(el, hardRef = false) {
-    this.pathId = ++LAST_PATH_ID;
-    this.el = el;
-    this.parent = null;
-    this.isHardReferenced = hardRef;
-    this.numReferencingPaths = 0;
-  }
-
-  // TODO: consider renaming this to something more explicit...
-  //        - lengthToRootOrSaved
-  get length() {
-    return (
-        this.isHardReferenced ? 0
-      : this.parent           ? (this.parent.length + 1)
-      : Number.MAX_SAFE_INTEGER
-    );
-  }
-
-  get tag() { return this.el.tag; }
-
-  get shouldBeSaved() {
-    const { el: { rootPath }, isHardReferenced, numReferencingPaths } = this;
-    return (
-      isHardReferenced ||
-      numReferencingPaths > 1 ||
-      (rootPath && rootPath !== this && rootPath.shouldBeSaved)
-    );
-  }
-
-  get id() {
-    const referenceIndicator = (
-        this.isHardReferenced ? '*'
-      : this.shouldBeSaved    ? '^'
-      : ''
-    );
-    return `${referenceIndicator}${this.el.tag}(${this.pathId})`
-  }
-
-  isShorterOrEqualThan(b) {
-    const a = this;
-    const aEl = a.el;
-    const bEl = b.el;
-    log('path',
-      'isShorterOrEqualThan:',
-      `length: ${a.id}(${a.length}) < ${b.id}(${b.length})`,
-      `elNumDynamicDescendants: ${aEl.numContainedDynamics} < ${bEl.numContainedDynamics}`,
-      `numDynamicProps: ${aEl.numDynamicProps} < ${bEl.numDynamicProps}`
-    );
-    return 0 >= (
-      Math.sign(a.length - b.length) ||
-      Math.sign(bEl.numContainedDynamics - aEl.numContainedDynamics) ||
-      Math.sign(aEl.numDynamicProps - +bEl.numDynamicProps)
-    );
-  }
-
-  toString() {
-    const result = [];
-    let path = this;
-    while(path) {
-      result.push(path.id);
-      path = path.parent;
-    }
-    return result.join(', ');
-  }
-
-  finalize(pathHead) {
-    return logFunc('path',
-      `finalize ${this.id}`,
-      () => {
-        this.addReference();
-        this.el.rootPath = this;
-
-        const { parent } = this; 
-        if((!pathHead || !this.shouldBeSaved) && parent && !parent.isHardReferenced) {
-          parent.finalize(this);
-        }
-        return this;
-      }
-    );
-  }
-
-  removeReference() {
-    logFunc('path',
-      `removeReference ${this.id} numReferencingPaths = ${this.numReferencingPaths}`,
-      () => {
-        const { el: { rootPath } } = this;
-        if(rootPath && rootPath !== this) {
-          log('path', `adding reference to previous rootPath ${rootPath.id}`);
-          rootPath.removeReference();
-        }
-
-        --this.numReferencingPaths;
-      },
-      () => `-> ${this.numReferencingPaths}`
-    );
-  }
-
-  addReference() {
-    logFunc('path',
-      `addReference ${this.id} numReferencingPaths = ${this.numReferencingPaths}`,
-      () => {
-        const { el: { rootPath } } = this;
-        if(rootPath && rootPath !== this) {
-          log('path', `adding reference to previous rootPath ${rootPath.id}`);
-          rootPath.addReference();
-        }
-
-        const { shouldBeSaved } = this;
-        ++this.numReferencingPaths;
-
-        /*
-        Make sure a parent is not saved when it isn't necessary to.
-        Example:
-
-        <a cloneable>
-          <b />
-          <d>
-            <e>
-              <i>
-                <j>
-                  <l id={var1} />
-                </j>
-                <k>
-                  <m id={var1} />
-                </k>
-              </i>
-            </e>
-            <f id={var1} />
-            <g>
-              <h id={var1} />
-            </g>
-          </d>
-          <c id={var1} />
-        </a>
-
-        ...without this <e> would be saved.
-        */
-        if(!shouldBeSaved && this.shouldBeSaved && this.parent) {
-          this.parent.removeReference();
-        }
-      },
-      () => `-> ${this.numReferencingPaths}`
-    );
-  }
-}
-
-function getPath(el, ignoreEl, isHardReferenced) {
-  return logFunc('path',
-    `getPath ${el.tag}`,
-    () => el.rootPath ? el.rootPath : calcPath(el, ignoreEl, isHardReferenced),
-    result => `[ ${result.toString()} ]`
-  );
-}
-
-function calcPath(el, ignoreEl, isHardReferenced) {
-  const { parent } = el;
-  if(!parent) return new Path(el, true);
-  if(ignoreEl) log('path', 'ignoreEl', ignoreEl.tag);
-
-  const path = new Path(el, isHardReferenced);
-  const { distFromEnd, index, previousSibling, nextSibling } = el;
-  let parentPath;
-
-  if(index === 0) {
-    parentPath = (
-      ignoreEl === nextSibling
-        ? getPath(parent)
-        : Path.min(getPath(parent), getPath(nextSibling, el))
-    );
-  }
-  else if(distFromEnd === 0) {
-    parentPath = (
-      ignoreEl === previousSibling
-        ? getPath(parent)
-        : Path.min(getPath(parent), getPath(previousSibling, el))
-    );
-  }
-  else if(
-    ignoreEl === previousSibling || (
-      ignoreEl !== nextSibling &&
-      getPath(nextSibling, el).isShorterOrEqualThan(getPath(previousSibling, el))
-    )
-  ) {
-    parentPath = getPath(nextSibling, el);
-  }
-  else {
-    parentPath = getPath(previousSibling, el);
-  }
-
-  path.parent = parentPath;
-  return path;
-}
-
-// Determine the relationship from one element to another (ex. parent, next sibling, previous sibling)
-function getElementRelationshipTo(el, otherEl) {
-  return (
-      el === otherEl.firstChild      ? 'firstChild'
-    : el === otherEl.lastChild       ? 'lastChild'
-    : el === otherEl.nextSibling     ? 'nextSibling'
-    : el === otherEl.previousSibling ? 'previousSibling'
-    : 'UNKNOWN'
+      .reduce((result, group) => (
+        [...result, ...group.sort(sortDistanceFromEnds)]
+      ), [])
   );
 }
 
@@ -563,11 +354,11 @@ function generateMemberExpression(t, { tmpVar, path }) {
 
 function getTmpVarForNode(t, savedNodesToTmpVarId, el) {
   let tmpVar = savedNodesToTmpVarId.get(el);
-  if(tmpVar) return tmpVar;
-
-  tmpVar = tmpVarId(t, savedNodesToTmpVarId.size);
-  savedNodesToTmpVarId.set(el, tmpVar);
-  return tmpVar;
+  return tmpVar || (
+    tmpVar = tmpVarId(t, savedNodesToTmpVarId.size),
+    savedNodesToTmpVarId.set(el, tmpVar),
+    tmpVar
+  );
 }
 
 function generateSpecCreateCloneableDynamicPropCode(context, dynamic, savedNodesToTmpVarId) {
@@ -590,9 +381,8 @@ function generateSpecCreateCloneableDynamicPropCode(context, dynamic, savedNodes
             savedNodesToTmpVarId.has(parentEl) ? [ savedNodesToTmpVarId.get(parentEl).name ]
           : path.parent.parent                 ? EMPTY_ARRAY
           : [ getTmpVarForNode(t, savedNodesToTmpVarId, parentEl).name ]
-        )
-        ,
-        getElementRelationshipTo(el, parentEl)
+        ),
+        el.relationshipTo(parentEl)
       ]
 
       // Optimization: Inline the assignment of the saved nodes in the member expression
@@ -616,8 +406,6 @@ function generateSpecCreateCloneableDynamicPropCode(context, dynamic, savedNodes
     }
   }
 
-  log('dynamicsPath', JSON.stringify(rootAssignExpr, null, 2));
-  // log('dynamicsPath', generateMemberExpression(t, rootAssignExpr));
   generateAssignDynamicProp(
     context,
     generateMemberExpression(t, rootAssignExpr),
@@ -656,7 +444,7 @@ function generateSpecCreateCloneableDynamicCode(context, rootEl, rootElId, dynam
   }
 }
 
-function generateSpecCreateCloneableElementCode(context, el, cloneable/* cloneable */, dynamics) {
+function generateSpecCreateCloneableElementCode(context, el, isCloneable, dynamics) {
   const { t, tmpVars, xvdomApi } = context;
   const rootElId = tmpVarId(t, 0);
   const specNodeId = xvdomApi.definePrefixed('xvdomSpecNode', t.nullLiteral()).uniqueNameId;
@@ -703,11 +491,11 @@ function generateSpecCreateCloneableElementCode(context, el, cloneable/* cloneab
 }
 
 function generateSpecCreateElementCode(context, el) {
-  if(el instanceof JSXHTMLComponent) generateSpecCreateHTMLElementCode(context, el, 0);
+  if(el instanceof JSXHTMLElement) generateSpecCreateHTMLElementCode(context, el, 0);
   else generateSpecCreateComponentCode(context, el, 0);
 }
 
-function generateSpecCreateCode(t, xvdomApi, { rootElement, dynamics, hasComponents, cloneable }) {
+function generateSpecCreateCode(t, xvdomApi, { rootElement, dynamics, hasComponents, isCloneable }) {
   const context = {
     t,
     xvdomApi,
@@ -717,7 +505,7 @@ function generateSpecCreateCode(t, xvdomApi, { rootElement, dynamics, hasCompone
     statements: []
   };
 
-  if(cloneable) generateSpecCreateCloneableElementCode(context, rootElement, cloneable, dynamics);
+  if(isCloneable) generateSpecCreateCloneableElementCode(context, rootElement, isCloneable, dynamics);
   else generateSpecCreateElementCode(context, rootElement);
 
   // TODO: Remove this when we make generate methods request access for an instance prop
@@ -860,7 +648,7 @@ function generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, co
   );
 }
 
-function generateSpecUpdateCode(t, xvdomApi, { dynamics, componentsWithDyanmicProps }) {
+function generateSpecUpdateCode(t, xvdomApi, { dynamics, customElementsWithDynamicProps }) {
   if(!dynamics.length) return t.functionExpression(null, EMPTY_ARRAY, t.blockStatement(EMPTY_ARRAY));
 
   const instId  = instParamId(t);
@@ -878,7 +666,7 @@ function generateSpecUpdateCode(t, xvdomApi, { dynamics, componentsWithDyanmicPr
   );
 
   const updateDynamicComponents = (
-    [...componentsWithDyanmicProps].map(component =>
+    [...customElementsWithDynamicProps].map(component =>
       generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, component)
     )
   );
@@ -910,18 +698,18 @@ function generateInstanceCode(t, xvdomApi, { dynamics, key }, id) {
   )
 }
 
-function generateRenderingCode(t, file, template) {
+function generateRenderingCode(t, file, frag) {
   const xvdomApi = FileGlobals.forFile(t, file);
   const { uniqueNameId, value:specCode } = xvdomApi.definePrefixed('xvdomSpec',
     obj(t, {
-      c: generateSpecCreateCode(t, xvdomApi, template),
-      u: generateSpecUpdateCode(t, xvdomApi, template),
+      c: generateSpecCreateCode(t, xvdomApi, frag),
+      u: generateSpecUpdateCode(t, xvdomApi, frag),
       r: t.memberExpression(t.identifier('xvdom'), t.identifier('DEADPOOL'))
     })
   );
   return {
     specCode,
-    instanceCode: generateInstanceCode(t, xvdomApi, template, uniqueNameId)
+    instanceCode: generateInstanceCode(t, xvdomApi, frag, uniqueNameId)
   }
 }
 

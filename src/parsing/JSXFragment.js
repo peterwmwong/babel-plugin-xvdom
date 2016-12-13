@@ -42,7 +42,7 @@ const hasSideEffects = (tag, propName) => (
   (tag === 'a'     && propName === 'href')
 );
 
-class JSXComponentProp {
+class JSXElementProp {
   constructor(fragment, astNode, attr, el) {
     const { t } = fragment;
     const name = attr.name.name;
@@ -59,7 +59,16 @@ class JSXComponentProp {
   }
 }
 
-class JSXComponentChild {
+/*
+Type Hierarchy
+
+- JSXElementChild
+  - JSXValue
+  - JSXElement
+    - JSXHTMLElement
+*/
+
+class JSXElementChild {
   constructor(parent) { this.parent = parent; }
 
   get depth()           { return !this.parent ? 0 : this.parent.depth + 1; }
@@ -69,9 +78,19 @@ class JSXComponentChild {
   get lastChild()       { return this.children[this.children.length - 1]; }
   get nextSibling()     { return this.parent.children[this.index + 1]; }
   get previousSibling() { return this.parent.children[this.index - 1]; }
+
+  relationshipTo(comp)  {
+    return (
+        this === comp.firstChild      ? 'firstChild'
+      : this === comp.lastChild       ? 'lastChild'
+      : this === comp.nextSibling     ? 'nextSibling'
+      : this === comp.previousSibling ? 'previousSibling'
+      : 'UNKNOWN'
+    );
+  }
 }
 
-class JSXElementValueChild extends JSXComponentChild {
+class JSXValueElement extends JSXElementChild {
   constructor(fragment, astNode, parent, isOnlyChild) {
     super(parent);
 
@@ -82,7 +101,7 @@ class JSXElementValueChild extends JSXComponentChild {
   }
 }
 
-class JSXComponent extends JSXComponentChild {
+class JSXElement extends JSXElementChild {
   constructor(fragment, astJSXElement, parent) {
     super(parent);
     
@@ -92,7 +111,7 @@ class JSXComponent extends JSXComponentChild {
     this.props = (
       openingElement.attributes
         .filter(isNotXvdomAttribute)
-        .map(attr => new JSXComponentProp(fragment, astJSXElement, attr, this))
+        .map(attr => new JSXElementProp(fragment, astJSXElement, attr, this))
     );
   }
 
@@ -106,7 +125,7 @@ class JSXComponent extends JSXComponentChild {
   }
 }
 
-class JSXHTMLComponent extends JSXComponent {
+class JSXHTMLElement extends JSXElement {
   constructor(fragment, astJSXElement, parent) {
     super(fragment, astJSXElement, parent);
     
@@ -118,20 +137,17 @@ class JSXHTMLComponent extends JSXComponent {
     this.children = (
       filteredChildren.map(child =>
         t.isJSXElement(child)
-          ? createComponent(fragment, child, this)
-          : new JSXElementValueChild(fragment, child, this, hasOnlyOneChild)
+          ? createJSXElement(fragment, child, this)
+          : new JSXValueElement(fragment, child, this, hasOnlyOneChild)
       )
     );
   }
 }
 
-const createComponent = (fragment, astJSXElement, parent) => (
+const createJSXElement = (fragment, astJSXElement, parent) => (
   !isComponentName(astJSXElement.openingElement.name.name)
-    ? new JSXHTMLComponent(fragment, astJSXElement, parent)
-    : (
-      fragment.hasComponents = true,
-      new JSXComponent(fragment, astJSXElement, parent)
-    )
+    ? new JSXHTMLElement(fragment, astJSXElement, parent)
+    : new JSXElement(fragment, astJSXElement, parent)
 );
 
 const parseKeyAttr = (t, astJSXOpeningElement) => {
@@ -173,17 +189,22 @@ class JSXFragment {
     const { openingElement } = astNode;
 
     this.dynamics = [];
-    this.componentsWithDyanmicProps = new Set();
+    this.customElementsWithDynamicProps = new Set();
     this._instanceParamIndex = 0;
-    // TODO: Remove when code generator can determine on it's own whether an
-    //       instance variable is needed. 
-    this.hasComponents = false;
     this.t = t;
-
     this.key = parseKeyAttr(t, openingElement);
-    // TODO: rename to isCloneable
-    this.cloneable = openingElement.attributes.some(isCloneableAttribute);
-    this.rootElement = createComponent(this, astNode, null);
+    this.isCloneable = openingElement.attributes.some(isCloneableAttribute);
+    this.rootElement = createJSXElement(this, astNode, null);
+  }
+
+  get hasComponents() {
+    const els = [ this.rootElement ];
+    let el;
+    while(el = els.pop()) {
+      if(el instanceof JSXHTMLElement)  { els.push(...el.children); }
+      else if(el instanceof JSXElement) { return true; }
+    }
+    return false;
   }
 
   addDynamicChild(parent) {
@@ -192,30 +213,22 @@ class JSXFragment {
       this._genInstancePropId(),
       parent
     );
-    return this._addDynamic(dynamic);
-  }
 
-  addDynamicProp(prop) {
-    const dynamic = new DynamicProp(
-      this._getInstanceContextIdForNode(prop.el),
-      this._genInstancePropId(),
-      prop
-    );
-    return (
-      prop.el instanceof JSXHTMLComponent
-        ? this._addDynamic(dynamic)
-        : this._addDynamicPropForComponent(dynamic)
-    )
-  }
-
-  _addDynamic(dynamic) {
     this.dynamics.push(dynamic);
     return dynamic;
   }
 
-  _addDynamicPropForComponent(dynamic) {
-    this.componentsWithDyanmicProps.add(dynamic.el);
-    return this._addDynamic(dynamic);
+  addDynamicProp(prop) {
+    const { el } = prop;
+    const dynamic = new DynamicProp(
+      this._getInstanceContextIdForNode(el),
+      this._genInstancePropId(),
+      prop
+    );
+    
+    this.dynamics.push(dynamic);
+    if(!(el instanceof JSXHTMLElement)) this.customElementsWithDynamicProps.add(el);
+    return dynamic;
   }
 
   _getInstanceContextIdForNode(el) {
@@ -232,9 +245,9 @@ module.exports = {
   DynamicChild,
   DynamicProp,
   JSXFragment,
-  JSXComponent,
-  JSXHTMLComponent,
-  JSXComponentProp,
-  JSXComponentChild,
-  JSXElementValueChild
+  JSXElement,
+  JSXHTMLElement,
+  JSXElementProp,
+  JSXElementChild,
+  JSXValueElement
 }
