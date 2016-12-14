@@ -1,9 +1,7 @@
-"use strict";
-
 var _xvdomCreateComponent = xvdom.createComponent,
     _xvdomEl = xvdom.el,
     _xvdomSpec = {
-  c: function c(inst) {
+  c(inst) {
     var _n = (inst.a = _xvdomCreateComponent(MyComponent, MyComponent.state, {
       msg: inst.b,
       msg2: inst.c,
@@ -13,7 +11,8 @@ var _xvdomCreateComponent = xvdom.createComponent,
 
     return _n;
   },
-  u: function u(inst, pInst) {
+
+  u(inst, pInst) {
     if (inst.b !== pInst.b || inst.c !== pInst.c) pInst.a = _xvdomUpdateComponent(MyComponent, MyComponent.state, {
       msg: pInst.b = inst.b,
       msg2: pInst.c = inst.c,
@@ -21,10 +20,11 @@ var _xvdomCreateComponent = xvdom.createComponent,
       two: "two"
     }, pInst.a);
   },
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec2 = {
-  c: function c(inst) {
+  c(inst) {
     var _n = _xvdomEl("div"),
         _n2 = (inst.a = _xvdomCreateComponent(MyComponent, MyComponent.state, {
       msg: inst.b,
@@ -37,7 +37,8 @@ var _xvdomCreateComponent = xvdom.createComponent,
 
     return _n;
   },
-  u: function u(inst, pInst) {
+
+  u(inst, pInst) {
     if (inst.b !== pInst.b || inst.c !== pInst.c) pInst.a = _xvdomUpdateComponent(MyComponent, MyComponent.state, {
       msg: pInst.b = inst.b,
       msg2: pInst.c = inst.c,
@@ -45,6 +46,7 @@ var _xvdomCreateComponent = xvdom.createComponent,
       two: "two"
     }, pInst.a);
   },
+
   r: xvdom.DEADPOOL
 },
     _xvdomUpdateComponent = xvdom.updateComponent;

@@ -1,31 +1,35 @@
-"use strict";
-
 var _xvdomEl = xvdom.el,
     _xvdomSpec = {
-  c: function c() {
+  c() {
     var _n = _xvdomEl("div");
 
     return _n;
   },
-  u: function u() {},
+
+  u() {},
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec2 = {
-  c: function c() {
+  c() {
     var _n = _xvdomEl("div");
 
     return _n;
   },
-  u: function u() {},
+
+  u() {},
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec3 = {
-  c: function c() {
+  c() {
     var _n = _xvdomEl("div");
 
     return _n;
   },
-  u: function u() {},
+
+  u() {},
+
   r: xvdom.DEADPOOL
 };
 var key = "one";

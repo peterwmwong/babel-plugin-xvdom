@@ -16,7 +16,7 @@ const {
   log
 } = require('../logger.js');
 
-const EMPTY_ARRAY    = [];
+const EMPTY_ARRAY = [];
 const instParamId = t => t.identifier('inst');
 const tmpVarId = (t, num) => t.identifier(`_n${num ? ++num : ''}`);
 

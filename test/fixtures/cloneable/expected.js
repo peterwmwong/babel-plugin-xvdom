@@ -1,8 +1,6 @@
-"use strict";
-
 var _xvdomEl = xvdom.el,
     _xvdomSpec = {
-  c: function c(inst) {
+  c(inst) {
     var _n = (_xvdomSpecNode || (_xvdomSpecNode = _xvdomSpecNodeCreate())).cloneNode(true),
         _n2,
         _n3,
@@ -18,7 +16,8 @@ var _xvdomEl = xvdom.el,
     (inst.g = _n7 = _n3.nextSibling.firstChild).id = inst.h;
     return _n;
   },
-  u: function u(inst, pInst) {
+
+  u(inst, pInst) {
     var v;
     v = inst.b;
     if (v !== pInst.b) pInst.a.id = pInst.b = v;
@@ -31,10 +30,11 @@ var _xvdomEl = xvdom.el,
     v = inst.j;
     if (v !== pInst.j) pInst.i.id = pInst.j = v;
   },
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpecNode = null,
-    _xvdomSpecNodeCreate = function _xvdomSpecNodeCreate() {
+    _xvdomSpecNodeCreate = function () {
   var _n = _xvdomEl("a"),
       _n2 = _xvdomEl("b"),
       _n3 = _xvdomEl("e"),

@@ -1,13 +1,13 @@
-"use strict";
-
 var _xvdomEl = xvdom.el,
     _xvdomSpec = {
-  c: function c() {
+  c() {
     var _n = _xvdomEl("div");
 
     return _n;
   },
-  u: function u() {},
+
+  u() {},
+
   r: xvdom.DEADPOOL
 };
 ({

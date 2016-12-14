@@ -1,9 +1,7 @@
-"use strict";
-
 var _xvdomCreateDynamic = xvdom.createDynamic,
     _xvdomEl = xvdom.el,
     _xvdomSpec = {
-  c: function c(inst) {
+  c(inst) {
     var _n = _xvdomEl("div"),
         _n2 = _xvdomEl("span");
 
@@ -14,58 +12,68 @@ var _xvdomCreateDynamic = xvdom.createDynamic,
     inst.c = _xvdomCreateDynamic(true, _n2, inst.d);
     return _n;
   },
-  u: function u(inst, pInst) {
+
+  u(inst, pInst) {
     if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(false, pInst.b, pInst.b = inst.b, pInst.a);
     if (inst.d !== pInst.d) pInst.c = _xvdomUpdateDynamic(true, pInst.d, pInst.d = inst.d, pInst.c);
   },
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec2 = {
-  c: function c(inst) {
+  c(inst) {
     var _n = _xvdomEl("div");
 
     inst.a = _xvdomCreateDynamic(true, _n, inst.b);
     return _n;
   },
-  u: function u(inst, pInst) {
+
+  u(inst, pInst) {
     if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
   },
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec3 = {
-  c: function c(inst) {
+  c(inst) {
     var _n = _xvdomEl("div");
 
     inst.a = _xvdomCreateDynamic(true, _n, inst.b);
     return _n;
   },
-  u: function u(inst, pInst) {
+
+  u(inst, pInst) {
     if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
   },
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec4 = {
-  c: function c(inst) {
+  c(inst) {
     var _n = _xvdomEl("div");
 
     inst.a = _xvdomCreateDynamic(true, _n, inst.b);
     return _n;
   },
-  u: function u(inst, pInst) {
+
+  u(inst, pInst) {
     if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
   },
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec5 = {
-  c: function c(inst) {
+  c(inst) {
     var _n = _xvdomEl("div");
 
     inst.a = _xvdomCreateDynamic(true, _n, inst.b);
     return _n;
   },
-  u: function u(inst, pInst) {
+
+  u(inst, pInst) {
     if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(true, pInst.b, pInst.b = inst.b, pInst.a);
   },
+
   r: xvdom.DEADPOOL
 },
     _xvdomUpdateDynamic = xvdom.updateDynamic;

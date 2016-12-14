@@ -1,17 +1,17 @@
-"use strict";
-
 var _xvdomEl = xvdom.el,
     _xvdomSpec = {
-  c: function c() {
+  c() {
     var _n = (_xvdomSpecNode || (_xvdomSpecNode = _xvdomSpecNodeCreate())).cloneNode(true);
 
     return _n;
   },
-  u: function u() {},
+
+  u() {},
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpecNode = null,
-    _xvdomSpecNodeCreate = function _xvdomSpecNodeCreate() {
+    _xvdomSpecNodeCreate = function () {
   var _n = _xvdomEl("div"),
       _n2 = _xvdomEl("div");
 

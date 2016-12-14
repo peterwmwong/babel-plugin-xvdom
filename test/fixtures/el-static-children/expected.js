@@ -1,19 +1,18 @@
-
-"use strict";
-
 var _xvdomEl = xvdom.el,
     _xvdomSpec = {
-  c: function c() {
+  c() {
     var _n = _xvdomEl("div");
 
     _n.textContent = "hello world";
     return _n;
   },
-  u: function u() {},
+
+  u() {},
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec2 = {
-  c: function c() {
+  c() {
     var _n = _xvdomEl("div"),
         _n2 = _xvdomEl("span"),
         _n3 = _xvdomEl("a");
@@ -28,11 +27,13 @@ var _xvdomEl = xvdom.el,
 
     return _n;
   },
-  u: function u() {},
+
+  u() {},
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec3 = {
-  c: function c() {
+  c() {
     var _n = _xvdomEl("div"),
         _n2 = _xvdomEl("span"),
         _n3 = _xvdomEl("a");
@@ -45,37 +46,45 @@ var _xvdomEl = xvdom.el,
 
     return _n;
   },
-  u: function u() {},
+
+  u() {},
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec4 = {
-  c: function c() {
+  c() {
     var _n = _xvdomEl("div");
 
     _n.textContent = "hello";
     return _n;
   },
-  u: function u() {},
+
+  u() {},
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec5 = {
-  c: function c() {
+  c() {
     var _n = _xvdomEl("div");
 
     _n.textContent = "hello" + 5;
     return _n;
   },
-  u: function u() {},
+
+  u() {},
+
   r: xvdom.DEADPOOL
 },
     _xvdomSpec6 = {
-  c: function c() {
+  c() {
     var _n = _xvdomEl("div");
 
     _n.textContent = !"hello";
     return _n;
   },
-  u: function u() {},
+
+  u() {},
+
   r: xvdom.DEADPOOL
 };
 ({
