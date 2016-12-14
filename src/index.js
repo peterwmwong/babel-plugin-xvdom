@@ -5,50 +5,42 @@ const {
 const generateSpecCreateCode = require('./code_generation/fragment_create.js');
 const generateSpecUpdateCode = require('./code_generation/fragment_update.js');
 const obj = require('./code_generation/obj.js');
+const memberExpr = require('./code_generation/memberExpr.js');
 
-const xvdomApiFuncName = name => `xvdom${name[0].toUpperCase()}${name.slice(1)}`;
+const apiVarName = name => `xvdom${name[0].toUpperCase()}${name.slice(1)}`;
 
-const _fileGlobalForFile = new WeakMap();
+const globalsForFile = new WeakMap();
 class FileGlobals {
   static forFile(t, file) {
     return (
-      _fileGlobalForFile.get(file) ||
-        _fileGlobalForFile
-          .set(file, new FileGlobals(t, file))
-          .get(file)
+      globalsForFile.get(file) || 
+      globalsForFile.set(file, new FileGlobals(t, file)).get(file) 
     );
   }
 
   constructor(t, file) {
-    this._t = t;
-    this._file = file;
-    this._definedPrefixCounts = new Map();
+    this.t = t;
+    this.genUid = id => file.scope.generateUidIdentifier(id);
+    this.definedPrefixCounts = {};
     this.globals = {};
   }
 
   definePrefixed(name, value) {
-    const { _definedPrefixCounts } = this;
-    const count = 1 + (_definedPrefixCounts.get(name) | 0);
-    const globalId = count === 1 ? name : name + count;
-
-    _definedPrefixCounts.set(name, count);
-    return this.globals[globalId] = {
-      uniqueNameId: this._file.scope.generateUidIdentifier(name),
-      value
-    };
+    const { definedPrefixCounts } = this;
+    const count = definedPrefixCounts[name] = 1 + (definedPrefixCounts[name] || 0); 
+    return this._getOrSet(`${name}${count > 1 ? count : ''}`, value);
   }
 
-  accessFunction(apiFuncName) {
-    const { _t } = this;
-    const globalId = xvdomApiFuncName(apiFuncName);
-    const global = this.globals[globalId];
-    return (
-      global ||
-        (this.globals[globalId] = {
-          uniqueNameId: this._file.scope.generateUidIdentifier(globalId),
-          value: _t.memberExpression(_t.identifier('xvdom'), _t.identifier(apiFuncName))
-        })
-    ).uniqueNameId;
+  accessAPI(apiFuncName) {
+    const { t } = this;
+    return this._getOrSet(
+      apiVarName(apiFuncName),
+      memberExpr(t, 'xvdom', apiFuncName)
+    ).name;
+  }
+
+  _getOrSet(id, value) {
+    return this.globals[id] || (this.globals[id] = { name: this.genUid(id), value });
   }
 }
 
@@ -66,17 +58,14 @@ function generateInstanceCode(t, xvdomApi, { dynamics, key }, id) {
 
 function generateRenderingCode(t, file, frag) {
   const xvdomApi = FileGlobals.forFile(t, file);
-  const { uniqueNameId, value:specCode } = xvdomApi.definePrefixed('xvdomSpec',
+  const { name, value:specCode } = xvdomApi.definePrefixed('xvdomSpec',
     obj(t, {
       c: generateSpecCreateCode(t, xvdomApi, frag),
       u: generateSpecUpdateCode(t, xvdomApi, frag),
-      r: t.memberExpression(t.identifier('xvdom'), t.identifier('DEADPOOL'))
+      r: memberExpr(t, 'xvdom', 'DEADPOOL')
     })
   );
-  return {
-    specCode,
-    instanceCode: generateInstanceCode(t, xvdomApi, frag, uniqueNameId)
-  }
+  return { specCode, instanceCode: generateInstanceCode(t, xvdomApi, frag, name) };
 }
 
 module.exports = ({ types: t }) => ({
@@ -85,25 +74,22 @@ module.exports = ({ types: t }) => ({
       exit(path, { file }) {
         if(t.isJSX(path.parent)) return;
 
-        const template = new JSXFragment(t, path.node);
-        const { instanceCode } = generateRenderingCode(t, file, template);
+        const { instanceCode } = generateRenderingCode(t, file, new JSXFragment(t, path.node));
         path.replaceWith(instanceCode);
       }
     },
     Program: {
       exit(path, { file }) {
-        const fileGlobals = FileGlobals.forFile(t, file).globals;
-        const globalKeys = fileGlobals && Object.keys(fileGlobals);
-        if(!globalKeys.length) return;
-
-        file.path.unshiftContainer('body',
-          t.variableDeclaration('var',
-            globalKeys.sort().map(key => {
-              const { uniqueNameId, value } = fileGlobals[key];
-              return t.variableDeclarator(uniqueNameId, value);
-            })
-          )
+        const { globals } = FileGlobals.forFile(t, file);
+        const declarators = (
+          Object.keys(globals)
+            .sort()
+            .map(key => t.variableDeclarator(globals[key].name, globals[key].value))
         );
+          
+        if(declarators.length) {
+          file.path.unshiftContainer('body', t.variableDeclaration('var', declarators));  
+        }
       }
     }
   }

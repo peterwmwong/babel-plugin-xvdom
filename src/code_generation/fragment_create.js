@@ -10,6 +10,7 @@ const {
 } = require('../pathing/index.js');
 
 const obj = require('./obj.js');
+const memberExpr = require('./memberExpr.js');
 
 const {
   log
@@ -27,7 +28,7 @@ function generateAssignDynamicProp(
 ) {
   const valueCode = (
     dynamic
-      ? t.memberExpression(instId, dynamic.instanceValueId)
+      ? memberExpr(t, instId, dynamic.instanceValueId)
       : astValueNode
   );
 
@@ -41,7 +42,7 @@ function generateAssignDynamicProp(
 
   const exprStmt = t.expressionStatement(
     t.assignmentExpression('=',
-      t.memberExpression(domNodeExpression, astNameId),
+      memberExpr(t, domNodeExpression, astNameId),
       valueCode
     )
   );
@@ -61,13 +62,13 @@ function generateSpecElementDynamicChildCode({ t, xvdomApi, statements, instId }
   statements.push(
     t.expressionStatement(
       t.assignmentExpression('=',
-        t.memberExpression(instId, instanceContextId),
+        memberExpr(t, instId, instanceContextId),
         t.callExpression(
-          xvdomApi.accessFunction('createDynamic'),
+          xvdomApi.accessAPI('createDynamic'),
           [
             t.booleanLiteral(isOnlyChild),
             parentNodeVarId,
-            t.memberExpression(instId, instanceValueId)
+            memberExpr(t, instId, instanceValueId)
           ]
         )
       )
@@ -82,16 +83,16 @@ function generateSpecElementStaticChildCode({ t, xvdomApi, statements, instId },
       isOnlyChild
         ? (// _n.textContent = "hello" + 5;
             t.assignmentExpression('=',
-              t.memberExpression(parentNodeVarId, t.identifier('textContent')),
+              memberExpr(t, parentNodeVarId, 'textContent'),
               astValueNode
             )
           )
         : (// _n.appendChild(document.createTextNode(("hello" + 5) || ""));
             t.callExpression(
-              t.memberExpression(parentNodeVarId, t.identifier('appendChild')),
+              memberExpr(t, parentNodeVarId, 'appendChild'),
               [
                 t.callExpression(
-                  t.memberExpression(t.identifier('document'), t.identifier('createTextNode')),
+                  memberExpr(t, 'document', 'createTextNode'),
                   [astValueNode]
                 )
               ]
@@ -110,7 +111,7 @@ function generateSpecCreateComponentCode(context, el, depth) {
         t,
         el.props.reduce(
           ((acc, { astNameId, astValueNode, dynamic }) => (
-            acc[astNameId.name] = dynamic ? t.memberExpression(instId, dynamic.instanceValueId) : astValueNode,
+            acc[astNameId.name] = dynamic ? memberExpr(t, instId, dynamic.instanceValueId) : astValueNode,
             acc
           )),
           {}
@@ -121,10 +122,10 @@ function generateSpecCreateComponentCode(context, el, depth) {
   // ex. _xvdomCreateComponent('div');
   let createComponentCode = (
     t.callExpression(
-      xvdomApi.accessFunction('createComponent'),
+      xvdomApi.accessAPI('createComponent'),
       [
         componentId,
-        t.memberExpression(componentId, t.identifier('state')),
+        memberExpr(t, componentId, 'state'),
         propsArg,
         instId
       ]
@@ -132,12 +133,12 @@ function generateSpecCreateComponentCode(context, el, depth) {
   );
   if(el.numDynamicProps) {
     createComponentCode = t.assignmentExpression('=',
-      t.memberExpression(instId, el.instanceContextId),
+      memberExpr(t, instId, el.instanceContextId),
       createComponentCode
     )
   }
 
-  const createCode = t.memberExpression(createComponentCode, t.identifier('$n'))
+  const createCode = memberExpr(t, createComponentCode, '$n');
 
   // Optimization: If we're using the temp variable for the fist time, assign the
   //               result of the create element code as part of the variable
@@ -163,7 +164,7 @@ function generateSpecCreateComponentCode(context, el, depth) {
     statements.push(
       t.expressionStatement(
         t.callExpression(
-          t.memberExpression(tmpVars[depth-1].id, t.identifier('appendChild')),
+          memberExpr(t, tmpVars[depth-1].id, 'appendChild'),
           [tmpVars[depth].id]
         )
       )
@@ -177,7 +178,7 @@ function generateSpecCreateHTMLElementCode(context, el, depth) {
   // Create element
   // ex. _xvdomEl('div');
   const createCode = t.callExpression(
-    xvdomApi.accessFunction('el'),
+    xvdomApi.accessAPI('el'),
     [t.stringLiteral(el.tag)]
   );
 
@@ -212,7 +213,7 @@ function generateSpecCreateHTMLElementCode(context, el, depth) {
         (
           i === 0 && 
           prop.dynamic &&
-          t.memberExpression(context.instId, prop.dynamic.instanceContextId)
+          memberExpr(t, context.instId, prop.dynamic.instanceContextId)
         )
       );
     }
@@ -224,7 +225,7 @@ function generateSpecCreateHTMLElementCode(context, el, depth) {
     statements.push(
       t.expressionStatement(
         t.callExpression(
-          t.memberExpression(tmpVars[depth-1].id, t.identifier('appendChild')),
+          memberExpr(t, tmpVars[depth-1].id, 'appendChild'),
           [tmpVars[depth].id]
         )
       )
@@ -277,15 +278,13 @@ function expressionForRelationOrAssign(t, relationOrAssign) {
 }
 
 function generateMemberExpression(t, { tmpVar, path }) {
-  if(!path) return tmpVar;
-  return t.assignmentExpression('=',
-    t.identifier(tmpVar.name),
-    path.slice(1).reduce(
-      (acc, relationOrAssign) => (
-        t.memberExpression(acc, expressionForRelationOrAssign(t, relationOrAssign))
-      ),
-      expressionForRelationOrAssign(t, path[0])
-    )
+  return (
+    !path
+      ? tmpVar
+      : t.assignmentExpression('=',
+          t.identifier(tmpVar.name),
+          memberExpr(t, ...path.map(p => expressionForRelationOrAssign(t, p)))
+        )
   );
 }
 
@@ -350,7 +349,7 @@ function generateSpecCreateCloneableDynamicPropCode(context, dynamic, savedNodes
     (
       !originalSavedNodes.has(dynamic.el) &&
       dynamic.prop.dynamic &&
-      t.memberExpression(context.instId, dynamic.instanceContextId)
+      memberExpr(t, context.instId, dynamic.instanceContextId)
     )
   );
 }
@@ -384,7 +383,7 @@ function generateSpecCreateCloneableDynamicCode(context, rootEl, rootElId, dynam
 function generateSpecCreateCloneableElementCode(context, el, isCloneable, dynamics) {
   const { t, tmpVars, xvdomApi } = context;
   const rootElId = tmpVarId(t, 0);
-  const specNodeId = xvdomApi.definePrefixed('xvdomSpecNode', t.nullLiteral()).uniqueNameId;
+  const specNodeId = xvdomApi.definePrefixed('xvdomSpecNode', t.nullLiteral()).name;
   const createSpecContext =
     Object.assign({}, context, {
       statements:[], tmpVars:[], shouldGenerateDynamicPropCode: false
@@ -402,14 +401,14 @@ function generateSpecCreateCloneableElementCode(context, el, isCloneable, dynami
       ...createSpecContext.statements,
       t.returnStatement(createSpecContext.tmpVars[0].id)
     ]))
-  ).uniqueNameId;
+  ).name;
 
   // var _n = (_xvdomSpecNode || (_xvdomSpecNode = _xvdomSpecNodeCreate())).cloneNode(true);
   tmpVars.push(
     t.variableDeclarator(
       rootElId,
       t.callExpression(
-        t.memberExpression(
+        memberExpr(t, 
           t.logicalExpression('||',
             specNodeId,
             t.assignmentExpression('=',

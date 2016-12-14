@@ -4,6 +4,7 @@ const {
 } = require('../parsing/JSXFragment.js');
 
 const obj = require('./obj.js');
+const memberExpr = require('./memberExpr.js');
 
 const EMPTY_ARRAY = [];
 const nonComponentPropDynamic = d => !(d instanceof DynamicProp) || (d.el instanceof JSXHTMLElement);
@@ -21,38 +22,38 @@ function generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, getTmpVar, 
       t.expressionStatement(
         t.assignmentExpression('=',
           tmpVar,
-          t.memberExpression(instId, instanceValueId)
+          memberExpr(t, instId, instanceValueId)
         )
       ),
       t.ifStatement(
         t.binaryExpression('!==',
           tmpVar,
-          t.memberExpression(pInstId, instanceValueId)
+          memberExpr(t, pInstId, instanceValueId)
         ),
         hasSideEffects ? t.blockStatement([
           t.ifStatement(
             t.binaryExpression('!==',
-              t.memberExpression(t.memberExpression(pInstId, instanceContextId), astNameId),
+              memberExpr(t, pInstId, instanceContextId, astNameId),
               tmpVar
             ),
             t.expressionStatement(
               t.assignmentExpression('=',
-                t.memberExpression(t.memberExpression(pInstId, instanceContextId), astNameId),
+                memberExpr(t, pInstId, instanceContextId, astNameId),
                 tmpVar
               )
             )
           ),
           t.expressionStatement(
             t.assignmentExpression('=',
-              t.memberExpression(pInstId, instanceValueId),
+              memberExpr(t, pInstId, instanceValueId),
               tmpVar
             )
           )
         ]) : t.expressionStatement(
           t.assignmentExpression('=',
-            t.memberExpression(t.memberExpression(pInstId, instanceContextId), astNameId),
+            memberExpr(t, pInstId, instanceContextId, astNameId),
             t.assignmentExpression('=',
-              t.memberExpression(pInstId, instanceValueId),
+              memberExpr(t, pInstId, instanceValueId),
               tmpVar
             )
           )
@@ -64,22 +65,22 @@ function generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, getTmpVar, 
     return [
       t.ifStatement(
         t.binaryExpression('!==',
-          t.memberExpression(instId, instanceValueId),
-          t.memberExpression(pInstId, instanceValueId)
+          memberExpr(t, instId, instanceValueId),
+          memberExpr(t, pInstId, instanceValueId)
         ),
         t.expressionStatement(
           t.assignmentExpression('=',
-            t.memberExpression(pInstId, instanceContextId),
+            memberExpr(t, pInstId, instanceContextId),
             t.callExpression(
-              xvdomApi.accessFunction('updateDynamic'),
+              xvdomApi.accessAPI('updateDynamic'),
               [
                 t.booleanLiteral(isOnlyChild),
-                t.memberExpression(pInstId, instanceValueId),
+                memberExpr(t, pInstId, instanceValueId),
                 t.assignmentExpression('=',
-                  t.memberExpression(pInstId, instanceValueId),
-                  t.memberExpression(instId, instanceValueId)
+                  memberExpr(t, pInstId, instanceValueId),
+                  memberExpr(t, instId, instanceValueId)
                 ),
-                t.memberExpression(pInstId, instanceContextId)
+                memberExpr(t, pInstId, instanceContextId)
               ]
             )
           )
@@ -95,8 +96,8 @@ function generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, co
     dynamicProps.map(p => (
       t.binaryExpression(
         '!==',
-        t.memberExpression(instId, p.dynamic.instanceValueId),
-        t.memberExpression(pInstId, p.dynamic.instanceValueId)
+        memberExpr(t, instId, p.dynamic.instanceValueId),
+        memberExpr(t, pInstId, p.dynamic.instanceValueId)
       )
     )).reduce(((expra, exprb) =>
       t.logicalExpression(
@@ -111,12 +112,12 @@ function generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, co
       condition,
       t.expressionStatement(
         t.assignmentExpression('=',
-          t.memberExpression(pInstId, component.instanceContextId),
+          memberExpr(t, pInstId, component.instanceContextId),
           t.callExpression(
-            xvdomApi.accessFunction('updateComponent'),
+            xvdomApi.accessAPI('updateComponent'),
             [
               t.identifier(component.tag),
-              t.memberExpression(
+              memberExpr(t,
                 t.identifier(component.tag),
                 t.identifier('state')
               ),
@@ -124,14 +125,14 @@ function generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, co
                 hash[p.astNameId.name] = (
                   !p.dynamic ? p.astValueNode : (
                     t.assignmentExpression('=',
-                      t.memberExpression(pInstId, p.dynamic.instanceValueId),
-                      t.memberExpression(instId, p.dynamic.instanceValueId)
+                      memberExpr(t, pInstId, p.dynamic.instanceValueId),
+                      memberExpr(t, instId, p.dynamic.instanceValueId)
                     )
                   )
                 );
                 return hash;
               }, {})),
-              t.memberExpression(pInstId, component.instanceContextId)
+              memberExpr(t, pInstId, component.instanceContextId)
             ]
           )
         )
