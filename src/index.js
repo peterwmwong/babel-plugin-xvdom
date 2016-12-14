@@ -19,28 +19,23 @@ class FileGlobals {
   }
 
   constructor(t, file) {
+    const globals = this.globals = {};
     this.t = t;
-    this.genUid = id => file.scope.generateUidIdentifier(id);
     this.definedPrefixCounts = {};
-    this.globals = {};
+    this.getOrSet = (id, value) => globals[id] || (globals[id] = { value, name: file.scope.generateUidIdentifier(id) });
   }
 
   definePrefixed(name, value) {
     const { definedPrefixCounts } = this;
     const count = definedPrefixCounts[name] = 1 + (definedPrefixCounts[name] || 0); 
-    return this._getOrSet(`${name}${count > 1 ? count : ''}`, value);
+    return this.getOrSet(`${name}${count > 1 ? count : ''}`, value);
   }
 
   accessAPI(apiFuncName) {
-    const { t } = this;
-    return this._getOrSet(
+    return this.getOrSet(
       apiVarName(apiFuncName),
-      memberExpr(t, 'xvdom', apiFuncName)
+      memberExpr(this.t, 'xvdom', apiFuncName)
     ).name;
-  }
-
-  _getOrSet(id, value) {
-    return this.globals[id] || (this.globals[id] = { name: this.genUid(id), value });
   }
 }
 
