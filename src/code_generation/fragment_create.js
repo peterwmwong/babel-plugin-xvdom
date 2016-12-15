@@ -18,13 +18,9 @@ const {
 
 const EMPTY_ARRAY = [];
 
-function dynamicPropStatement(
-  funcGen,
-  domNodeExpression,
-  { dynamic, astValueNode, astNameId },
-  expressionToAssignDomNode
-) {
+function dynamicPropStatement(funcGen, domNodeExpression, jsxElementProp, expressionToAssignDomNode) {
   const { t } = funcGen;
+  const { dynamic, astValueNode, astNameId } = jsxElementProp;
   const valueCode = (
     dynamic
       ? memberExpr(t, funcGen.accessInstance(), dynamic.instanceValueId)
@@ -56,9 +52,9 @@ function dynamicPropStatement(
   );
 }
 
-function dynamicChildStatement(funcGen, childDesc, parentNodeVarId) {
+function dynamicChildStatement(funcGen, jsxValueElement, parentNodeVarId) {
   const { t } = funcGen
-  const { dynamic: { instanceContextId, instanceValueId }, isOnlyChild } = childDesc;
+  const { dynamic: { instanceContextId, instanceValueId }, isOnlyChild } = jsxValueElement;
   const instId = funcGen.accessInstance();
 
   return t.expressionStatement(
@@ -76,7 +72,10 @@ function dynamicChildStatement(funcGen, childDesc, parentNodeVarId) {
   );
 }
 
-function staticChildStatment({ t, xvdomApi, instId }, { astValueNode, isOnlyChild }, parentNodeVarId) {
+function staticChildStatment(funcGen, jsxValueElement, parentNodeVarId) {
+  const { t } = funcGen;
+  const { astValueNode, isOnlyChild } = jsxValueElement;
+  
   return t.expressionStatement(
     // Optimization: https://jsperf.com/textcontent-vs-createtextnode-vs-innertext
     isOnlyChild
@@ -100,14 +99,14 @@ function staticChildStatment({ t, xvdomApi, instId }, { astValueNode, isOnlyChil
   );
 }
 
-function componentCode(funcGen, el, depth) {
+function componentCode(funcGen, jsxElement, depth) {
   const { t } = funcGen;
-  const componentId = t.identifier(el.tag);
-  const propsArg = !el.props.length
+  const componentId = t.identifier(jsxElement.tag);
+  const propsArg = !jsxElement.props.length
     ? t.nullLiteral()
     : obj(
         t,
-        el.props.reduce(
+        jsxElement.props.reduce(
           ((acc, { astNameId, astValueNode, dynamic }) => (
             acc[astNameId.name] = (
               dynamic
@@ -134,9 +133,9 @@ function componentCode(funcGen, el, depth) {
     )
   );
 
-  if(el.numDynamicProps) {
+  if(jsxElement.numDynamicProps) {
     createComponentCode = t.assignmentExpression('=',
-      memberExpr(t, funcGen.accessInstance(), el.instanceContextId),
+      memberExpr(t, funcGen.accessInstance(), jsxElement.instanceContextId),
       createComponentCode
     )
   }
@@ -162,23 +161,24 @@ function componentCode(funcGen, el, depth) {
   }
 }
 
-function htmlElementCode(funcGen, el, depth, shouldGenerateDynamicPropCode) {
+function htmlElementCode(funcGen, jsxHTMLElement, depth, shouldGenerateDynamicPropCode) {
   const { t } = funcGen;
   // Create element
   // ex. _xvdomEl('div');
-  const createCode = t.callExpression(
-    funcGen.accessAPI('el'),
-    [t.stringLiteral(el.tag)]
-  );
-
   // Optimization: If we're using the temp variable for the fist time, assign the
   //               result of the create element code as part of the variable
   //               declaration.
-  funcGen.defineOrSetTmpVar(depth, createCode);
+  funcGen.defineOrSetTmpVar(
+    depth,
+    t.callExpression(
+      funcGen.accessAPI('el'),
+      [t.stringLiteral(jsxHTMLElement.tag)]
+    )
+  );
 
   // Assign props
   const nodeVarId = funcGen.getTmpVarId(depth);
-  el.props.forEach((prop, i) => {
+  jsxHTMLElement.props.forEach((prop, i) => {
     if(shouldGenerateDynamicPropCode || !prop.dynamic) {
       // Optimization: Only assign the instanceContextId once
       funcGen.addStatement(
@@ -211,7 +211,7 @@ function htmlElementCode(funcGen, el, depth, shouldGenerateDynamicPropCode) {
 
   ++depth;
 
-  el.children.forEach(jsxElementChild => {
+  jsxHTMLElement.children.forEach(jsxElementChild => {
     if (jsxElementChild instanceof JSXHTMLElement) {
       htmlElementCode(funcGen, jsxElementChild, depth, shouldGenerateDynamicPropCode);
     }
@@ -357,7 +357,8 @@ function cloneableDynamicsCode(funcGen, rootEl, rootElId, dynamics) {
   }
 }
 
-function cloneableElementCode(funcGen, el, isCloneable, dynamics) {
+function cloneableElementCode(funcGen, jsxFragment) {
+  const { rootElement, isCloneable, dynamics } = jsxFragment;
   const { t } = funcGen;
   const specNodeId = funcGen.definePrefixed('xvdomSpecNode', t.nullLiteral()).name;
   const createSpecFuncGen = new FunctionGenerator(t, funcGen.fileGlobals);
@@ -365,7 +366,7 @@ function cloneableElementCode(funcGen, el, isCloneable, dynamics) {
   // function _xvdomSpecNodeCreate() {
   //   ...
   // }
-  elementCode(createSpecFuncGen, el, false);
+  elementCode(createSpecFuncGen, rootElement, false);
 
   const createSpecNodeId = funcGen.definePrefixed(
     'xvdomSpecNodeCreate',
@@ -389,7 +390,7 @@ function cloneableElementCode(funcGen, el, isCloneable, dynamics) {
     )
   );
 
-  cloneableDynamicsCode(funcGen, el, funcGen.getTmpVarId(0), dynamics);
+  cloneableDynamicsCode(funcGen, rootElement, funcGen.getTmpVarId(0), dynamics);
 }
 
 function elementCode(funcGen, el, shouldGenerateDynamicPropCode) {
@@ -399,7 +400,6 @@ function elementCode(funcGen, el, shouldGenerateDynamicPropCode) {
 
 class FunctionGenerator {
   constructor(t, fileGlobals){
-    let instId;
     this.t = t;
     this.fileGlobals = fileGlobals;
     this.tmpVars = [];
@@ -453,10 +453,11 @@ class FunctionGenerator {
 }
 
 
-module.exports = function(t, xvdomApi, { rootElement, dynamics, hasComponents, isCloneable }) {
-  const funcGen = new FunctionGenerator(t, xvdomApi);
+module.exports = function(t, fileGlobals, jsxFragment) {
+  const { rootElement, dynamics, hasComponents, isCloneable } = jsxFragment
+  const funcGen = new FunctionGenerator(t, fileGlobals);
 
-  if(isCloneable) cloneableElementCode(funcGen, rootElement, isCloneable, dynamics);
+  if(isCloneable) cloneableElementCode(funcGen, jsxFragment);
   else elementCode(funcGen, rootElement, true);
 
   return funcGen.code;
