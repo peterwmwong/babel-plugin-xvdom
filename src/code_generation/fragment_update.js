@@ -1,4 +1,5 @@
 const {
+  DynamicChild,
   DynamicProp,
   JSXHTMLElement
 } = require('../parsing/JSXFragment.js');
@@ -7,90 +8,87 @@ const obj = require('./obj.js');
 const memberExpr = require('./memberExpr.js');
 
 const EMPTY_ARRAY = [];
-const nonComponentPropDynamic = d => !(d instanceof DynamicProp) || (d.el instanceof JSXHTMLElement);
+const nonComponentPropDynamic = d => (d instanceof DynamicProp && d.el instanceof JSXHTMLElement) || d instanceof DynamicChild;
 const instParamId             = t => t.identifier('inst');
 const prevInstParamId         = t => t.identifier('pInst');
 
-//TODO: function generateSpecUpdateDynamicPropCode() {}
-//TODO: function generateSpecUpdateDynamicChildCode() {}
-
-function generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, getTmpVar, dynamic) {
-  const { instanceContextId, instanceValueId, astNameId, isOnlyChild, hasSideEffects } = dynamic;
-  if(dynamic instanceof DynamicProp) {
-    const tmpVar = getTmpVar();
-    return [
-      t.expressionStatement(
-        t.assignmentExpression('=',
-          tmpVar,
-          memberExpr(t, instId, instanceValueId)
-        )
+function dynamicPropStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamicProp) {
+  const { instanceContextId, instanceValueId, astNameId, hasSideEffects } = dynamicProp;
+  const tmpVar = getTmpVar();
+  return [
+    t.expressionStatement(
+      t.assignmentExpression('=',
+        tmpVar,
+        memberExpr(t, instId, instanceValueId)
+      )
+    ),
+    t.ifStatement(
+      t.binaryExpression('!==',
+        tmpVar,
+        memberExpr(t, pInstId, instanceValueId)
       ),
-      t.ifStatement(
-        t.binaryExpression('!==',
-          tmpVar,
-          memberExpr(t, pInstId, instanceValueId)
-        ),
-        hasSideEffects ? t.blockStatement([
-          t.ifStatement(
-            t.binaryExpression('!==',
-              memberExpr(t, pInstId, instanceContextId, astNameId),
-              tmpVar
-            ),
-            t.expressionStatement(
-              t.assignmentExpression('=',
-                memberExpr(t, pInstId, instanceContextId, astNameId),
-                tmpVar
-              )
-            )
+      hasSideEffects ? t.blockStatement([
+        t.ifStatement(
+          t.binaryExpression('!==',
+            memberExpr(t, pInstId, instanceContextId, astNameId),
+            tmpVar
           ),
           t.expressionStatement(
             t.assignmentExpression('=',
-              memberExpr(t, pInstId, instanceValueId),
+              memberExpr(t, pInstId, instanceContextId, astNameId),
               tmpVar
             )
           )
-        ]) : t.expressionStatement(
-          t.assignmentExpression('=',
-            memberExpr(t, pInstId, instanceContextId, astNameId),
-            t.assignmentExpression('=',
-              memberExpr(t, pInstId, instanceValueId),
-              tmpVar
-            )
-          )
-        )
-      )
-    ]
-  }
-  else{
-    return [
-      t.ifStatement(
-        t.binaryExpression('!==',
-          memberExpr(t, instId, instanceValueId),
-          memberExpr(t, pInstId, instanceValueId)
         ),
         t.expressionStatement(
           t.assignmentExpression('=',
-            memberExpr(t, pInstId, instanceContextId),
-            t.callExpression(
-              xvdomApi.accessAPI('updateDynamic'),
-              [
-                t.booleanLiteral(isOnlyChild),
-                memberExpr(t, pInstId, instanceValueId),
-                t.assignmentExpression('=',
-                  memberExpr(t, pInstId, instanceValueId),
-                  memberExpr(t, instId, instanceValueId)
-                ),
-                memberExpr(t, pInstId, instanceContextId)
-              ]
-            )
+            memberExpr(t, pInstId, instanceValueId),
+            tmpVar
+          )
+        )
+      ]) : t.expressionStatement(
+        t.assignmentExpression('=',
+          memberExpr(t, pInstId, instanceContextId, astNameId),
+          t.assignmentExpression('=',
+            memberExpr(t, pInstId, instanceValueId),
+            tmpVar
           )
         )
       )
-    ];
-  }
+    )
+  ];
 }
 
-function generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, component) {
+function dynamicChildStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild) {
+  const { instanceContextId, instanceValueId, isOnlyChild } = dynamicChild;
+  return [
+    t.ifStatement(
+      t.binaryExpression('!==',
+        memberExpr(t, instId, instanceValueId),
+        memberExpr(t, pInstId, instanceValueId)
+      ),
+      t.expressionStatement(
+        t.assignmentExpression('=',
+          memberExpr(t, pInstId, instanceContextId),
+          t.callExpression(
+            xvdomApi.accessAPI('updateDynamic'),
+            [
+              t.booleanLiteral(isOnlyChild),
+              memberExpr(t, pInstId, instanceValueId),
+              t.assignmentExpression('=',
+                memberExpr(t, pInstId, instanceValueId),
+                memberExpr(t, instId, instanceValueId)
+              ),
+              memberExpr(t, pInstId, instanceContextId)
+            ]
+          )
+        )
+      )
+    )
+  ];
+}
+
+function componentDynamicStatement(t, xvdomApi, instId, pInstId, component) {
   const dynamicProps = component.props.filter(p => p.dynamic);
   const condition = (
     dynamicProps.map(p => (
@@ -141,7 +139,7 @@ function generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, co
   );
 }
 
-function generateSpecUpdateCode(t, xvdomApi, { dynamics, customElementsWithDynamicProps }) {
+module.exports = function(t, xvdomApi, { dynamics, customElementsWithDynamicProps }) {
   if(!dynamics.length) return t.functionExpression(null, EMPTY_ARRAY, t.blockStatement(EMPTY_ARRAY));
 
   const instId  = instParamId(t);
@@ -152,15 +150,19 @@ function generateSpecUpdateCode(t, xvdomApi, { dynamics, customElementsWithDynam
   const updateDynamicPropCode = (
     dynamics
       .filter(nonComponentPropDynamic)
-      .reduce((acc, dynamic) => {
-        acc.push(...generateSpecUpdateDynamicCode(t, xvdomApi, instId, pInstId, getTmpVar, dynamic));
-        return acc;
-      }, [])
+      .reduce((acc, dynamic) => [
+        ...acc,
+        ...(
+          dynamic instanceof DynamicProp 
+            ? dynamicPropStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamic)
+            : dynamicChildStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamic)
+        )
+      ], [])
   );
 
   const updateDynamicComponents = (
     [...customElementsWithDynamicProps].map(component =>
-      generateSpecUpdateDynamicComponentCode(t, xvdomApi, instId, pInstId, component)
+      componentDynamicStatement(t, xvdomApi, instId, pInstId, component)
     )
   );
 
@@ -178,5 +180,3 @@ function generateSpecUpdateCode(t, xvdomApi, { dynamics, customElementsWithDynam
     )
   );
 }
-
-module.exports = generateSpecUpdateCode;
