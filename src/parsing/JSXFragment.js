@@ -63,7 +63,7 @@ class JSXElementProp {
 Type Hierarchy
 
 - JSXElementChild
-  - JSXValue
+  - JSXValueElement
   - JSXElement
     - JSXHTMLElement
 */
