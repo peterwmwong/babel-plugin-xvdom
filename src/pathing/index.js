@@ -1,12 +1,13 @@
 const {
   log,
-  logFunc
+  logFunc,
+  LOGGING
 } = require('../logger.js');
 
 let LAST_PATH_ID = 0;
 class Path {
   static min(a, b) {
-    log('path', `min: ${a.id}(${a.length}) < ${b.id}(${b.length})`);
+    if(LOGGING.path) log('path', `min: ${a.id}(${a.length}) < ${b.id}(${b.length})`);
     return a.length < b.length ? a : b;
   }
 
@@ -18,8 +19,6 @@ class Path {
     this.numReferencingPaths = 0;
   }
 
-  // TODO: consider renaming this to something more explicit...
-  //        - lengthToRootOrSaved
   get length() {
     return (
         this.isHardReferenced ? 0
@@ -52,12 +51,14 @@ class Path {
     const a = this;
     const aEl = a.el;
     const bEl = b.el;
-    log('path',
-      'isShorterOrEqualThan:',
-      `length: ${a.id}(${a.length}) < ${b.id}(${b.length})`,
-      `elNumDynamicDescendants: ${aEl.numContainedDynamics} < ${bEl.numContainedDynamics}`,
-      `numDynamicProps: ${aEl.numDynamicProps} < ${bEl.numDynamicProps}`
-    );
+    if(LOGGING.path) {
+      log('path',
+        'isShorterOrEqualThan:',
+        `length: ${a.id}(${a.length}) < ${b.id}(${b.length})`,
+        `elNumDynamicDescendants: ${aEl.numContainedDynamics} < ${bEl.numContainedDynamics}`,
+        `numDynamicProps: ${aEl.numDynamicProps} < ${bEl.numDynamicProps}`
+      );
+    }
     return 0 >= (
       Math.sign(a.length - b.length) ||
       Math.sign(bEl.numContainedDynamics - aEl.numContainedDynamics) ||
@@ -97,7 +98,7 @@ class Path {
       () => {
         const { el: { rootPath } } = this;
         if(rootPath && rootPath !== this) {
-          log('path', `adding reference to previous rootPath ${rootPath.id}`);
+          if(LOGGING.path) log('path', `adding reference to previous rootPath ${rootPath.id}`);
           rootPath.removeReference();
         }
 
@@ -113,7 +114,7 @@ class Path {
       () => {
         const { el: { rootPath } } = this;
         if(rootPath && rootPath !== this) {
-          log('path', `adding reference to previous rootPath ${rootPath.id}`);
+          if(LOGGING.path) log('path', `adding reference to previous rootPath ${rootPath.id}`);
           rootPath.addReference();
         }
 
@@ -167,7 +168,7 @@ function getPath(el, ignoreEl, isHardReferenced) {
 function calcPath(el, ignoreEl, isHardReferenced) {
   const { parent } = el;
   if(!parent) return new Path(el, true);
-  if(ignoreEl) log('path', 'ignoreEl', ignoreEl.tag);
+  if(LOGGING.path && ignoreEl) log('path', 'ignoreEl', ignoreEl.tag);
 
   const path = new Path(el, isHardReferenced);
   const { distFromEnd, index, previousSibling, nextSibling } = el;

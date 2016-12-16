@@ -37,7 +37,7 @@ const stackLevel = () => {
       e.stack
         .split(/^ {4}at/mg)
         .filter(a => !/logFunc/.test(a))
-        .length - 47
+        .length - 40
     );
   }
 }
@@ -53,9 +53,7 @@ log('category1', 'obj.name', obj.name);
 
 */
 const log = (cat, ...args) => {
-  if(LOGGING[cat]){
-    console.log(new Array(stackLevel()).join('  '), ...args);
-  }
+  if(LOGGING[cat]) console.log(new Array(stackLevel()).join('  '), ...args);
 };
 
 const logFunc = (cat, methodName, fn, outroMsg = () => '') => {

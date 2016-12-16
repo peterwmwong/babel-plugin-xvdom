@@ -9,11 +9,14 @@ const {
   getPath
 } = require('../pathing/index.js');
 
+
+const FunctionGenerator = require('./function_generator.js');
 const obj = require('./obj.js');
 const memberExpr = require('./memberExpr.js');
 
 const {
-  log
+  log,
+  LOGGING
 } = require('../logger.js');
 
 const EMPTY_ARRAY = [];
@@ -101,23 +104,22 @@ function staticChildStatment(funcGen, jsxValueElement, parentNodeVarId) {
 
 function componentCode(funcGen, jsxElement, depth) {
   const { t } = funcGen;
-  const componentId = t.identifier(jsxElement.tag);
-  const propsArg = !jsxElement.props.length
-    ? t.nullLiteral()
-    : obj(
-        t,
-        jsxElement.props.reduce(
-          ((acc, { astNameId, astValueNode, dynamic }) => (
+  const { instanceContextId, numDynamicProps, props, tag } = jsxElement;
+  const componentId = t.identifier(tag);
+  const propsArg = (
+    !props.length
+      ? t.nullLiteral()
+      : obj(t,
+          props.reduce(((acc, { astNameId, astValueNode, dynamic }) => (
             acc[astNameId.name] = (
               dynamic
                 ? memberExpr(t, funcGen.accessInstance(), dynamic.instanceValueId)
                 : astValueNode
             ),
             acc
-          )),
-          {}
+          )), {})
         )
-      );
+  );
 
   // Create element
   // ex. _xvdomCreateComponent('div');
@@ -133,19 +135,17 @@ function componentCode(funcGen, jsxElement, depth) {
     )
   );
 
-  if(jsxElement.numDynamicProps) {
+  if(numDynamicProps) {
     createComponentCode = t.assignmentExpression('=',
-      memberExpr(t, funcGen.accessInstance(), jsxElement.instanceContextId),
+      memberExpr(t, funcGen.accessInstance(), instanceContextId),
       createComponentCode
     )
   }
 
-  const createCode = memberExpr(t, createComponentCode, '$n');
-
   // Optimization: If we're using the temp variable for the fist time, assign the
   //               result of the create element code as part of the variable
   //               declaration.
-  funcGen.defineOrSetTmpVar(depth, createCode);
+  funcGen.defineOrSetTmpVar(depth, memberExpr(t, createComponentCode, '$n'));
 
   // Add this node to parent, if there is a parent (not root).
   // ex. _n.appendChild(_n2);
@@ -178,7 +178,8 @@ function htmlElementCode(funcGen, jsxHTMLElement, depth, shouldGenerateDynamicPr
 
   // Assign props
   const nodeVarId = funcGen.getTmpVarId(depth);
-  jsxHTMLElement.props.forEach((prop, i) => {
+  let i=0;
+  for(let prop of jsxHTMLElement.props) {
     if(shouldGenerateDynamicPropCode || !prop.dynamic) {
       // Optimization: Only assign the instanceContextId once
       funcGen.addStatement(
@@ -194,7 +195,8 @@ function htmlElementCode(funcGen, jsxHTMLElement, depth, shouldGenerateDynamicPr
         )
       );
     }
-  });
+    i++;
+  };
 
   // Add this node to parent, if there is a parent (not root).
   // ex. _n.appendChild(_n2);
@@ -211,7 +213,7 @@ function htmlElementCode(funcGen, jsxHTMLElement, depth, shouldGenerateDynamicPr
 
   ++depth;
 
-  jsxHTMLElement.children.forEach(jsxElementChild => {
+  for (let jsxElementChild of jsxHTMLElement.children) {
     if (jsxElementChild instanceof JSXHTMLElement) {
       htmlElementCode(funcGen, jsxElementChild, depth, shouldGenerateDynamicPropCode);
     }
@@ -225,92 +227,80 @@ function htmlElementCode(funcGen, jsxHTMLElement, depth, shouldGenerateDynamicPr
           : staticChildStatment(funcGen, jsxElementChild, nodeVarId)
       )
     }
-  });
+  }
 }
 
 const distanceFromEnds = ({ index, distFromEnd }) => Math.min(index, distFromEnd);
 const sortDistanceFromEnds = (a, b) => distanceFromEnds(a.el) - distanceFromEnds(b.el); 
 
-function sortDynamicsByDepthThenDistanceFromEnds(dynamics) {
-  return (
-    dynamics
-      .reduce((depthGroups, d) => {
-        const depth = d.el.depth;
-        (depthGroups[depth] || (depthGroups[depth] = [])).push(d);
-        return depthGroups;
-      }, [])
-      .reduce((result, group) => (
-        [...result, ...group.sort(sortDistanceFromEnds)]
-      ), [])
-  );
-}
+const sortDynamicsByDepthThenDistanceFromEnds = dynamics => (
+  dynamics
+    .reduce((depthGroups, d) => {
+      const depth = d.el.depth;
+      (depthGroups[depth] || (depthGroups[depth] = [])).push(d);
+      return depthGroups;
+    }, [])
+    .reduce((result, group) => [...result, ...group.sort(sortDistanceFromEnds)], [])
+);
 
-function expressionForRelationOrAssign(t, relationOrAssign) {
-  return (
-    typeof relationOrAssign === 'string'
-      ? t.identifier(relationOrAssign)
-      : expressionForPath(t, relationOrAssign)
-  );
-}
+const expressionForRelationOrAssign = (t, relationOrAssign) => (
+  typeof relationOrAssign === 'string'
+    ? t.identifier(relationOrAssign)
+    : expressionForPath(t, relationOrAssign)
+);
 
-function expressionForPath(t, { tmpVar, path }) {
-  return (
-    !path
-      ? tmpVar
-      : t.assignmentExpression('=',
-          t.identifier(tmpVar.name),
-          memberExpr(t, ...path.map(p => expressionForRelationOrAssign(t, p)))
-        )
-  );
-}
+const expressionForPath = (t, { tmpVar, pathMembers }) => (
+  !pathMembers
+    ? tmpVar
+    : t.assignmentExpression('=',
+        tmpVar,
+        memberExpr(t, ...pathMembers.map(p => expressionForRelationOrAssign(t, p)))
+      )
+);
 
-function cloneableDynamicPropCode(funcGen, dynamic, savedNodesToTmpVarId) {
-  function getTmpVarForNode(el) {
-    let tmpVar = savedNodesToTmpVarId.get(el);
-    return tmpVar || (
-      // TODO: Find a better way then storing $index, maybe this should call funcGen.defineOrSetTmpVar
-      tmpVar = Object.assign(funcGen.getTmpVarId(savedNodesToTmpVarId.size), { $index:  savedNodesToTmpVarId.size}),
-      savedNodesToTmpVarId.set(el, tmpVar),
-      tmpVar
-    );
+function cloneableDynamicPropCode(funcGen, dynamic, elToTmpVarId) {
+  const hasTmpVar = el => elToTmpVarId.has(el);
+  function getOrAllocateTmpVar(el) {
+    if(!hasTmpVar(el)) elToTmpVarId.set(el, elToTmpVarId.size);
+    return funcGen.getTmpVarId(elToTmpVarId.get(el));
   }
 
   const { t } = funcGen;
   let path = dynamic.el.rootPath;
   let el, parentEl;
   let rootAssignExpr, curAssignExpr, pathMembers;
-  const originalSavedNodes = new Set(savedNodesToTmpVarId.keys());
+  const originalSavedEls = new Set(elToTmpVarId.keys());
 
   if(!path.parent) {
-    rootAssignExpr = { tmpVar: getTmpVarForNode(path.el) };
+    rootAssignExpr = { tmpVar: getOrAllocateTmpVar(path.el) };
   }
   else{
-    while(path.parent && !originalSavedNodes.has(el = path.el)) {
+    while(path.parent && !originalSavedEls.has(el = path.el)) {
       parentEl = path.parent.el;
       pathMembers = [
         ...(
-            savedNodesToTmpVarId.has(parentEl) ? [ savedNodesToTmpVarId.get(parentEl).name ]
-          : path.parent.parent                 ? EMPTY_ARRAY
-          : [ getTmpVarForNode(parentEl).name ]
+          hasTmpVar(parentEl) || !path.parent.parent
+            ? [ getOrAllocateTmpVar(parentEl).name ]
+            :  EMPTY_ARRAY
         ),
         el.relationshipTo(parentEl)
       ]
 
       // Optimization: Inline the assignment of the saved nodes in the member expression
       //               to the dynamic node
-      if(!originalSavedNodes.has(el) && path.shouldBeSaved) {
+      if(!originalSavedEls.has(el) && path.shouldBeSaved) {
         const newCur = {
-          tmpVar: getTmpVarForNode(el),
-          path: pathMembers
+          pathMembers,
+          tmpVar: getOrAllocateTmpVar(el)
         };
 
-        if(curAssignExpr) curAssignExpr.path.unshift(newCur);
+        if(curAssignExpr) curAssignExpr.pathMembers.unshift(newCur);
         rootAssignExpr = rootAssignExpr || newCur;
 
         curAssignExpr = newCur;
       }
       else{
-        curAssignExpr.path.unshift(...pathMembers);
+        curAssignExpr.pathMembers.unshift(...pathMembers);
       }
 
       path = path.parent;
@@ -322,45 +312,45 @@ function cloneableDynamicPropCode(funcGen, dynamic, savedNodesToTmpVarId) {
     expressionForPath(t, rootAssignExpr),
     dynamic.prop,
     (
-      !originalSavedNodes.has(dynamic.el) &&
+      !originalSavedEls.has(dynamic.el) &&
       dynamic.prop.dynamic &&
       memberExpr(t, funcGen.accessInstance(), dynamic.instanceContextId)
     )
   );
 }
 
-function cloneableDynamicsCode(funcGen, rootEl, rootElId, dynamics) {
+function cloneableDynamicsCode(funcGen, rootEl, dynamics) {
   const { t } = funcGen;
-  const savedNodesToTmpVarId = new Map();
+  const elToTmpVarId = new Map();
   const sortedDynamics = sortDynamicsByDepthThenDistanceFromEnds(dynamics);
-  let d;
 
   // Calculate shortest paths
-  for(d of sortedDynamics) {
+  for(let d of sortedDynamics) {
     getPath(d.el, undefined, true).finalize();
   }
 
-  for(d of sortedDynamics) {
+  for(let d of sortedDynamics) {
     // TODO: Handle dynamic children
     if(d instanceof DynamicChild) return;
 
-    log('dynamicsPath', d.el.rootPath.toString());
+    if(LOGGING.dynamicsPath) log('dynamicsPath', d.el.rootPath.toString());
 
     // Generate member expression for path
     funcGen.addStatement(
-      cloneableDynamicPropCode(funcGen, d, savedNodesToTmpVarId)
+      cloneableDynamicPropCode(funcGen, d, elToTmpVarId)
     );
   }
 
-  for(let [el, tmpVarId] of savedNodesToTmpVarId.entries()) {
-    if(el !== rootEl) funcGen.defineOrSetTmpVar(tmpVarId.$index);
+  elToTmpVarId.delete(rootEl);
+  for(let [el, tmpVarId] of elToTmpVarId.entries()) {
+    funcGen.defineOrSetTmpVar(tmpVarId);
   }
 }
 
 function cloneableElementCode(funcGen, jsxFragment) {
   const { rootElement, isCloneable, dynamics } = jsxFragment;
   const { t } = funcGen;
-  const specNodeId = funcGen.definePrefixed('xvdomSpecNode', t.nullLiteral()).name;
+  const specNodeId = funcGen.definePrefixedGlobal('xvdomSpecNode', t.nullLiteral());
   const createSpecFuncGen = new FunctionGenerator(t, funcGen.fileGlobals);
 
   // function _xvdomSpecNodeCreate() {
@@ -368,10 +358,10 @@ function cloneableElementCode(funcGen, jsxFragment) {
   // }
   elementCode(createSpecFuncGen, rootElement, false);
 
-  const createSpecNodeId = funcGen.definePrefixed(
+  const createSpecNodeId = funcGen.definePrefixedGlobal(
     'xvdomSpecNodeCreate',
     createSpecFuncGen.code
-  ).name;
+  );
 
   // var _n = (_xvdomSpecNode || (_xvdomSpecNode = _xvdomSpecNodeCreate())).cloneNode(true);
   funcGen.defineOrSetTmpVar(0,
@@ -390,7 +380,7 @@ function cloneableElementCode(funcGen, jsxFragment) {
     )
   );
 
-  cloneableDynamicsCode(funcGen, rootElement, funcGen.getTmpVarId(0), dynamics);
+  cloneableDynamicsCode(funcGen, rootElement, dynamics);
 }
 
 function elementCode(funcGen, el, shouldGenerateDynamicPropCode) {
@@ -398,63 +388,8 @@ function elementCode(funcGen, el, shouldGenerateDynamicPropCode) {
   else componentCode(funcGen, el, 0);
 }
 
-class FunctionGenerator {
-  constructor(t, fileGlobals){
-    this.t = t;
-    this.fileGlobals = fileGlobals;
-    this.tmpVars = [];
-    this.statements = [];
-  }
-
-  accessAPI(name) { return this.fileGlobals.accessAPI(name); }
-
-  definePrefixed(name, value) { return this.fileGlobals.definePrefixed(name, value); }
-
-  getTmpVarId(i) { return this.t.identifier(`_n${i ? i+1 : ''}`); }
-
-  defineOrSetTmpVar(i, value) {
-    const { t } = this;
-    // Temporary variable for this index has not be defined yet.
-    // Store value as the temporary variable's initial value.
-    if (!this.tmpVars[i]) {
-      this.tmpVars[i] = value;
-    }
-    // ... otherwise, add a statement to assign the value to the
-    // temporary variable.
-    else {
-      this.addStatement(
-        t.expressionStatement(
-          t.assignmentExpression('=', this.getTmpVarId(i), value)
-        )
-      );
-    }
-  }
-
-  addStatement(stmt){ this.statements.push(stmt); }
-
-  accessInstance(){ return this._instId || (this._instId = this.t.identifier('inst')); }
-
-  get code(){
-    const { t, tmpVars, statements, _instId } = this;
-    const tmpVarDeclarators = tmpVars.map((value, i) =>
-      t.variableDeclarator(this.getTmpVarId(i), value)
-    );
-
-    return t.functionExpression(
-      null,
-      (_instId ? [_instId] : EMPTY_ARRAY),
-      t.blockStatement([
-        t.variableDeclaration('var', tmpVarDeclarators),
-        ...statements,
-        t.returnStatement(this.getTmpVarId(0))
-      ])
-    );
-  }
-}
-
-
 module.exports = function(t, fileGlobals, jsxFragment) {
-  const { rootElement, dynamics, hasComponents, isCloneable } = jsxFragment
+  const { rootElement, dynamics, hasComponents, isCloneable } = jsxFragment;
   const funcGen = new FunctionGenerator(t, fileGlobals);
 
   if(isCloneable) cloneableElementCode(funcGen, jsxFragment);

@@ -13,10 +13,26 @@ class FileGlobals {
   }
 
   constructor(t, file) {
-    const globals = this.globals = {};
-    this.t = t;
+    this.globals = {};
     this.definedPrefixCounts = {};
-    this.getOrSet = (id, value) => globals[id] || (globals[id] = { value, name: file.scope.generateUidIdentifier(id) });
+    this.file = file;
+    this.t = t;
+  }
+
+  getOrSet(id, value){
+    const { globals } = this;
+    return (
+      globals[id] ||
+      (globals[id] = { value, name: this.file.scope.generateUidIdentifier(id) })
+    ).name;
+  }
+
+  get variableDeclarators() {
+    const { t } = this;
+    return Object.keys(this.globals).sort().map(k => {
+      const { name, value } = this.globals[k];
+      return t.variableDeclarator(name, value);
+    });
   }
 
   definePrefixed(name, value) {
@@ -29,7 +45,7 @@ class FileGlobals {
     return this.getOrSet(
       apiVarName(apiFuncName),
       memberExpr(this.t, 'xvdom', apiFuncName)
-    ).name;
+    );
   }
 }
 
