@@ -37,7 +37,7 @@ const stackLevel = () => {
       e.stack
         .split(/^ {4}at/mg)
         .filter(a => !/logFunc/.test(a))
-        .length - 40
+        .length - 45
     );
   }
 }

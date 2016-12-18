@@ -271,7 +271,7 @@ function cloneableDynamicPropCode(funcGen, dynamic, elToTmpVarId) {
   let rootAssignExpr, curAssignExpr, pathMembers;
   const originalSavedEls = new Set(elToTmpVarId.keys());
 
-  if(!path.parent) {
+  if(hasTmpVar(path.el) || !path.parent) {
     rootAssignExpr = { tmpVar: getOrAllocateTmpVar(path.el) };
   }
   else{

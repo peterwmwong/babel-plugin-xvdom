@@ -1,41 +1,13 @@
-const genId = require('../genId.js');
+const genCompactId = require('./genCompactId');
+const normalizeChildren = require('./normalizeChildren');
+const normalizeElementPropValue = require('./normalizeElementPropValue');
 const {
-  buildChildren,
-  toReference
-} = require('../helpers.js');
-
-const isAttr               = (attr, name) => attr.name.name === name
-const isCloneableAttribute = attr => isAttr(attr, 'cloneable');
-const isKeyAttribute       = attr => isAttr(attr, 'key');
-const isNotXvdomAttribute  = attr => !isCloneableAttribute(attr) && !isKeyAttribute(attr);
-const isComponentName      = name => /^[A-Z]/.test(name);
-
-function isDynamicNode(t, astNode) {
-  if(t.isLiteral(astNode)) {
-    return false;
-  }
-
-  if(t.isLogicalExpression(astNode) || t.isBinaryExpression(astNode)) {
-    return isDynamicNode(t, astNode.left) || isDynamicNode(t, astNode.right);
-  }
-
-  if(t.isUnaryExpression(astNode)) {
-    return isDynamicNode(t, astNode.argument);
-  }
-
-  return true;
-}
-
-function normalizeElementPropValue(t, prop) {
-  return (
-      t.isJSXExpressionContainer(prop) ? normalizeElementPropValue(t, prop.expression)
-    : t.isJSXEmptyExpression(prop)     ? null
-    : (t.isIdentifier(prop)
-        || t.isMemberExpression(prop)) ? toReference(t, prop)
-    : prop == null                     ? t.booleanLiteral(true)
-    : prop
-  );
-}
+  isCloneableAttribute,
+  isComponentName,
+  isDynamicNode,
+  isKeyAttribute,
+  isNotXvdomAttribute
+} = require('./isHelpers');
 
 const hasSideEffects = (tag, propName) => (
   (tag === 'input' && propName === 'value') ||
@@ -131,7 +103,7 @@ class JSXHTMLElement extends JSXElement {
     
     const { t } = fragment;
     const { children } = astJSXElement;
-    const filteredChildren = buildChildren(t, children);
+    const filteredChildren = normalizeChildren(t, children);
     const hasOnlyOneChild  = filteredChildren.length === 1;
 
     this.children = (
@@ -237,7 +209,7 @@ class JSXFragment {
   }
 
   _genInstancePropId() {
-    return this.t.identifier(genId(this._instanceParamIndex++));
+    return this.t.identifier(genCompactId(this._instanceParamIndex++));
   }
 }
 

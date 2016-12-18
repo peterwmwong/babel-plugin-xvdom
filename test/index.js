@@ -18,29 +18,27 @@ const filterFixtures = fixture => [
   "component-dynamic-props",
   "component-static-props",
   "cloneable",
+  "cloneable-static-props",
   "cloneable-root-props",
-  "cloneable-static-props"
+  "cloneable-multiple-dynamic-props"
 
   // "cloneable-saved-path-nodes"
-  // "cloneable-nested-dynamics"
   // "recycle"
 ].indexOf(fixture) !== -1;
 
-const specName     = fixture   => fixture.split("-").join(" ")
-const expectedPath = (...args) => path.join(...[...args, "expected.js"]);
-const actualPath   = (...args) => path.join(...[...args, "actual.js"]);
-const transform    = path      => babel.transformFileSync(path, BABEL_CONFIG).code.trim()
+const fixturesDir   = path.join(__dirname, "fixtures");
+const dirTospecName = fixture     => fixture.split("-").join(" ")
+const fixturePath   = (dir, file) => path.join(fixturesDir, dir, file);
+const transform     = path        => babel.transformFileSync(path, BABEL_CONFIG).code.trim()
 
 describe("transforms jsx", () => {
-  const fixturesDir = path.join(__dirname, "fixtures");
-  fs.readdirSync(fixturesDir)
-    .filter(filterFixtures)
-    .forEach(dir => {
-      it(specName(dir), () => {
-        assert.equal(
-          transform(actualPath(fixturesDir, dir)),
-          fs.readFileSync(expectedPath(fixturesDir, dir)).toString().trim()
-        )
-      });
+  for(let dir of fs.readdirSync(fixturesDir).filter(filterFixtures)) {
+    it(dirTospecName(dir), () => {
+      debugger;
+      assert.equal(
+        transform(fixturePath(dir, 'actual.js')),
+        fs.readFileSync(fixturePath(dir, 'expected.js')).toString().trim()
+      )
     });
+  }
 });

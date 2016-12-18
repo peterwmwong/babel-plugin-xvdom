@@ -1,5 +1,4 @@
-const nonWhitespace = /\S/;
-const newlines      = /\r\n?|\n/;
+const toReference = require('./toReference');
 
 // Trims the whitespace off the lines.
 function lineFilter(lines, line, i, { length }){
@@ -11,33 +10,21 @@ function lineFilter(lines, line, i, { length }){
 }
 
 // Cleans the whitespace from a text node.
-function cleanText(node){
-  if(!nonWhitespace.test(node.value)){
-    return '';
-  }
+function cleanText(astNode){
+  const { value } = astNode;
+  if (!/\S/.test(value)) return '';
 
-  let lines = node.value.split(newlines);
-  lines = lines.reduce(lineFilter, []);
-
-  return lines.join(' ');
-}
-
-// Helper to transform a JSX identifier into a normal reference.
-function toReference(t, node, identifier){
-  if (t.isIdentifier(node)){
-    return node;
-  }
-  else if (t.isJSXIdentifier(node)){
-    return identifier ? t.identifier(node.name) : t.stringLiteral(node.name);
-  }
-  else{
-    return node;
-  }
+  return (
+    value
+      .split(/\r\n?|\n/)
+      .reduce(lineFilter, [])
+      .join(' ')
+  );
 }
 
 // Filters out empty children, and transform JSX expressions
 // into normal expressions.
-function buildChildren(t, rawChildren){
+module.exports = function normalizeChildren(t, rawChildren){
   return rawChildren.reduce((children, child) => {
     if (t.isJSXExpressionContainer(child)){
       child = child.expression;
@@ -53,7 +40,7 @@ function buildChildren(t, rawChildren){
       return children;
     }
     else if(t.isArrayExpression(child)){
-      child = t.sequenceExpression(buildChildren(t, child.elements));
+      child = t.sequenceExpression(normalizeChildren(t, child.elements));
     }
     else if(t.isIdentifier(child) || t.isMemberExpression(child)){
       child = toReference(t, child);
@@ -63,5 +50,3 @@ function buildChildren(t, rawChildren){
     return children;
   }, []);
 }
-
-module.exports = { toReference, buildChildren };

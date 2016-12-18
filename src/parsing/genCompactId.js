@@ -4,16 +4,19 @@ const CHARS = [
   'E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
   'Y','Z'
 ];
+const CHARS_LENGTH = CHARS.length;
 const FIRST_CHARS = CHARS.slice(10);
+const FIRST_CHARS_LENGTH = FIRST_CHARS.length;
 
-module.exports = function genId(num){
-  let transformNum = num;
+module.exports = function(num){
   let result = '';
-  let charsToUse = FIRST_CHARS;
-  do{
-    result += charsToUse[transformNum % charsToUse.length];
-    transformNum = (transformNum / charsToUse.length) | 0;
-    charsToUse = CHARS;
-  }while(transformNum);
+  
+  result += FIRST_CHARS[num % FIRST_CHARS_LENGTH];
+  num = num / FIRST_CHARS_LENGTH | 0;
+
+  while(num){
+    result += CHARS[num % CHARS_LENGTH];
+    num = num / CHARS_LENGTH | 0;
+  };
   return result;
 }

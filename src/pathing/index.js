@@ -12,11 +12,11 @@ class Path {
   }
 
   constructor(el, hardRef = false) {
+    this.parent = null;
+    this.numReferencingPaths = 0;
     this.pathId = ++LAST_PATH_ID;
     this.el = el;
-    this.parent = null;
     this.isHardReferenced = hardRef;
-    this.numReferencingPaths = 0;
   }
 
   get length() {
@@ -44,7 +44,7 @@ class Path {
       : this.shouldBeSaved    ? '^'
       : ''
     );
-    return `${referenceIndicator}${this.el.tag}(${this.pathId})`
+    return `${referenceIndicator}${this.el.tag}(${this.pathId})`;
   }
 
   isShorterOrEqualThan(b) {
@@ -62,7 +62,7 @@ class Path {
     return 0 >= (
       Math.sign(a.length - b.length) ||
       Math.sign(bEl.numContainedDynamics - aEl.numContainedDynamics) ||
-      Math.sign(aEl.numDynamicProps - +bEl.numDynamicProps)
+      Math.sign(aEl.numDynamicProps - bEl.numDynamicProps)
     );
   }
 
@@ -160,48 +160,48 @@ class Path {
 function getPath(el, ignoreEl, isHardReferenced) {
   return logFunc('path',
     `getPath ${el.tag}`,
-    () => el.rootPath ? el.rootPath : calcPath(el, ignoreEl, isHardReferenced),
+    () => {
+      if(el.rootPath) return el.rootPath;
+
+      const { parent } = el;
+      if(!parent) return new Path(el, true);
+      if(LOGGING.path && ignoreEl) log('path', 'ignoreEl', ignoreEl.tag);
+
+      const path = new Path(el, isHardReferenced);
+      const { distFromEnd, index, previousSibling, nextSibling } = el;
+      let parentPath;
+
+      if(index === 0) {
+        parentPath = (
+          ignoreEl === nextSibling
+            ? getPath(parent)
+            : Path.min(getPath(parent), getPath(nextSibling, el))
+        );
+      }
+      else if(distFromEnd === 0) {
+        parentPath = (
+          ignoreEl === previousSibling
+            ? getPath(parent)
+            : Path.min(getPath(parent), getPath(previousSibling, el))
+        );
+      }
+      else if(
+        ignoreEl === previousSibling || (
+          ignoreEl !== nextSibling &&
+          getPath(nextSibling, el).isShorterOrEqualThan(getPath(previousSibling, el))
+        )
+      ) {
+        parentPath = getPath(nextSibling, el);
+      }
+      else {
+        parentPath = getPath(previousSibling, el);
+      }
+
+      path.parent = parentPath;
+      return path;
+    },
     result => `[ ${result.toString()} ]`
   );
-}
-
-function calcPath(el, ignoreEl, isHardReferenced) {
-  const { parent } = el;
-  if(!parent) return new Path(el, true);
-  if(LOGGING.path && ignoreEl) log('path', 'ignoreEl', ignoreEl.tag);
-
-  const path = new Path(el, isHardReferenced);
-  const { distFromEnd, index, previousSibling, nextSibling } = el;
-  let parentPath;
-
-  if(index === 0) {
-    parentPath = (
-      ignoreEl === nextSibling
-        ? getPath(parent)
-        : Path.min(getPath(parent), getPath(nextSibling, el))
-    );
-  }
-  else if(distFromEnd === 0) {
-    parentPath = (
-      ignoreEl === previousSibling
-        ? getPath(parent)
-        : Path.min(getPath(parent), getPath(previousSibling, el))
-    );
-  }
-  else if(
-    ignoreEl === previousSibling || (
-      ignoreEl !== nextSibling &&
-      getPath(nextSibling, el).isShorterOrEqualThan(getPath(previousSibling, el))
-    )
-  ) {
-    parentPath = getPath(nextSibling, el);
-  }
-  else {
-    parentPath = getPath(previousSibling, el);
-  }
-
-  path.parent = parentPath;
-  return path;
 }
 
 module.exports = { getPath };

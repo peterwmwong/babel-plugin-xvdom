@@ -1,5 +1,5 @@
 const assert = require("assert");
-const genId  = require("../src/genId");
+const genId  = require("../../src/parsing/genCompactId");
 
 describe("genId(num)", () => {
   it("returns unique strings", () => {
