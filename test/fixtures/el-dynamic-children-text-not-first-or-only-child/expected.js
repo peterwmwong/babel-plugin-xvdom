@@ -1,4 +1,4 @@
-var _xvdomCreateDynamic = xvdom.createDynamic,
+var _xvdomCreateText = xvdom.createText,
     _xvdomEl = xvdom.el,
     _xvdomSpec = {
   c(inst) {
@@ -7,17 +7,18 @@ var _xvdomCreateDynamic = xvdom.createDynamic,
 
     _n.appendChild(_n2);
 
-    inst.a = _xvdomCreateDynamic(_n, inst.b);
+    _n.appendChild(inst.a = _xvdomCreateText(inst.b));
+
     return _n;
   },
 
   u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamic(pInst.b, pInst.b = inst.b, pInst.a);
+    if (inst.b !== pInst.b) pInst.a.data = _xvdomText(pInst.b = inst.b);
   },
 
   r: xvdom.DEADPOOL
 },
-    _xvdomUpdateDynamic = xvdom.updateDynamic;
+    _xvdomText = xvdom.text;
 var message1 = "hello";
 
 ({

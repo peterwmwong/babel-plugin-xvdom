@@ -59,30 +59,61 @@ function dynamicPropStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamicP
   ];
 }
 
-function dynamicChildStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild) {
+function dynamicArrayOrJSXChildStatement(t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild) {
   const { instanceContextId, instanceValueId, isOnlyChild } = dynamicChild;
+  return (
+    t.expressionStatement(
+      t.assignmentExpression('=',
+        memberExpr(t, pInstId, instanceContextId),
+        t.callExpression(
+          xvdomApi.accessAPI(`updateDynamic${isOnlyChild ? 'OnlyChild': ''}`),
+          [
+            memberExpr(t, pInstId, instanceValueId),
+            t.assignmentExpression('=',
+              memberExpr(t, pInstId, instanceValueId),
+              memberExpr(t, instId, instanceValueId)
+            ),
+            memberExpr(t, pInstId, instanceContextId)
+          ]
+        )
+      )
+    )
+  );
+}
+
+function dynamicTextChildStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild) {
+  const { instanceContextId, instanceValueId, isOnlyChild, isFirstChild } = dynamicChild;
+  return (
+    t.expressionStatement(
+      t.assignmentExpression('=',
+        ((isOnlyChild || isFirstChild)
+          ? memberExpr(t, pInstId, instanceContextId, 'firstChild', 'data')
+          : memberExpr(t, pInstId, instanceContextId, 'data')
+        ),
+        t.callExpression(
+          xvdomApi.accessAPI(`text`),
+          [
+            t.assignmentExpression('=',
+              memberExpr(t, pInstId, instanceValueId),
+              memberExpr(t, instId, instanceValueId)
+            )
+          ]
+        )
+      )
+    )
+  );
+}
+
+function dynamicChildStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild) {
+  const { instanceContextId, instanceValueId, isText } = dynamicChild;
   return [
     t.ifStatement(
       t.binaryExpression('!==',
         memberExpr(t, instId, instanceValueId),
         memberExpr(t, pInstId, instanceValueId)
       ),
-      t.expressionStatement(
-        t.assignmentExpression('=',
-          memberExpr(t, pInstId, instanceContextId),
-          t.callExpression(
-            xvdomApi.accessAPI('updateDynamic'),
-            [
-              t.booleanLiteral(isOnlyChild),
-              memberExpr(t, pInstId, instanceValueId),
-              t.assignmentExpression('=',
-                memberExpr(t, pInstId, instanceValueId),
-                memberExpr(t, instId, instanceValueId)
-              ),
-              memberExpr(t, pInstId, instanceContextId)
-            ]
-          )
-        )
+      (isText ? dynamicTextChildStatements : dynamicArrayOrJSXChildStatement)(
+        t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild
       )
     )
   ];

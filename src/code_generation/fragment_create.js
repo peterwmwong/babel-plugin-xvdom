@@ -56,7 +56,36 @@ function dynamicPropStatement(funcGen, domNodeExpression, jsxElementProp, expres
   );
 }
 
-function dynamicChildStatement(funcGen, jsxValueElement, parentNodeVarId) {
+function dynamicTextChildStatement(funcGen, jsxValueElement, parentNodeVarId) {
+  const { t } = funcGen
+  const { dynamic: { instanceContextId, instanceValueId }, isOnlyChild, isFirstChild } = jsxValueElement;
+  const instId = funcGen.accessInstance();
+  const instContextExpr = memberExpr(t, instId, instanceContextId);
+  const instValueExpr = memberExpr(t, instId, instanceValueId);
+  return (
+    t.expressionStatement(
+      (isOnlyChild || isFirstChild)
+        ? t.sequenceExpression([
+            t.assignmentExpression('=', instContextExpr, parentNodeVarId),
+            t.assignmentExpression('=',
+              memberExpr(t, parentNodeVarId, 'innerText'),
+              t.callExpression(funcGen.accessAPI('text'), [instValueExpr])
+            )
+          ])
+        : t.callExpression(
+            memberExpr(t, parentNodeVarId, 'appendChild'),
+            [
+              t.assignmentExpression('=',
+                instContextExpr,
+                t.callExpression(funcGen.accessAPI('createText'), [instValueExpr])
+              )
+            ]
+          )
+    )
+  );
+}
+
+function dynamicArrayOrJSXChildStatement(funcGen, jsxValueElement, parentNodeVarId) {
   const { t } = funcGen
   const { dynamic: { instanceContextId, instanceValueId }, isOnlyChild } = jsxValueElement;
   const instId = funcGen.accessInstance();
@@ -65,15 +94,15 @@ function dynamicChildStatement(funcGen, jsxValueElement, parentNodeVarId) {
     t.assignmentExpression('=',
       memberExpr(t, instId, instanceContextId),
       t.callExpression(
-        funcGen.accessAPI('createDynamic'),
-        [
-          t.booleanLiteral(isOnlyChild),
-          parentNodeVarId,
-          memberExpr(t, instId, instanceValueId)
-        ]
+        funcGen.accessAPI(`createDynamic${isOnlyChild ? 'OnlyChild': ''}`),
+        [parentNodeVarId, memberExpr(t, instId, instanceValueId)]
       )
     )
   );
+}
+
+function dynamicChildStatement(funcGen, jsxValueElement, parentNodeVarId) {
+  return (jsxValueElement.isText ? dynamicTextChildStatement : dynamicArrayOrJSXChildStatement)(funcGen, jsxValueElement, parentNodeVarId)
 }
 
 function staticChildStatment(funcGen, jsxValueElement, parentNodeVarId) {

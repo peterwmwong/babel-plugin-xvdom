@@ -1,6 +1,6 @@
 var message1 = "hello";
 
 <div>
+  {message1}
   <span></span>
-  {...message1}
 </div>;

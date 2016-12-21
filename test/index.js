@@ -7,21 +7,26 @@ const plugin = require("../src/index");
 const BABEL_CONFIG = { plugins: ["syntax-jsx", plugin] };
 
 const filterFixtures = fixture => [
-  "el",
-  "el-comment-children",
-  "el-dynamic-children",
-  "el-dynamic-props",
-  "el-key-prop",
-  "el-static-children",
-  "el-static-props",
+  "cloneable",
+  "cloneable-multiple-dynamic-props",
+  "cloneable-root-props",
+  "cloneable-saved-path-nodes",
+  "cloneable-static-props",
   "component",
   "component-dynamic-props",
   "component-static-props",
-  "cloneable",
-  "cloneable-static-props",
-  "cloneable-root-props",
-  "cloneable-multiple-dynamic-props",
-  "cloneable-saved-path-nodes"
+  "el",
+  "el-comment-children",
+  "el-dynamic-children",
+  "el-dynamic-children-only-child",
+  "el-dynamic-children-text",
+  "el-dynamic-children-text-first-child",
+  "el-dynamic-children-text-not-first-or-only-child",
+  "el-dynamic-children-text-only-child",
+  "el-dynamic-props",
+  "el-key-prop",
+  "el-static-children",
+  "el-static-props"
   // "recycle"
 ].indexOf(fixture) !== -1;
 

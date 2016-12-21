@@ -39,6 +39,7 @@ module.exports = function normalizeChildren(t, rawChildren){
     else if(t.isJSXEmptyExpression(child)){
       return children;
     }
+    // TODO: Are these even possible?  How do you get an array expression as child of a JSXElement?
     else if(t.isArrayExpression(child)){
       child = t.sequenceExpression(normalizeChildren(t, child.elements));
     }

@@ -63,13 +63,16 @@ class JSXElementChild {
 }
 
 class JSXValueElement extends JSXElementChild {
-  constructor(fragment, astNode, parent, isOnlyChild) {
+  constructor(fragment, astNode, parent, isOnlyChild, isFirstChild) {
     super(parent);
 
+    const { t } = fragment;
     this.numContainedDynamics = 1;
     this.isOnlyChild = isOnlyChild;
-    this.dynamic = isDynamicNode(fragment.t, astNode) && fragment.addDynamicChild(this);
-    this.astValueNode = astNode;
+    this.isFirstChild = isFirstChild;
+    this.isText = !t.isJSXSpreadChild(astNode);
+    this.dynamic = isDynamicNode(t, astNode) && fragment.addDynamicChild(this);
+    this.astValueNode = this.isText ? astNode : astNode.expression;
   }
 }
 
@@ -107,11 +110,12 @@ class JSXHTMLElement extends JSXElement {
     const hasOnlyOneChild  = filteredChildren.length === 1;
 
     this.children = (
-      filteredChildren.map(child =>
-        t.isJSXElement(child)
-          ? createJSXElement(fragment, child, this)
-          : new JSXValueElement(fragment, child, this, hasOnlyOneChild)
-      )
+      filteredChildren
+        .map((child, i) =>
+          t.isJSXElement(child)
+            ? createJSXElement(fragment, child, this)
+            : new JSXValueElement(fragment, child, this, hasOnlyOneChild, i === 0)
+        )
     );
   }
 }
@@ -152,7 +156,9 @@ class DynamicChild extends Dynamic {
     this.child = child;
   }
 
+  get isText() { return this.child.isText; }
   get isOnlyChild() { return this.child.isOnlyChild; }
+  get isFirstChild() { return this.child.isFirstChild; }
   get astValueNode() { return this.child.astValueNode; }
 }
 
