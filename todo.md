@@ -1,17 +1,30 @@
 ## Unit/Integration specs for pathing algorithm
 
-## Code Generation Cloneable: unused temporary variables
+## Code Generation: Cloneable temporary variable recycling
 
-See `cloneable-saved-path-nodes/expected.js`, notice _n6 is unused.
+Consider the output for cloneable-save-path-nodes:
 
-## Code Generation: Cloneable paths to member expression
+```js
+    (inst.i = _n2 = _n.lastChild).id = inst.j;
+    (inst.e = _n4 = (_n3 = _n2.previousSibling.firstChild).nextSibling).id = inst.f;
+    (inst.g = _n4.nextSibling.firstChild).id = inst.h;
+    (inst.a = (_n5 = _n3.firstChild).firstChild.firstChild).id = inst.b;
+    (inst.c = _n5.lastChild.firstChild).id = inst.d;
+```
 
-Currently `fragment_create.js cloneableDynamicPropCode()` is a bit complicated.
-Let's reconsider how generate this path and look for opportunities for
-simplification...
+`_n2`, `_n4`, `_n3` could be reused for another node after it's been used, since it is not referenced again after it's used.
+An optimized output could reuse a variable once it's contents is no longer needed...
 
-- Can we first look traverse the path in the right order. For example, build a
-  list of `Path`'s starting from a `path`'s nearest saved `path`?
+```js
+    (inst.i = _n2 = _n.lastChild).id = inst.j;
+    (inst.e = _n3 = (_n2 = _n2.previousSibling.firstChild).nextSibling).id = inst.f;
+    (inst.g = _n3.nextSibling.firstChild).id = inst.h;
+    (inst.a = (_n2 = _n2.firstChild).firstChild.firstChild).id = inst.b;
+    (inst.c = _n2.lastChild.firstChild).id = inst.d;
+```
+
+... the number of temp variables was reduced to 2 (`_n2` and `_n3`).
+
 
 ## API
 

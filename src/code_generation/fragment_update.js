@@ -115,10 +115,7 @@ function componentDynamicStatement(t, xvdomApi, instId, pInstId, component) {
             xvdomApi.accessAPI('updateComponent'),
             [
               t.identifier(component.tag),
-              memberExpr(t,
-                t.identifier(component.tag),
-                t.identifier('state')
-              ),
+              memberExpr(t, component.tag, 'state'),
               obj(t, component.props.reduce((hash, p) => {
                 hash[p.astNameId.name] = (
                   !p.dynamic ? p.astValueNode : (

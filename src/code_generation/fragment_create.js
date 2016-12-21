@@ -16,6 +16,7 @@ const memberExpr = require('./memberExpr.js');
 
 const {
   log,
+  logFunc,
   LOGGING
 } = require('../logger.js');
 
@@ -243,73 +244,49 @@ const sortDynamicsByDepthThenDistanceFromEnds = dynamics => (
     .reduce((result, group) => [...result, ...group.sort(sortDistanceFromEnds)], [])
 );
 
-const expressionForRelationOrAssign = (t, relationOrAssign) => (
-  typeof relationOrAssign === 'string'
-    ? t.identifier(relationOrAssign)
-    : expressionForPath(t, relationOrAssign)
-);
+const expressionForPath = (path, funcGen, elToTmpVarId) =>
+  logFunc('dynamicsPath',
+    `expressionForPath ${path.toString()}`,
+    () => {
+      const { t } = funcGen;
+      const { el, parent } = path;
 
-const expressionForPath = (t, { tmpVar, pathMembers }) => (
-  !pathMembers
-    ? tmpVar
-    : t.assignmentExpression('=',
-        tmpVar,
-        memberExpr(t, ...pathMembers.map(p => expressionForRelationOrAssign(t, p)))
-      )
-);
+      if(elToTmpVarId.has(el)) {
+        log('dynamicsPath', 'using saved variable', funcGen.getTmpVarId(elToTmpVarId.get(el)).name);
+        return funcGen.getTmpVarId(elToTmpVarId.get(el));
+      }
+      else if(!parent) {
+        return funcGen.getTmpVarId(
+          elToTmpVarId.set(el, elToTmpVarId.size).get(el)
+        );
+      }
+      else {
+        const memberExpression = memberExpr(t,
+          expressionForPath(parent, funcGen, elToTmpVarId),
+          el.relationshipTo(parent.el)
+        );
+
+        if(path.shouldBeSaved){
+          log('dynamicsPath', '> saving', el.tag);
+          return t.assignmentExpression('=',
+            funcGen.getTmpVarId(
+              elToTmpVarId.set(el, elToTmpVarId.size).get(el)
+            ),
+            memberExpression
+          );
+        }
+        return memberExpression;
+      }
+    }
+  );
 
 function cloneableDynamicPropCode(funcGen, dynamic, elToTmpVarId) {
-  const hasTmpVar = el => elToTmpVarId.has(el);
-  function getOrAllocateTmpVar(el) {
-    if(!hasTmpVar(el)) elToTmpVarId.set(el, elToTmpVarId.size);
-    return funcGen.getTmpVarId(elToTmpVarId.get(el));
-  }
-
   const { t } = funcGen;
-  let path = dynamic.rootPath;
-  let el, parentEl;
-  let rootAssignExpr, curAssignExpr, pathMembers;
   const originalSavedEls = new Set(elToTmpVarId.keys());
-
-  if(hasTmpVar(path.el) || !path.parent) {
-    rootAssignExpr = { tmpVar: getOrAllocateTmpVar(path.el) };
-  }
-  else{
-    while(path.parent && !originalSavedEls.has(el = path.el)) {
-      parentEl = path.parent.el;
-      pathMembers = [
-        ...(
-          hasTmpVar(parentEl) || !path.parent.parent
-            ? [ getOrAllocateTmpVar(parentEl).name ]
-            :  EMPTY_ARRAY
-        ),
-        el.relationshipTo(parentEl)
-      ];
-
-      // Optimization: Inline the assignment of the saved nodes in the member expression
-      //               to the dynamic node
-      if(!originalSavedEls.has(el) && path.shouldBeSaved) {
-        const newCur = {
-          pathMembers,
-          tmpVar: getOrAllocateTmpVar(el)
-        };
-
-        if(curAssignExpr) curAssignExpr.pathMembers.unshift(newCur);
-        rootAssignExpr = rootAssignExpr || newCur;
-
-        curAssignExpr = newCur;
-      }
-      else{
-        curAssignExpr.pathMembers.unshift(...pathMembers);
-      }
-
-      path = path.parent;
-    }
-  }
 
   return dynamicPropStatement(
     funcGen,
-    expressionForPath(t, rootAssignExpr),
+    expressionForPath(dynamic.el.finalizedPath, funcGen, elToTmpVarId),
     dynamic.prop,
     (
       !originalSavedEls.has(dynamic.el) &&
@@ -326,14 +303,13 @@ function cloneableDynamicsCode(funcGen, rootEl, dynamics) {
 
   // Calculate shortest paths
   for(let d of sortedDynamics) {
-    d.rootPath = getPath(d.el, undefined, true).finalize();
+    getPath(d.el, undefined, true).finalize(d);
   }
 
   for(let d of sortedDynamics) {
     // TODO: Handle dynamic children
     if(d instanceof DynamicChild) return;
-
-    if(LOGGING.dynamicsPath) log('dynamicsPath', d.rootPath.toString());
+    if(LOGGING.dynamicsPath) log('dynamicsPath', d.el.finalizedPath.toString());
 
     // Generate member expression for path
     funcGen.addStatement(
@@ -374,7 +350,7 @@ function cloneableElementCode(funcGen, jsxFragment) {
             t.callExpression(createSpecNodeId, EMPTY_ARRAY)
           )
         ),
-        t.identifier('cloneNode')
+        'cloneNode'
       ),
       [t.booleanLiteral(true)]
     )

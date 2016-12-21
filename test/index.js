@@ -33,7 +33,6 @@ const transform     = path        => babel.transformFileSync(path, BABEL_CONFIG)
 describe("transforms jsx", () => {
   for(let dir of fs.readdirSync(fixturesDir).filter(filterFixtures)) {
     it(dirTospecName(dir), () => {
-      debugger;
       assert.equal(
         transform(fixturePath(dir, 'actual.js')),
         fs.readFileSync(fixturePath(dir, 'expected.js')).toString().trim()

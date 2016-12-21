@@ -5,16 +5,13 @@ var _xvdomEl = xvdom.el,
         _n2,
         _n3,
         _n4,
-        _n5,
-        _n6,
-        _n7,
-        _n8;
+        _n5;
 
     (inst.i = _n2 = _n.lastChild).id = inst.j;
-    (inst.e = _n3 = (_n4 = _n2.previousSibling.firstChild).nextSibling).id = inst.f;
-    (inst.g = _n5 = _n3.nextSibling.firstChild).id = inst.h;
-    (inst.a = _n6 = (_n7 = _n4.firstChild).firstChild.firstChild).id = inst.b;
-    (inst.c = _n8 = _n7.lastChild.firstChild).id = inst.d;
+    (inst.e = _n4 = (_n3 = _n2.previousSibling.firstChild).nextSibling).id = inst.f;
+    (inst.g = _n4.nextSibling.firstChild).id = inst.h;
+    (inst.a = (_n5 = _n3.firstChild).firstChild.firstChild).id = inst.b;
+    (inst.c = _n5.lastChild.firstChild).id = inst.d;
     return _n;
   },
 

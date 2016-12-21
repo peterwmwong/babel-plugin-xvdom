@@ -14,6 +14,7 @@ class Path {
     this.el = el;
     this.isHardReferenced = hardRef;
     this.children = new Set();
+    this.referencingDynamics = new Set();
   }
 
   get length() {
@@ -24,7 +25,12 @@ class Path {
     );
   }
 
-  get shouldBeSaved() { return this.isHardReferenced || this.children.size > 1; }
+  get shouldBeSaved() {
+    return (
+      this.children.size > (this.isHardReferenced ? 0 : 1) ||
+      this.referencingDynamics.size > 1
+    );
+  }
 
   get id() {
     const referenceIndicator = (
@@ -32,7 +38,7 @@ class Path {
       : this.shouldBeSaved    ? '^'
       : ''
     );
-    return `${referenceIndicator}${this.el.tag}(${this.pathId}, ${this.children.size})`;
+    return `${referenceIndicator}${this.el.tag}(children = ${this.children.size}, dynamics = ${this.referencingDynamics.size})`;
   }
 
   isMoreDesirableThan(b) {
@@ -65,12 +71,13 @@ class Path {
   // This commits this path AND all ancestor paths to their element.
   // Essentially upgrading this path from "temporary calculation, lets see how this goes" to
   // "All other options have been considered, this is the shortest path to root".
-  finalize() {
+  finalize(dynamic) {
     return logFunc('path',
       `finalize ${this.id}`,
       () => {
         const { parent, el } = this;
         el.finalizedPath = this;
+        if(dynamic) this.referencingDynamics.add(dynamic);
 
         if(parent) {
           parent.addReference(this);
