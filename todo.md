@@ -1,6 +1,8 @@
-## Extract Multi-Source Shortest Path algorithm out
+## Unit/Integration specs for pathing algorithm
 
-## Code Generation: Fix disabled cloneable-saved-path-nodes
+## Code Generation Cloneable: unused temporary variables
+
+See `cloneable-saved-path-nodes/expected.js`, notice _n6 is unused.
 
 ## Code Generation: Cloneable paths to member expression
 
@@ -10,7 +12,6 @@ simplification...
 
 - Can we first look traverse the path in the right order. For example, build a
   list of `Path`'s starting from a `path`'s nearest saved `path`?
-
 
 ## API
 

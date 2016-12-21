@@ -6,37 +6,25 @@ const {
 
 let LAST_PATH_ID = 0;
 class Path {
-  static min(a, b) {
-    if(LOGGING.path) log('path', `min: ${a.id}(${a.length}) < ${b.id}(${b.length})`);
-    return a.length < b.length ? a : b;
-  }
+  static moreDesirable(a, b) { return a.isMoreDesirableThan(b) ? a : b; }
 
   constructor(el, hardRef = false) {
     this.parent = null;
-    this.numReferencingPaths = 0;
     this.pathId = ++LAST_PATH_ID;
     this.el = el;
     this.isHardReferenced = hardRef;
+    this.children = new Set();
   }
 
   get length() {
     return (
         this.isHardReferenced ? 0
-      : this.parent           ? (this.parent.length + 1)
+      : this.parent           ? this.parent.length + 1
       : Number.MAX_SAFE_INTEGER
     );
   }
 
-  get tag() { return this.el.tag; }
-
-  get shouldBeSaved() {
-    const { el: { rootPath }, isHardReferenced, numReferencingPaths } = this;
-    return (
-      isHardReferenced ||
-      numReferencingPaths > 1 ||
-      (rootPath && rootPath !== this && rootPath.shouldBeSaved)
-    );
-  }
+  get shouldBeSaved() { return this.isHardReferenced || this.children.size > 1; }
 
   get id() {
     const referenceIndicator = (
@@ -44,16 +32,16 @@ class Path {
       : this.shouldBeSaved    ? '^'
       : ''
     );
-    return `${referenceIndicator}${this.el.tag}(${this.pathId})`;
+    return `${referenceIndicator}${this.el.tag}(${this.pathId}, ${this.children.size})`;
   }
 
-  isShorterOrEqualThan(b) {
+  isMoreDesirableThan(b) {
     const a = this;
     const aEl = a.el;
     const bEl = b.el;
     if(LOGGING.path) {
       log('path',
-        'isShorterOrEqualThan:',
+        'isMoreDesirableThan:',
         `length: ${a.id}(${a.length}) < ${b.id}(${b.length})`,
         `elNumDynamicDescendants: ${aEl.numContainedDynamics} < ${bEl.numContainedDynamics}`,
         `numDynamicProps: ${aEl.numDynamicProps} < ${bEl.numDynamicProps}`
@@ -62,110 +50,79 @@ class Path {
     return 0 >= (
       Math.sign(a.length - b.length) ||
       Math.sign(bEl.numContainedDynamics - aEl.numContainedDynamics) ||
-      Math.sign(aEl.numDynamicProps - bEl.numDynamicProps)
+      Math.sign(bEl.numDynamicProps - aEl.numDynamicProps)
     );
   }
 
   toString() {
     const result = [];
     let path = this;
-    while(path) {
-      result.push(path.id);
-      path = path.parent;
-    }
+    do { result.push(path.id); }
+    while(path = path.parent);
     return result.join(', ');
   }
 
-  finalize(pathHead) {
+  // This commits this path AND all ancestor paths to their element.
+  // Essentially upgrading this path from "temporary calculation, lets see how this goes" to
+  // "All other options have been considered, this is the shortest path to root".
+  finalize() {
     return logFunc('path',
       `finalize ${this.id}`,
       () => {
-        this.addReference();
-        this.el.rootPath = this;
+        const { parent, el } = this;
+        el.finalizedPath = this;
 
-        const { parent } = this; 
-        if((!pathHead || !this.shouldBeSaved) && parent && !parent.isHardReferenced) {
-          parent.finalize(this);
+        if(parent) {
+          parent.addReference(this);
+          parent.finalize();
         }
         return this;
       }
     );
   }
 
-  removeReference() {
+  removeReference(childPath) {
     logFunc('path',
-      `removeReference ${this.id} numReferencingPaths = ${this.numReferencingPaths}`,
-      () => {
-        const { el: { rootPath } } = this;
-        if(rootPath && rootPath !== this) {
-          if(LOGGING.path) log('path', `adding reference to previous rootPath ${rootPath.id}`);
-          rootPath.removeReference();
-        }
-
-        --this.numReferencingPaths;
-      },
-      () => `-> ${this.numReferencingPaths}`
+      `removeReference ${this.id} ${this.shouldBeSaved}`,
+      () => { this.children.delete(childPath); },
+      () => `-> ${this.shouldBeSaved}`
     );
   }
 
-  addReference() {
+  addReference(childPath) {
     logFunc('path',
-      `addReference ${this.id} numReferencingPaths = ${this.numReferencingPaths}`,
+      `addReference ${this.id} ${this.shouldBeSaved}`,
       () => {
-        const { el: { rootPath } } = this;
-        if(rootPath && rootPath !== this) {
-          if(LOGGING.path) log('path', `adding reference to previous rootPath ${rootPath.id}`);
-          rootPath.addReference();
-        }
+        const { parent, shouldBeSaved } = this;
+        this.children.add(childPath);
 
-        const { shouldBeSaved } = this;
-        ++this.numReferencingPaths;
-
-        /*
-        Make sure a parent is not saved when it isn't necessary to.
-        Example:
-
-        <a cloneable>
-          <b />
-          <d>
-            <e>
-              <i>
-                <j>
-                  <l id={var1} />
-                </j>
-                <k>
-                  <m id={var1} />
-                </k>
-              </i>
-            </e>
-            <f id={var1} />
-            <g>
-              <h id={var1} />
-            </g>
-          </d>
-          <c id={var1} />
-        </a>
-
-        ...without this <e> would be saved.
-        */
-        if(!shouldBeSaved && this.shouldBeSaved && this.parent) {
-          this.parent.removeReference();
+        // If, by adding this childPath, this path should now shouldBeSaved...
+        // we should remove our reference to our parent. This prevents saving
+        // more paths than we need.
+        // 
+        // Consider the example paths "A <- B <- C" (B is the parent of A, C is
+        // the parent of B). This path should generate an expression path like
+        // `C.B.A`. If B is finalized and is upgraded to `shouldBeSaved`, the
+        // expected expression path would be `B.A` and no longer needs to
+        // travel through C.  Thus B's path no longer references C's path.
+        if(!shouldBeSaved && this.shouldBeSaved && parent){
+          parent.removeReference(this);
         }
       },
-      () => `-> ${this.numReferencingPaths}`
+      () => `-> ${this.shouldBeSaved}`
     );
   }
 }
 
 function getPath(el, ignoreEl, isHardReferenced) {
   return logFunc('path',
-    `getPath ${el.tag}`,
+    `getPath ${el.tag} ${ignoreEl ? `ignoring ${ignoreEl.tag}` : ''}`,
     () => {
-      if(el.rootPath) return el.rootPath;
+      // If it already exists, use element's finalized path.
+      if(el.finalizedPath) return el.finalizedPath;
 
       const { parent } = el;
       if(!parent) return new Path(el, true);
-      if(LOGGING.path && ignoreEl) log('path', 'ignoreEl', ignoreEl.tag);
 
       const path = new Path(el, isHardReferenced);
       const { distFromEnd, index, previousSibling, nextSibling } = el;
@@ -175,20 +132,20 @@ function getPath(el, ignoreEl, isHardReferenced) {
         parentPath = (
           ignoreEl === nextSibling
             ? getPath(parent)
-            : Path.min(getPath(parent), getPath(nextSibling, el))
+            : Path.moreDesirable(getPath(parent), getPath(nextSibling, el))
         );
       }
       else if(distFromEnd === 0) {
         parentPath = (
           ignoreEl === previousSibling
             ? getPath(parent)
-            : Path.min(getPath(parent), getPath(previousSibling, el))
+            : Path.moreDesirable(getPath(parent), getPath(previousSibling, el))
         );
       }
       else if(
         ignoreEl === previousSibling || (
           ignoreEl !== nextSibling &&
-          getPath(nextSibling, el).isShorterOrEqualThan(getPath(previousSibling, el))
+          getPath(nextSibling, el).isMoreDesirableThan(getPath(previousSibling, el))
         )
       ) {
         parentPath = getPath(nextSibling, el);

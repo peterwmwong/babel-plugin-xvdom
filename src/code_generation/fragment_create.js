@@ -266,7 +266,7 @@ function cloneableDynamicPropCode(funcGen, dynamic, elToTmpVarId) {
   }
 
   const { t } = funcGen;
-  let path = dynamic.el.rootPath;
+  let path = dynamic.rootPath;
   let el, parentEl;
   let rootAssignExpr, curAssignExpr, pathMembers;
   const originalSavedEls = new Set(elToTmpVarId.keys());
@@ -284,7 +284,7 @@ function cloneableDynamicPropCode(funcGen, dynamic, elToTmpVarId) {
             :  EMPTY_ARRAY
         ),
         el.relationshipTo(parentEl)
-      ]
+      ];
 
       // Optimization: Inline the assignment of the saved nodes in the member expression
       //               to the dynamic node
@@ -326,14 +326,14 @@ function cloneableDynamicsCode(funcGen, rootEl, dynamics) {
 
   // Calculate shortest paths
   for(let d of sortedDynamics) {
-    getPath(d.el, undefined, true).finalize();
+    d.rootPath = getPath(d.el, undefined, true).finalize();
   }
 
   for(let d of sortedDynamics) {
     // TODO: Handle dynamic children
     if(d instanceof DynamicChild) return;
 
-    if(LOGGING.dynamicsPath) log('dynamicsPath', d.el.rootPath.toString());
+    if(LOGGING.dynamicsPath) log('dynamicsPath', d.rootPath.toString());
 
     // Generate member expression for path
     funcGen.addStatement(
