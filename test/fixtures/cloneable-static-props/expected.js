@@ -43,5 +43,5 @@ var _xvdomEl = xvdom.el,
 };
 
 ({
-  $s: _xvdomSpec
+  s: _xvdomSpec
 });

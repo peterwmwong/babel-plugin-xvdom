@@ -13,5 +13,5 @@ var _xvdomCreateComponent = xvdom.createComponent,
 function MyComponent() {}
 
 ({
-  $s: _xvdomSpec
+  s: _xvdomSpec
 });

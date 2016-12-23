@@ -40,11 +40,15 @@ function translate(str) {
 }
 
 ({
-  $s: _xvdomSpec,
-  b: msg
+  s: _xvdomSpec,
+  v: {
+    b: msg
+  }
 });
 ({
-  $s: _xvdomSpec2,
-  b: msg + "hello",
-  c: translate(msg)
+  s: _xvdomSpec2,
+  v: {
+    b: msg + "hello",
+    c: translate(msg)
+  }
 });

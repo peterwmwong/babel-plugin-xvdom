@@ -8,7 +8,7 @@ var _xvdomEl = xvdom.el,
   },
 
   u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a.firstChild.data = _xvdomText(pInst.b = inst.b);
+    if (inst.b !== pInst.b) pInst.a.innerText = _xvdomText(pInst.b = inst.b);
   },
 
   r: xvdom.DEADPOOL
@@ -22,7 +22,7 @@ var _xvdomEl = xvdom.el,
   },
 
   u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a.firstChild.data = _xvdomText(pInst.b = inst.b);
+    if (inst.b !== pInst.b) pInst.a.innerText = _xvdomText(pInst.b = inst.b);
   },
 
   r: xvdom.DEADPOOL
@@ -36,7 +36,7 @@ var _xvdomEl = xvdom.el,
   },
 
   u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a.firstChild.data = _xvdomText(pInst.b = inst.b);
+    if (inst.b !== pInst.b) pInst.a.innerText = _xvdomText(pInst.b = inst.b);
   },
 
   r: xvdom.DEADPOOL
@@ -50,7 +50,7 @@ var _xvdomEl = xvdom.el,
   },
 
   u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a.firstChild.data = _xvdomText(pInst.b = inst.b);
+    if (inst.b !== pInst.b) pInst.a.innerText = _xvdomText(pInst.b = inst.b);
   },
 
   r: xvdom.DEADPOOL
@@ -63,18 +63,26 @@ function translate(str) {
 }
 
 ({
-  $s: _xvdomSpec,
-  b: message2[0]
+  s: _xvdomSpec,
+  v: {
+    b: message2[0]
+  }
 });
 ({
-  $s: _xvdomSpec2,
-  b: message2 + "hello"
+  s: _xvdomSpec2,
+  v: {
+    b: message2 + "hello"
+  }
 });
 ({
-  $s: _xvdomSpec3,
-  b: translate(message2)
+  s: _xvdomSpec3,
+  v: {
+    b: translate(message2)
+  }
 });
 ({
-  $s: _xvdomSpec4,
-  b: message2.length
+  s: _xvdomSpec4,
+  v: {
+    b: message2.length
+  }
 });

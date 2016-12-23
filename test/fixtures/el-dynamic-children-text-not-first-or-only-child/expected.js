@@ -22,6 +22,8 @@ var _xvdomCreateText = xvdom.createText,
 var message1 = "hello";
 
 ({
-  $s: _xvdomSpec,
-  b: message1
+  s: _xvdomSpec,
+  v: {
+    b: message1
+  }
 });

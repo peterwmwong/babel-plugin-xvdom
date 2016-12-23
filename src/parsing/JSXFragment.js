@@ -6,7 +6,8 @@ const {
   isComponentName,
   isDynamicNode,
   isKeyAttribute,
-  isNotXvdomAttribute
+  isNotXvdomAttribute,
+  isRecycleAttribute
 } = require('./isHelpers');
 
 const hasSideEffects = (tag, propName) => (
@@ -172,6 +173,7 @@ class JSXFragment {
     this.t = t;
     this.key = parseKeyAttr(t, openingElement);
     this.isCloneable = openingElement.attributes.some(isCloneableAttribute);
+    this.isRecycleable = openingElement.attributes.some(isRecycleAttribute);
     this.rootElement = createJSXElement(this, astNode, null);
   }
 

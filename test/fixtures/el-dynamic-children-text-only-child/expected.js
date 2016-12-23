@@ -8,7 +8,7 @@ var _xvdomEl = xvdom.el,
   },
 
   u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a.firstChild.data = _xvdomText(pInst.b = inst.b);
+    if (inst.b !== pInst.b) pInst.a.innerText = _xvdomText(pInst.b = inst.b);
   },
 
   r: xvdom.DEADPOOL
@@ -17,6 +17,8 @@ var _xvdomEl = xvdom.el,
 var message1 = "hello";
 
 ({
-  $s: _xvdomSpec,
-  b: message1
+  s: _xvdomSpec,
+  v: {
+    b: message1
+  }
 });

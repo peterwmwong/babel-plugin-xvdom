@@ -64,7 +64,7 @@ function dynamicTextChildStatement(funcGen, jsxValueElement, parentNodeVarId) {
   const instValueExpr = memberExpr(t, instId, instanceValueId);
   return (
     t.expressionStatement(
-      (isOnlyChild || isFirstChild)
+      isOnlyChild
         ? t.sequenceExpression([
             t.assignmentExpression('=', instContextExpr, parentNodeVarId),
             t.assignmentExpression('=',

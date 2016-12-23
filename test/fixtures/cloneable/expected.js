@@ -74,10 +74,12 @@ var _xvdomEl = xvdom.el,
 var var1 = 1;
 
 ({
-  $s: _xvdomSpec,
-  b: var1,
-  d: var1,
-  f: var1,
-  h: var1,
-  j: var1
+  s: _xvdomSpec,
+  v: {
+    b: var1,
+    d: var1,
+    f: var1,
+    h: var1,
+    j: var1
+  }
 });

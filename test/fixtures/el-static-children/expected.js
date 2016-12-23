@@ -88,23 +88,23 @@ var _xvdomEl = xvdom.el,
   r: xvdom.DEADPOOL
 };
 ({
-  $s: _xvdomSpec
+  s: _xvdomSpec
 });
 
 ({
-  $s: _xvdomSpec2
+  s: _xvdomSpec2
 });
 
 ({
-  $s: _xvdomSpec3
+  s: _xvdomSpec3
 });
 
 ({
-  $s: _xvdomSpec4
+  s: _xvdomSpec4
 });
 ({
-  $s: _xvdomSpec5
+  s: _xvdomSpec5
 });
 ({
-  $s: _xvdomSpec6
+  s: _xvdomSpec6
 });

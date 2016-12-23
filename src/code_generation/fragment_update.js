@@ -82,12 +82,12 @@ function dynamicArrayOrJSXChildStatement(t, xvdomApi, instId, pInstId, getTmpVar
 }
 
 function dynamicTextChildStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild) {
-  const { instanceContextId, instanceValueId, isOnlyChild, isFirstChild } = dynamicChild;
+  const { instanceContextId, instanceValueId, isOnlyChild } = dynamicChild;
   return (
     t.expressionStatement(
       t.assignmentExpression('=',
-        ((isOnlyChild || isFirstChild)
-          ? memberExpr(t, pInstId, instanceContextId, 'firstChild', 'data')
+        (isOnlyChild
+          ? memberExpr(t, pInstId, instanceContextId, 'innerText')
           : memberExpr(t, pInstId, instanceContextId, 'data')
         ),
         t.callExpression(

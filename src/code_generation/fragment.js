@@ -7,6 +7,10 @@ module.exports = (t, fileGlobals, frag) => (
   obj(t, {
     c: fragmentCreateCode(t, fileGlobals, frag),
     u: fragmentUpdateCode(t, fileGlobals, frag),
-    r: memberExpr(t, 'xvdom', 'DEADPOOL')
+    r: (
+      frag.isRecycleable
+        ? t.newExpression(memberExpr(t, 'xvdom', 'Pool'), [])
+        : memberExpr(t, 'xvdom', 'DEADPOOL')
+    )
   })
 );

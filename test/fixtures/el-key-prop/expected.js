@@ -35,14 +35,14 @@ var _xvdomEl = xvdom.el,
 var key = "one";
 
 ({
-  $s: _xvdomSpec,
+  s: _xvdomSpec,
   key: "1"
 });
 ({
-  $s: _xvdomSpec2,
+  s: _xvdomSpec2,
   key: key
 });
 ({
-  $s: _xvdomSpec3,
+  s: _xvdomSpec3,
   key: key.length
 });

@@ -30,7 +30,9 @@ var var1 = 1;
 var var2 = 2;
 
 ({
-  $s: _xvdomSpec,
-  b: var1,
-  c: var2
+  s: _xvdomSpec,
+  v: {
+    b: var1,
+    c: var2
+  }
 });

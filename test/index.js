@@ -26,8 +26,8 @@ const filterFixtures = fixture => [
   "el-dynamic-props",
   "el-key-prop",
   "el-static-children",
-  "el-static-props"
-  // "recycle"
+  "el-static-props",
+  "recycle"
 ].indexOf(fixture) !== -1;
 
 const fixturesDir   = path.join(__dirname, "fixtures");

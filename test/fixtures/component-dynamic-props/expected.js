@@ -56,13 +56,17 @@ var message = "hello world";
 var message2 = "goodbye";
 
 ({
-  $s: _xvdomSpec,
-  b: message,
-  c: message2
+  s: _xvdomSpec,
+  v: {
+    b: message,
+    c: message2
+  }
 });
 
 ({
-  $s: _xvdomSpec2,
-  b: message,
-  c: message2
+  s: _xvdomSpec2,
+  v: {
+    b: message,
+    c: message2
+  }
 });

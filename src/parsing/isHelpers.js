@@ -1,7 +1,8 @@
 const isAttr               = (attr, name) => attr.name.name === name
 const isCloneableAttribute = attr => isAttr(attr, 'cloneable');
 const isKeyAttribute       = attr => isAttr(attr, 'key');
-const isNotXvdomAttribute  = attr => !isCloneableAttribute(attr) && !isKeyAttribute(attr);
+const isRecycleAttribute   = attr => isAttr(attr, 'recycle');
+const isNotXvdomAttribute  = attr => !(isCloneableAttribute(attr) || isKeyAttribute(attr) || isRecycleAttribute(attr));
 const isComponentName      = name => /^[A-Z]/.test(name);
 
 function isDynamicNode(t, astNode) {
@@ -25,5 +26,6 @@ module.exports = {
   isComponentName,
   isDynamicNode,
   isKeyAttribute,
-  isNotXvdomAttribute
+  isNotXvdomAttribute,
+  isRecycleAttribute
 };

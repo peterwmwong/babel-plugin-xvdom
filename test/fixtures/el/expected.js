@@ -11,5 +11,5 @@ var _xvdomEl = xvdom.el,
   r: xvdom.DEADPOOL
 };
 ({
-  $s: _xvdomSpec
+  s: _xvdomSpec
 });
