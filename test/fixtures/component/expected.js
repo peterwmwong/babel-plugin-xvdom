@@ -1,7 +1,7 @@
 var _xvdomCreateComponent = xvdom.createComponent,
     _xvdomSpec = {
-  c(inst) {
-    var _n = _xvdomCreateComponent(MyComponent, MyComponent.state, null, inst).$n;
+  c() {
+    var _n = _xvdomCreateComponent(MyComponent, MyComponent.state, null).$n;
 
     return _n;
   },
@@ -13,5 +13,6 @@ var _xvdomCreateComponent = xvdom.createComponent,
 function MyComponent() {}
 
 ({
-  s: _xvdomSpec
+  s: _xvdomSpec,
+  c: null
 });

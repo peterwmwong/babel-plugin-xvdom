@@ -1,15 +1,15 @@
 var _xvdomCreateDynamicOnlyChild = xvdom.createDynamicOnlyChild,
     _xvdomEl = xvdom.el,
     _xvdomSpec = {
-  c(inst) {
+  c(inst, ctx) {
     var _n = _xvdomEl("div");
 
-    inst.a = _xvdomCreateDynamicOnlyChild(_n, inst.b);
+    ctx.a = _xvdomCreateDynamicOnlyChild(_n, inst.a);
     return _n;
   },
 
-  u(inst, pInst) {
-    if (inst.b !== pInst.b) pInst.a = _xvdomUpdateDynamicOnlyChild(pInst.b, pInst.b = inst.b, pInst.a);
+  u(inst, pInst, ctx) {
+    if (inst.a !== pInst.a) ctx.a = _xvdomUpdateDynamicOnlyChild(pInst.a, pInst.a = inst.a, ctx.a);
   },
 
   r: xvdom.DEADPOOL
@@ -20,6 +20,7 @@ var message1 = "hello";
 ({
   s: _xvdomSpec,
   v: {
-    b: message1
-  }
+    a: message1
+  },
+  c: null
 });

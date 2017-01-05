@@ -24,7 +24,7 @@ class FileGlobals {
     return (
       globals[id] ||
       (globals[id] = { value, name: this.file.scope.generateUidIdentifier(id) })
-    ).name;
+    );
   }
 
   get variableDeclarators() {
@@ -45,7 +45,7 @@ class FileGlobals {
     return this.getOrSet(
       apiVarName(apiFuncName),
       memberExpr(this.t, 'xvdom', apiFuncName)
-    );
+    ).name;
   }
 }
 

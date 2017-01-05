@@ -9,54 +9,48 @@ const memberExpr = require('./memberExpr.js');
 
 const EMPTY_ARRAY = [];
 const nonComponentPropDynamic = d => (d instanceof DynamicProp && d.el instanceof JSXHTMLElement) || d instanceof DynamicChild;
-const instParamId             = t => t.identifier('inst');
-const prevInstParamId         = t => t.identifier('pInst');
+const instParamId             = t => t.identifier('v');
+const prevInstParamId         = t => t.identifier('pv');
+const ctxId                   = t => t.identifier('c');
 
-function dynamicPropStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamicProp) {
+function dynamicPropStatement(t, xvdomApi, instId, pInstId, getTmpVar, dynamicProp) {
   const { instanceContextId, instanceValueId, astNameId, hasSideEffects } = dynamicProp;
-  const tmpVar = getTmpVar();
-  return [
-    t.expressionStatement(
-      t.assignmentExpression('=',
-        tmpVar,
-        memberExpr(t, instId, instanceValueId)
-      )
+  const valueExpr = memberExpr(t, instId, instanceValueId);
+  return t.ifStatement(
+    t.binaryExpression('!==',
+      valueExpr,
+      memberExpr(t, pInstId, instanceValueId)
     ),
-    t.ifStatement(
-      t.binaryExpression('!==',
-        tmpVar,
-        memberExpr(t, pInstId, instanceValueId)
-      ),
-      hasSideEffects ? t.blockStatement([
-        t.ifStatement(
-          t.binaryExpression('!==',
-            memberExpr(t, pInstId, instanceContextId, astNameId),
-            tmpVar
-          ),
-          t.expressionStatement(
+    (
+      hasSideEffects
+        ? t.blockStatement([
+            t.ifStatement(
+              t.binaryExpression('!==',
+                memberExpr(t, ctxId(t), instanceContextId, astNameId),
+                valueExpr
+              ),
+              t.expressionStatement(
+                t.assignmentExpression('=',
+                  memberExpr(t, ctxId(t), instanceContextId, astNameId),
+                  valueExpr
+                )
+              )
+            ),
+            t.expressionStatement(
+              t.assignmentExpression('=',
+                memberExpr(t, pInstId, instanceValueId),
+                valueExpr
+              )
+            )
+          ])
+        : t.expressionStatement(
             t.assignmentExpression('=',
-              memberExpr(t, pInstId, instanceContextId, astNameId),
-              tmpVar
+              memberExpr(t, ctxId(t), instanceContextId, astNameId),
+              valueExpr
             )
           )
-        ),
-        t.expressionStatement(
-          t.assignmentExpression('=',
-            memberExpr(t, pInstId, instanceValueId),
-            tmpVar
-          )
-        )
-      ]) : t.expressionStatement(
-        t.assignmentExpression('=',
-          memberExpr(t, pInstId, instanceContextId, astNameId),
-          t.assignmentExpression('=',
-            memberExpr(t, pInstId, instanceValueId),
-            tmpVar
-          )
-        )
-      )
     )
-  ];
+  );
 }
 
 function dynamicArrayOrJSXChildStatement(t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild) {
@@ -64,7 +58,7 @@ function dynamicArrayOrJSXChildStatement(t, xvdomApi, instId, pInstId, getTmpVar
   return (
     t.expressionStatement(
       t.assignmentExpression('=',
-        memberExpr(t, pInstId, instanceContextId),
+        memberExpr(t, ctxId(t), instanceContextId),
         t.callExpression(
           xvdomApi.accessAPI(`updateDynamic${isOnlyChild ? 'OnlyChild': ''}`),
           [
@@ -73,7 +67,7 @@ function dynamicArrayOrJSXChildStatement(t, xvdomApi, instId, pInstId, getTmpVar
               memberExpr(t, pInstId, instanceValueId),
               memberExpr(t, instId, instanceValueId)
             ),
-            memberExpr(t, pInstId, instanceContextId)
+            memberExpr(t, ctxId(t), instanceContextId)
           ]
         )
       )
@@ -87,8 +81,8 @@ function dynamicTextChildStatements(t, xvdomApi, instId, pInstId, getTmpVar, dyn
     t.expressionStatement(
       t.assignmentExpression('=',
         (isOnlyChild
-          ? memberExpr(t, pInstId, instanceContextId, 'innerText')
-          : memberExpr(t, pInstId, instanceContextId, 'data')
+          ? memberExpr(t, ctxId(t), instanceContextId, 'innerText')
+          : memberExpr(t, ctxId(t), instanceContextId, 'data')
         ),
         t.callExpression(
           xvdomApi.accessAPI(`text`),
@@ -104,19 +98,17 @@ function dynamicTextChildStatements(t, xvdomApi, instId, pInstId, getTmpVar, dyn
   );
 }
 
-function dynamicChildStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild) {
-  const { instanceContextId, instanceValueId, isText } = dynamicChild;
-  return [
-    t.ifStatement(
-      t.binaryExpression('!==',
-        memberExpr(t, instId, instanceValueId),
-        memberExpr(t, pInstId, instanceValueId)
-      ),
-      (isText ? dynamicTextChildStatements : dynamicArrayOrJSXChildStatement)(
-        t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild
-      )
+function dynamicChildStatement(t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild) {
+  const { instanceValueId, isText } = dynamicChild;
+  return t.ifStatement(
+    t.binaryExpression('!==',
+      memberExpr(t, instId, instanceValueId),
+      memberExpr(t, pInstId, instanceValueId)
+    ),
+    (isText ? dynamicTextChildStatements : dynamicArrayOrJSXChildStatement)(
+      t, xvdomApi, instId, pInstId, getTmpVar, dynamicChild
     )
-  ];
+  );
 }
 
 function componentDynamicStatement(t, xvdomApi, instId, pInstId, component) {
@@ -141,7 +133,7 @@ function componentDynamicStatement(t, xvdomApi, instId, pInstId, component) {
       condition,
       t.expressionStatement(
         t.assignmentExpression('=',
-          memberExpr(t, pInstId, component.instanceContextId),
+          memberExpr(t, ctxId(t), component.instanceContextId),
           t.callExpression(
             xvdomApi.accessAPI('updateComponent'),
             [
@@ -158,7 +150,7 @@ function componentDynamicStatement(t, xvdomApi, instId, pInstId, component) {
                 );
                 return hash;
               }, {})),
-              memberExpr(t, pInstId, component.instanceContextId)
+              memberExpr(t, ctxId(t), component.instanceContextId)
             ]
           )
         )
@@ -167,7 +159,7 @@ function componentDynamicStatement(t, xvdomApi, instId, pInstId, component) {
   );
 }
 
-module.exports = function(t, xvdomApi, { dynamics, customElementsWithDynamicProps }) {
+module.exports = function fragmentUpdateCode(t, xvdomApi, { dynamics, customElementsWithDynamicProps }, valuesHeadId) {
   if(!dynamics.length) return t.functionExpression(null, EMPTY_ARRAY, t.blockStatement(EMPTY_ARRAY));
 
   const instId  = instParamId(t);
@@ -180,10 +172,10 @@ module.exports = function(t, xvdomApi, { dynamics, customElementsWithDynamicProp
       .filter(nonComponentPropDynamic)
       .reduce((acc, dynamic) => [
         ...acc,
-        ...(
+        (
           dynamic instanceof DynamicProp 
-            ? dynamicPropStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamic)
-            : dynamicChildStatements(t, xvdomApi, instId, pInstId, getTmpVar, dynamic)
+            ? dynamicPropStatement(t, xvdomApi, instId, pInstId, getTmpVar, dynamic)
+            : dynamicChildStatement(t, xvdomApi, instId, pInstId, getTmpVar, dynamic)
         )
       ], [])
   );
@@ -194,16 +186,30 @@ module.exports = function(t, xvdomApi, { dynamics, customElementsWithDynamicProp
     )
   );
 
+  // pv.z = _xvdomSpecValuesHead;
+  // _xvdomSpecValuesHead = pv.z;
+  const valuePushStatements = [
+    t.assignmentExpression('=',
+      memberExpr(t, pInstId, 'z'),
+      valuesHeadId
+    ),
+    t.assignmentExpression('=',
+      valuesHeadId,
+      memberExpr(t, pInstId)
+    )
+  ].map(e => t.expressionStatement(e));
+
   const tmpVarDecl = tmpVar ? [t.variableDeclaration('var', [t.variableDeclarator(tmpVar)])] : EMPTY_ARRAY;
 
   return (
     t.functionExpression(
       null,
-      [instId, pInstId],
+      [instId, pInstId, ctxId(t)],
       t.blockStatement([
         ...tmpVarDecl,
         ...updateDynamicPropCode,
-        ...updateDynamicComponents
+        ...updateDynamicComponents,
+        ...valuePushStatements
       ])
     )
   );

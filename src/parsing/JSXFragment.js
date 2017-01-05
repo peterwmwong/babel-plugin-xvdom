@@ -170,6 +170,7 @@ class JSXFragment {
     this.dynamics = [];
     this.customElementsWithDynamicProps = new Set();
     this._instanceParamIndex = 0;
+    this._contextIndex = 0;
     this.t = t;
     this.key = parseKeyAttr(t, openingElement);
     this.isCloneable = openingElement.attributes.some(isCloneableAttribute);
@@ -189,7 +190,7 @@ class JSXFragment {
 
   addDynamicChild(parent) {
     const dynamic = new DynamicChild(
-      this._genInstancePropId(),
+      this._genContextId(),
       this._genInstancePropId(),
       parent
     );
@@ -212,8 +213,12 @@ class JSXFragment {
   }
 
   _getInstanceContextIdForNode(el) {
-    if(!el.instanceContextId) el.instanceContextId = this._genInstancePropId();
+    if(!el.instanceContextId) el.instanceContextId = this._genContextId();
     return el.instanceContextId;
+  }
+
+  _genContextId() {
+    return this.t.identifier(genCompactId(this._contextIndex++));
   }
 
   _genInstancePropId() {

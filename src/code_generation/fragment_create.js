@@ -60,7 +60,7 @@ function dynamicTextChildStatement(funcGen, jsxValueElement, parentNodeVarId) {
   const { t } = funcGen
   const { dynamic: { instanceContextId, instanceValueId }, isOnlyChild, isFirstChild } = jsxValueElement;
   const instId = funcGen.accessInstance();
-  const instContextExpr = memberExpr(t, instId, instanceContextId);
+  const instContextExpr = funcGen.accessContext(instanceContextId);
   const instValueExpr = memberExpr(t, instId, instanceValueId);
   return (
     t.expressionStatement(
@@ -76,7 +76,7 @@ function dynamicTextChildStatement(funcGen, jsxValueElement, parentNodeVarId) {
             memberExpr(t, parentNodeVarId, 'appendChild'),
             [
               t.assignmentExpression('=',
-                instContextExpr,
+                funcGen.accessContext(instanceContextId),
                 t.callExpression(funcGen.accessAPI('createText'), [instValueExpr])
               )
             ]
@@ -92,7 +92,7 @@ function dynamicArrayOrJSXChildStatement(funcGen, jsxValueElement, parentNodeVar
 
   return t.expressionStatement(
     t.assignmentExpression('=',
-      memberExpr(t, instId, instanceContextId),
+      funcGen.accessContext(instanceContextId),
       t.callExpression(
         funcGen.accessAPI(`createDynamic${isOnlyChild ? 'OnlyChild': ''}`),
         [parentNodeVarId, memberExpr(t, instId, instanceValueId)]
@@ -159,15 +159,14 @@ function componentCode(funcGen, jsxElement, depth) {
       [
         componentId,
         memberExpr(t, componentId, 'state'),
-        propsArg,
-        funcGen.accessInstance()
+        propsArg
       ]
     )
   );
 
   if(numDynamicProps) {
     createComponentCode = t.assignmentExpression('=',
-      memberExpr(t, funcGen.accessInstance(), instanceContextId),
+      funcGen.accessContext(instanceContextId),
       createComponentCode
     )
   }
@@ -175,7 +174,7 @@ function componentCode(funcGen, jsxElement, depth) {
   // Optimization: If we're using the temp variable for the fist time, assign the
   //               result of the create element code as part of the variable
   //               declaration.
-  funcGen.defineOrSetTmpVar(depth, memberExpr(t, createComponentCode, '$n'));
+  funcGen.defineOrSetTmpVar(depth, memberExpr(t, createComponentCode, 'n'));
 
   // Add this node to parent, if there is a parent (not root).
   // ex. _n.appendChild(_n2);
@@ -220,7 +219,7 @@ function htmlElementCode(funcGen, jsxHTMLElement, depth, shouldGenerateDynamicPr
           (
             i === 0 && 
             prop.dynamic &&
-            memberExpr(t, funcGen.accessInstance(), prop.dynamic.instanceContextId)
+            funcGen.accessContext(prop.dynamic.instanceContextId)
           )
         )
       );

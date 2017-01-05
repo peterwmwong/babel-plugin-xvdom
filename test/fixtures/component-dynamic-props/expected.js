@@ -1,50 +1,50 @@
 var _xvdomCreateComponent = xvdom.createComponent,
     _xvdomEl = xvdom.el,
     _xvdomSpec = {
-  c(inst) {
-    var _n = (inst.a = _xvdomCreateComponent(MyComponent, MyComponent.state, {
-      msg: inst.b,
-      msg2: inst.c,
+  c(inst, ctx) {
+    var _n = (ctx.a = _xvdomCreateComponent(MyComponent, MyComponent.state, {
+      msg: inst.a,
+      msg2: inst.b,
       one: 1,
       two: "two"
-    }, inst)).$n;
+    })).$n;
 
     return _n;
   },
 
-  u(inst, pInst) {
-    if (inst.b !== pInst.b || inst.c !== pInst.c) pInst.a = _xvdomUpdateComponent(MyComponent, MyComponent.state, {
-      msg: pInst.b = inst.b,
-      msg2: pInst.c = inst.c,
+  u(inst, pInst, ctx) {
+    if (inst.a !== pInst.a || inst.b !== pInst.b) ctx.a = _xvdomUpdateComponent(MyComponent, MyComponent.state, {
+      msg: pInst.a = inst.a,
+      msg2: pInst.b = inst.b,
       one: 1,
       two: "two"
-    }, pInst.a);
+    }, ctx.a);
   },
 
   r: xvdom.DEADPOOL
 },
     _xvdomSpec2 = {
-  c(inst) {
+  c(inst, ctx) {
     var _n = _xvdomEl("div"),
-        _n2 = (inst.a = _xvdomCreateComponent(MyComponent, MyComponent.state, {
-      msg: inst.b,
-      msg2: inst.c,
+        _n2 = (ctx.a = _xvdomCreateComponent(MyComponent, MyComponent.state, {
+      msg: inst.a,
+      msg2: inst.b,
       one: 1,
       two: "two"
-    }, inst)).$n;
+    })).$n;
 
     _n.appendChild(_n2);
 
     return _n;
   },
 
-  u(inst, pInst) {
-    if (inst.b !== pInst.b || inst.c !== pInst.c) pInst.a = _xvdomUpdateComponent(MyComponent, MyComponent.state, {
-      msg: pInst.b = inst.b,
-      msg2: pInst.c = inst.c,
+  u(inst, pInst, ctx) {
+    if (inst.a !== pInst.a || inst.b !== pInst.b) ctx.a = _xvdomUpdateComponent(MyComponent, MyComponent.state, {
+      msg: pInst.a = inst.a,
+      msg2: pInst.b = inst.b,
       one: 1,
       two: "two"
-    }, pInst.a);
+    }, ctx.a);
   },
 
   r: xvdom.DEADPOOL
@@ -58,15 +58,17 @@ var message2 = "goodbye";
 ({
   s: _xvdomSpec,
   v: {
-    b: message,
-    c: message2
-  }
+    a: message,
+    b: message2
+  },
+  c: null
 });
 
 ({
   s: _xvdomSpec2,
   v: {
-    b: message,
-    c: message2
-  }
+    a: message,
+    b: message2
+  },
+  c: null
 });
