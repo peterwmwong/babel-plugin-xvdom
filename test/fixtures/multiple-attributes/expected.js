@@ -11,7 +11,8 @@ var _xvdomSpec = {
     _n.className = inst.a;
     _n.id = inst.c;
     _n.title = inst.d;
-    inst.f = _xvdomCreateDynamic(true, _n, inst.e);
+    _n.style.cssText = inst.e;
+    inst.g = _xvdomCreateDynamic(true, _n, inst.f);
     return _n;
   },
   u: function u(inst, pInst) {
@@ -37,8 +38,15 @@ var _xvdomSpec = {
       pInst.d = v;
     }
 
-    if (inst.e !== pInst.e) {
-      pInst.f = _xvdomUpdateDynamic(true, pInst.e, pInst.e = inst.e, pInst.f);
+    v = inst.e;
+
+    if (v !== pInst.e) {
+      pInst.b.style.cssText = v;
+      pInst.e = v;
+    }
+
+    if (inst.f !== pInst.f) {
+      pInst.g = _xvdomUpdateDynamic(true, pInst.f, pInst.f = inst.f, pInst.g);
     }
   },
   r: xvdom.DEADPOOL
@@ -47,11 +55,13 @@ var one = "1";
 var two = "2";
 var three = "3";
 var four = "4";
+var style = "color: red;";
 
 ({
   $s: _xvdomSpec,
   a: one,
   c: two,
   d: three,
-  e: four
+  e: style,
+  f: four
 });

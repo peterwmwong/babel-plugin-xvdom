@@ -88,7 +88,10 @@ function createPropsStatements(t, instanceParamId, genDynamicIdentifiers, nodeId
 
     let assignStmt = t.expressionStatement(
       t.assignmentExpression('=',
-        t.memberExpression(nodeId, t.identifier(prop)),
+        (prop !== 'style'
+          ? t.memberExpression(nodeId, t.identifier(prop))
+          : t.memberExpression(t.memberExpression(nodeId, t.identifier(prop)), t.identifier('cssText'))
+        ),
         rhs
       )
     );
@@ -399,7 +402,10 @@ function createRerenderStatementForComponent(t, dyn, instanceParamId, prevInstan
 function createPropAssignmentStatement(t, prevInstanceParamId, tempVarId, dyn){
   const assignStmt = t.expressionStatement(
     t.assignmentExpression('=',
-      t.memberExpression(t.memberExpression(prevInstanceParamId, dyn.contextId), t.identifier(dyn.prop)),
+      (dyn.prop !== 'style'
+        ? t.memberExpression(t.memberExpression(prevInstanceParamId, dyn.contextId), t.identifier(dyn.prop))
+        : t.memberExpression(t.memberExpression(t.memberExpression(prevInstanceParamId, dyn.contextId), t.identifier(dyn.prop)), t.identifier('cssText'))
+      ),
       tempVarId
     )
   );
